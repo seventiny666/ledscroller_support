@@ -169,6 +169,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     private func handleItemTap(_ item: LEDItem) {
+        // 特殊效果直接跳转
         if item.isLoveRain {
             AppDelegate.orientationLock = .landscape
             let loveRainVC = LoveRainViewController()
@@ -187,7 +188,14 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let fireworksVC = FireworksViewController()
             fireworksVC.modalPresentationStyle = .fullScreen
             present(fireworksVC, animated: true)
+        } else if item.isNeonTemplate || item.isIdolTemplate || item.isLEDTemplate {
+            // 模版卡片跳转到新的预览页面（带编辑和预览按钮）
+            AppDelegate.orientationLock = .landscape
+            let previewVC = LEDPreviewViewController(ledItem: item)
+            previewVC.modalPresentationStyle = .fullScreen
+            present(previewVC, animated: true)
         } else {
+            // 普通LED卡片直接全屏预览
             AppDelegate.orientationLock = .landscape
             let displayVC = LEDFullScreenViewController(ledItem: item)
             displayVC.modalPresentationStyle = .fullScreen
@@ -288,14 +296,31 @@ class TemplateCategoryCell: UITableViewCell {
     
     private func createPlaceholderItems(category: String, count: Int) -> [LEDItem] {
         var items: [LEDItem] = []
+        
+        // 定义每个分类的文字内容
+        let texts: [String]
+        switch category {
+        case "neon":
+            texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
+        case "idol":
+            texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
+        case "led":
+            texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
+        default:
+            texts = ["TEXT 1", "TEXT 2", "TEXT 3", "TEXT 4"]
+        }
+        
         for i in 1...count {
+            let text = i <= texts.count ? texts[i - 1] : "TEXT \(i)"
             let item = LEDItem(
                 id: "\(category)-\(i)",
-                text: "\(category.uppercased()) \(i)",
-                fontSize: 50,
-                textColor: "#FF69B4",
+                text: text,
+                fontSize: 60, // iPhone 14样式
+                textColor: "#FFFFFF", // 白色
                 backgroundColor: "#1a1a2e",
-                glowIntensity: 3.0
+                glowIntensity: 3.0,
+                scrollType: .scrollLeft, // 向左滚动
+                speed: 1.5
             )
             items.append(item)
         }
@@ -331,6 +356,7 @@ class TemplateItemCell: UICollectionViewCell {
     
     private let imageView = UIImageView()
     private let titleLabel = UILabel()
+    private let overlayTextLabel = UILabel() // 封面图片上的文字
     private let containerView = UIView()
     
     override init(frame: CGRect) {
@@ -358,6 +384,16 @@ class TemplateItemCell: UICollectionViewCell {
         imageView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(imageView)
         
+        // 封面图片上的文字（霓虹效果）
+        overlayTextLabel.textColor = .white
+        overlayTextLabel.font = .systemFont(ofSize: 20, weight: .bold) // 封面上的文字稍小
+        overlayTextLabel.textAlignment = .center
+        overlayTextLabel.numberOfLines = 2
+        overlayTextLabel.adjustsFontSizeToFitWidth = true
+        overlayTextLabel.minimumScaleFactor = 0.5
+        overlayTextLabel.translatesAutoresizingMaskIntoConstraints = false
+        imageView.addSubview(overlayTextLabel)
+        
         // 标题
         titleLabel.textColor = .white
         titleLabel.font = .systemFont(ofSize: 13, weight: .medium)
@@ -377,6 +413,11 @@ class TemplateItemCell: UICollectionViewCell {
             imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 9.0/16.0),
             
+            overlayTextLabel.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
+            overlayTextLabel.centerYAnchor.constraint(equalTo: imageView.centerYAnchor),
+            overlayTextLabel.leadingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: 8),
+            overlayTextLabel.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: -8),
+            
             titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
@@ -386,14 +427,32 @@ class TemplateItemCell: UICollectionViewCell {
     
     func configure(with item: LEDItem) {
         titleLabel.text = item.text
+        overlayTextLabel.text = item.text // 封面图片上也显示文字
+        
+        // 添加霓虹文字阴影效果（iPhone 14样式）
+        // text-shadow: 0 0 27px rgba(255,31,157,0.75)
+        titleLabel.layer.shadowColor = UIColor(red: 255/255.0, green: 31/255.0, blue: 157/255.0, alpha: 0.75).cgColor
+        titleLabel.layer.shadowRadius = 27
+        titleLabel.layer.shadowOpacity = 1.0
+        titleLabel.layer.shadowOffset = .zero
+        titleLabel.layer.masksToBounds = false
+        
+        // 封面图片上的文字也添加霓虹效果
+        overlayTextLabel.layer.shadowColor = UIColor(red: 255/255.0, green: 31/255.0, blue: 157/255.0, alpha: 0.75).cgColor
+        overlayTextLabel.layer.shadowRadius = 20
+        overlayTextLabel.layer.shadowOpacity = 1.0
+        overlayTextLabel.layer.shadowOffset = .zero
+        overlayTextLabel.layer.masksToBounds = false
         
         // 尝试加载图片，如果没有则使用占位颜色
         if let imageName = item.imageName, !imageName.isEmpty {
             imageView.image = UIImage(named: imageName)
+            overlayTextLabel.isHidden = false // 有图片时显示文字
         } else {
             // 使用占位颜色
             imageView.image = nil
             imageView.backgroundColor = UIColor(hex: item.backgroundColor)
+            overlayTextLabel.isHidden = true // 无图片时隐藏封面文字（因为下面已经有标题了）
         }
     }
 }

@@ -5,6 +5,7 @@ class LEDCreateViewController: UIViewController {
     
     var onSave: (() -> Void)?
     private var editingItem: LEDItem?
+    private var isTemplateEdit: Bool = false // 是否为模版编辑模式
     private var currentItem: LEDItem
     
     private let scrollView = UIScrollView()
@@ -52,19 +53,23 @@ class LEDCreateViewController: UIViewController {
         [["#FF006E", "#8338EC"], ["#06FFA5", "#FFFB00"], ["#F72585", "#7209B7"], ["#4CC9F0", "#4361EE"], ["#FF006E", "#FFBE0B"], ["#06FFA5", "#3A86FF"], ["#F72585", "#4CC9F0"]]
     ]
     
-    private let bgColors = ["#000000", "#1a1a2e", "#0f3460", "#16213e", "#1f1f1f", "#2d2d2d"]
+    private let bgColors = [
+        ["#000000", "#1a1a2e", "#0f3460", "#16213e", "#1f1f1f", "#2d2d2d"], // 第一行6个
+        ["#0a0a0a", "#1a1a1a", "#2a2a2a", "#0d1117", "#161b22", "#21262d"]  // 第二行6个
+    ]
     private let bgTextures = ["stars", "gradient", "dots", "waves", "grid", "noise"] // 纹理名称
     
-    // 背景渐变颜色：2行，每行7个
+    // 背景渐变颜色：2行，每行6个
     private let bgGradientColors = [
-        // 第一行：深色渐变背景
-        [["#1a1a2e", "#16213e"], ["#0f3460", "#16213e"], ["#1f1f1f", "#2d2d2d"], ["#000000", "#1a1a2e"], ["#16213e", "#0f3460"], ["#2d2d2d", "#1a1a2e"], ["#0f3460", "#000000"]],
-        // 第二行：彩色渐变背景
-        [["#1a0033", "#330066"], ["#001a33", "#003366"], ["#331a00", "#663300"], ["#1a3300", "#336600"], ["#33001a", "#660033"], ["#00331a", "#006633"], ["#331a33", "#663366"]]
+        // 第一行：深色渐变背景（6个）
+        [["#1a1a2e", "#16213e"], ["#0f3460", "#16213e"], ["#1f1f1f", "#2d2d2d"], ["#000000", "#1a1a2e"], ["#16213e", "#0f3460"], ["#2d2d2d", "#1a1a2e"]],
+        // 第二行：彩色渐变背景（6个）
+        [["#1a0033", "#330066"], ["#001a33", "#003366"], ["#331a00", "#663300"], ["#1a3300", "#336600"], ["#33001a", "#660033"], ["#00331a", "#006633"]]
     ]
     
-    init(editingItem: LEDItem? = nil) {
+    init(editingItem: LEDItem? = nil, isTemplateEdit: Bool = false) {
         self.editingItem = editingItem
+        self.isTemplateEdit = isTemplateEdit
         self.currentItem = editingItem ?? LEDItem(text: "") // 默认为空字符串
         super.init(nibName: nil, bundle: nil)
     }
@@ -185,8 +190,6 @@ class LEDCreateViewController: UIViewController {
         scrollView.isScrollEnabled = true
         scrollView.showsVerticalScrollIndicator = true
         scrollView.alwaysBounceVertical = true
-        scrollView.delaysContentTouches = false // 减少触摸延迟，提高响应速度
-        scrollView.canCancelContentTouches = true // 允许取消内容触摸，实现更自然的滑动
         view.addSubview(scrollView)
         
         contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -203,7 +206,7 @@ class LEDCreateViewController: UIViewController {
             contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
             contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             // 为contentView设置一个足够大的最小高度，确保内容超出scrollView时可以滚动
-            contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 800)
+            contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1200) // 增加高度以容纳所有内容
         ])
         
         var yOffset: CGFloat = 20
@@ -223,15 +226,13 @@ class LEDCreateViewController: UIViewController {
         ])
         yOffset += 70
         
-        // Tab切换控件
+        // Tab切换控件 - 胶囊形状
         tabSegment.selectedSegmentIndex = 0
         tabSegment.selectedSegmentTintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
         tabSegment.setTitleTextAttributes([.foregroundColor: UIColor.black, .font: UIFont.boldSystemFont(ofSize: 14)], for: .selected)
         tabSegment.setTitleTextAttributes([.foregroundColor: UIColor.lightGray], for: .normal)
         tabSegment.addTarget(self, action: #selector(tabChanged), for: .valueChanged)
         tabSegment.translatesAutoresizingMaskIntoConstraints = false
-        tabSegment.layer.cornerRadius = 20 // 最大圆角
-        tabSegment.layer.masksToBounds = true
         contentView.addSubview(tabSegment)
         
         NSLayoutConstraint.activate([
@@ -240,6 +241,13 @@ class LEDCreateViewController: UIViewController {
             tabSegment.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
             tabSegment.heightAnchor.constraint(equalToConstant: 40)
         ])
+        
+        // 设置胶囊形状（高度的一半作为圆角）
+        DispatchQueue.main.async {
+            self.tabSegment.layer.cornerRadius = 20 // 40/2 = 20，完美胶囊形状
+            self.tabSegment.layer.masksToBounds = true
+        }
+        
         yOffset += 55
         
         // 创建三个Tab视图
@@ -390,28 +398,28 @@ class LEDCreateViewController: UIViewController {
         addSectionLabelToView(backgroundTabView, text: "背景颜色", yOffset: &tabYOffset)
         
         // 第一行：纯色背景
-        let bgColorStack = createBgColorStack(colors: bgColors, tag: 200)
-        backgroundTabView.addSubview(bgColorStack)
+        let bgColorStack1 = createBgColorStack(colors: bgColors[0], tag: 200)
+        backgroundTabView.addSubview(bgColorStack1)
         NSLayoutConstraint.activate([
-            bgColorStack.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            bgColorStack.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            bgColorStack.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            bgColorStack.heightAnchor.constraint(equalToConstant: 36)
+            bgColorStack1.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            bgColorStack1.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            bgColorStack1.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            bgColorStack1.heightAnchor.constraint(equalToConstant: 36)
         ])
         tabYOffset += 48
         
-        // 第二行：纹理背景
-        let bgTextureStack = createBgTextureStack(textures: bgTextures, tag: 300)
-        backgroundTabView.addSubview(bgTextureStack)
+        // 第二行：纯色背景
+        let bgColorStack2 = createBgColorStack(colors: bgColors[1], tag: 210)
+        backgroundTabView.addSubview(bgColorStack2)
         NSLayoutConstraint.activate([
-            bgTextureStack.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            bgTextureStack.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            bgTextureStack.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            bgTextureStack.heightAnchor.constraint(equalToConstant: 36)
+            bgColorStack2.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            bgColorStack2.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            bgColorStack2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            bgColorStack2.heightAnchor.constraint(equalToConstant: 36)
         ])
         tabYOffset += 56
         
-        // 渐变背景色 - 第一行
+        // 渐变背景色 - 第一行（6个）
         let bgGradient1Stack = createBgGradientStack(gradients: bgGradientColors[0], tag: 400, rowIndex: 0)
         backgroundTabView.addSubview(bgGradient1Stack)
         NSLayoutConstraint.activate([
@@ -422,7 +430,7 @@ class LEDCreateViewController: UIViewController {
         ])
         tabYOffset += 48 // 与背景颜色间距一致
         
-        // 渐变背景色 - 第二行
+        // 渐变背景色 - 第二行（6个）
         let bgGradient2Stack = createBgGradientStack(gradients: bgGradientColors[1], tag: 410, rowIndex: 1)
         backgroundTabView.addSubview(bgGradient2Stack)
         NSLayoutConstraint.activate([
@@ -596,20 +604,23 @@ class LEDCreateViewController: UIViewController {
         field.layer.borderWidth = 1
         field.layer.borderColor = UIColor.white.withAlphaComponent(0.2).cgColor
         
+        // 确保输入框可交互
+        field.isUserInteractionEnabled = true
+        field.isEnabled = true
+        
         // 内边距
         let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 15, height: 50))
         field.leftView = paddingView
         field.leftViewMode = .always
         
-        // 键盘配置
+        // 键盘配置 - 确保支持中文输入
+        field.keyboardType = .default
         field.returnKeyType = .done
-        field.enablesReturnKeyAutomatically = true
         field.clearButtonMode = .whileEditing
         field.autocorrectionType = .no
         field.autocapitalizationType = .none
-        field.spellCheckingType = .no
         
-        // 设置代理和事件
+        // 设置代理
         field.delegate = self
         field.addTarget(self, action: #selector(textFieldDidChange), for: .editingChanged)
         
@@ -921,9 +932,15 @@ class LEDCreateViewController: UIViewController {
             updateColorButtonSelection(tag: 110, selectedIndex: textColorIndex)
         }
         
-        if let bgColorIndex = bgColors.firstIndex(of: currentItem.backgroundColor) {
+        // 查找背景颜色（第一行）
+        if let bgColorIndex = bgColors[0].firstIndex(of: currentItem.backgroundColor) {
             selectedBgColorIndex = bgColorIndex
             updateColorButtonSelection(tag: 200, selectedIndex: bgColorIndex)
+        }
+        // 查找背景颜色（第二行）
+        else if let bgColorIndex = bgColors[1].firstIndex(of: currentItem.backgroundColor) {
+            selectedBgColorIndex = bgColorIndex
+            updateColorButtonSelection(tag: 210, selectedIndex: bgColorIndex)
         }
         
         let scrollTypes: [LEDItem.ScrollType] = [.none, .scrollLeft, .scrollRight, .scrollUp, .scrollDown]
@@ -1132,14 +1149,30 @@ class LEDCreateViewController: UIViewController {
     }
     
     @objc private func colorButtonTapped(_ sender: UIButton) {
-        if sender.tag >= 200 {
-            // 背景颜色
+        if sender.tag >= 210 {
+            // 背景颜色 - 第二行
+            selectedBgColorIndex = sender.tag - 210
+            currentItem.backgroundColor = bgColors[1][selectedBgColorIndex]
+            selectedBackgroundImage = nil // 清除背景图片
+            updateColorButtonSelection(tag: 210, selectedIndex: selectedBgColorIndex)
+            updateColorButtonSelection(tag: 200, selectedIndex: -1) // 清除第一行
+            // 清除渐变选择
+            updateColorButtonSelection(tag: 400, selectedIndex: -1)
+            updateColorButtonSelection(tag: 410, selectedIndex: -1)
+            // 清除模版选择
+            updateColorButtonSelection(tag: 500, selectedIndex: -1)
+            updateColorButtonSelection(tag: 510, selectedIndex: -1)
+            updateColorButtonSelection(tag: 520, selectedIndex: -1)
+        } else if sender.tag >= 200 {
+            // 背景颜色 - 第一行
             selectedBgColorIndex = sender.tag - 200
-            currentItem.backgroundColor = bgColors[selectedBgColorIndex]
+            currentItem.backgroundColor = bgColors[0][selectedBgColorIndex]
             selectedBackgroundImage = nil // 清除背景图片
             updateColorButtonSelection(tag: 200, selectedIndex: selectedBgColorIndex)
-            // 清除纹理选择
-            updateColorButtonSelection(tag: 300, selectedIndex: -1)
+            updateColorButtonSelection(tag: 210, selectedIndex: -1) // 清除第二行
+            // 清除渐变选择
+            updateColorButtonSelection(tag: 400, selectedIndex: -1)
+            updateColorButtonSelection(tag: 410, selectedIndex: -1)
             // 清除模版选择
             updateColorButtonSelection(tag: 500, selectedIndex: -1)
             updateColorButtonSelection(tag: 510, selectedIndex: -1)
@@ -1429,10 +1462,28 @@ class LEDCreateViewController: UIViewController {
         
         var items = LEDDataManager.shared.loadItems()
         
-        if let editingItem = editingItem,
-           let index = items.firstIndex(where: { $0.id == editingItem.id }) {
+        // 如果是模版编辑模式，总是创建新的item
+        if isTemplateEdit {
+            // 创建新的ID
+            let newItem = LEDItem(
+                id: UUID().uuidString,
+                text: currentItem.text,
+                fontSize: currentItem.fontSize,
+                textColor: currentItem.textColor,
+                backgroundColor: currentItem.backgroundColor,
+                backgroundImageName: currentItem.backgroundImageName,
+                glowIntensity: currentItem.glowIntensity,
+                scrollType: currentItem.scrollType,
+                speed: currentItem.speed,
+                fontName: currentItem.fontName
+            )
+            items.insert(newItem, at: 0)
+        } else if let editingItem = editingItem,
+                  let index = items.firstIndex(where: { $0.id == editingItem.id }) {
+            // 普通编辑模式，更新现有item
             items[index] = currentItem
         } else {
+            // 新建模式
             items.insert(currentItem, at: 0)
         }
         
@@ -1462,44 +1513,15 @@ class LEDCreateViewController: UIViewController {
     }
 }
 
+
+
+
+
+
 // MARK: - UITextFieldDelegate
 extension LEDCreateViewController: UITextFieldDelegate {
-    func textFieldShouldBeginEditing(_ textField: UITextField) -> Bool {
-        // 当用户开始输入时，清除默认的"led content"文本并将文字颜色设置为完全不透明的白色
-        if textField.text == "led content" && textField.textColor == UIColor.white.withAlphaComponent(0.3) {
-            textField.text = ""
-            textField.textColor = .white
-        }
-        return true
-    }
-    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         textField.resignFirstResponder()
         return true
     }
-    
-    func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
-        // 计算新的文字
-        let currentText = textField.text ?? ""
-        guard let stringRange = Range(range, in: currentText) else { return true }
-        let updatedText = currentText.replacingCharacters(in: stringRange, with: string)
-        
-        // 实时更新预览
-        DispatchQueue.main.async {
-            self.previewLabel.text = updatedText.isEmpty ? "预览" : updatedText
-        }
-        
-        return true
-    }
-    
-    func textFieldDidEndEditing(_ textField: UITextField) {
-        // 当输入框失去焦点且为空时，恢复默认的"led content"文本和30%透明度
-        if textField.text?.isEmpty == true {
-            textField.text = "led content"
-            textField.textColor = UIColor.white.withAlphaComponent(0.3)
-        }
-    }
 }
-
-
-

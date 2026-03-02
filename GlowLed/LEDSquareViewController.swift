@@ -43,11 +43,11 @@ class LEDSquareViewController: UIViewController {
         
         // 集合视图布局
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 15
-        layout.minimumLineSpacing = 15
-        layout.sectionInset = UIEdgeInsets(top: 20, left: 20, bottom: 20, right: 20)
+        layout.minimumInteritemSpacing = 17 // 横向间距17px
+        layout.minimumLineSpacing = 17 // 纵向间距17px
+        layout.sectionInset = UIEdgeInsets(top: 20, left: 26, bottom: 20, right: 26) // 左右边距26px
         
-        let width = (view.bounds.width - 55) / 2
+        let width = (view.bounds.width - 40) / 2 // 新的宽度计算
         layout.itemSize = CGSize(width: width, height: width * 0.6)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -68,6 +68,20 @@ class LEDSquareViewController: UIViewController {
     
     private func loadData() {
         ledItems = LEDDataManager.shared.loadItems()
+        
+        // 调试：检查爱心流星雨是否存在
+        let loveRainItem = ledItems.first { $0.isLoveRain }
+        if loveRainItem != nil {
+            print("✅ 爱心流星雨卡片存在，ID: \(loveRainItem!.id)")
+        } else {
+            print("❌ 爱心流星雨卡片不存在！")
+        }
+        print("📊 总卡片数：\(ledItems.count)")
+        print("📋 所有卡片：")
+        for (index, item) in ledItems.enumerated() {
+            print("   \(index + 1). \(item.text) (isLoveRain: \(item.isLoveRain))")
+        }
+        
         collectionView.reloadData()
     }
     
@@ -209,7 +223,7 @@ class LEDCell: UICollectionViewCell {
     private func setupUI() {
         containerView.layer.cornerRadius = 12
         containerView.layer.borderWidth = 1.5
-        containerView.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        containerView.layer.borderColor = UIColor.white.withAlphaComponent(0.4).cgColor // 40%透明度
         containerView.clipsToBounds = true
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
@@ -348,10 +362,11 @@ class LEDCell: UICollectionViewCell {
         }
     }
     
-    // 翻页时钟：静态预览效果
+    // 翻页时钟：静态预览效果（不显示文字）
     private func setupStaticFlipClock() {
         // 隐藏文字标签
         textLabel.alpha = 0
+        textLabel.text = "" // 清空文字
         
         // 获取当前时间
         let now = Date()

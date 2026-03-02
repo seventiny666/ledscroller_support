@@ -131,8 +131,6 @@ class LoveRainViewController: UIViewController {
         let centerY = view.bounds.height / 2
         let size: CGFloat = 200
         
-        let heartPath = createHeartPath(center: CGPoint(x: centerX, y: centerY), size: size)
-        
         // 不再创建大的实心心形，改为用小爱心组成心形轮廓
         createHeartShapeWithSmallHearts(center: CGPoint(x: centerX, y: centerY), size: size)
         

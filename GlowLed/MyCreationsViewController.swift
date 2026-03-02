@@ -21,25 +21,22 @@ class MyCreationsViewController: UIViewController {
     }
     
     private func setupUI() {
-        title = "创作"
+        title = "我的创作" // 从"创作"改为"我的创作"
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1) // 纯黑背景
         
-        // 导航栏样式 - 标题居左显示，与右上角按钮在同一高度
+        // 导航栏样式 - 标题和按钮在同一高度（关闭大标题）
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
-        appearance.largeTitleTextAttributes = [
+        appearance.titleTextAttributes = [
             .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+            .font: UIFont.systemFont(ofSize: 18, weight: .semibold) // 标准导航栏标题字体
         ]
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.prefersLargeTitles = true // 开启大标题，标题在左侧
-        
-        // 确保导航项在大标题模式下正确显示
-        navigationItem.largeTitleDisplayMode = .always
+        navigationController?.navigationBar.prefersLargeTitles = false // 关闭大标题，标题和按钮同高度
         
         // 右上角添加新增按钮
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createNewLED))
@@ -53,7 +50,7 @@ class MyCreationsViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(CreationTableCell.self, forCellReuseIdentifier: "CreationCell")
-        tableView.register(AddCreationTableCell.self, forCellReuseIdentifier: "AddCell")
+        // tableView.register(AddCreationTableCell.self, forCellReuseIdentifier: "AddCell") // 注释掉添加按钮
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
@@ -74,14 +71,13 @@ class MyCreationsViewController: UIViewController {
         emptyStateView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(emptyStateView)
         
-        // 提示文字
-        let hintLabel = UILabel()
-        hintLabel.text = "开始创作您的第一个LED屏幕吧"
-        hintLabel.textColor = .systemGray
-        hintLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        hintLabel.textAlignment = .center
-        hintLabel.translatesAutoresizingMaskIntoConstraints = false
-        emptyStateView.addSubview(hintLabel)
+        // 图标（邮件堆叠图标）
+        let iconImageView = UIImageView()
+        iconImageView.image = UIImage(systemName: "mail.stack.fill")
+        iconImageView.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        iconImageView.contentMode = .scaleAspectFit
+        iconImageView.translatesAutoresizingMaskIntoConstraints = false
+        emptyStateView.addSubview(iconImageView)
         
         // 创建按钮（圆角矩形）
         createButton = UIButton(type: .system)
@@ -94,20 +90,34 @@ class MyCreationsViewController: UIViewController {
         createButton.translatesAutoresizingMaskIntoConstraints = false
         emptyStateView.addSubview(createButton)
         
+        // 提示文字（放在按钮下面）
+        let hintLabel = UILabel()
+        hintLabel.text = "开始创作您的第一个LED屏幕吧"
+        hintLabel.textColor = .systemGray
+        hintLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        hintLabel.textAlignment = .center
+        hintLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyStateView.addSubview(hintLabel)
+        
         NSLayoutConstraint.activate([
             emptyStateView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            emptyStateView.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -50),
+            emptyStateView.centerYAnchor.constraint(equalTo: view.centerYAnchor), // 居中显示
             emptyStateView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
             emptyStateView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
             
-            hintLabel.topAnchor.constraint(equalTo: emptyStateView.topAnchor),
-            hintLabel.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            iconImageView.topAnchor.constraint(equalTo: emptyStateView.topAnchor),
+            iconImageView.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            iconImageView.widthAnchor.constraint(equalToConstant: 80),
+            iconImageView.heightAnchor.constraint(equalToConstant: 80),
             
-            createButton.topAnchor.constraint(equalTo: hintLabel.bottomAnchor, constant: 24),
+            createButton.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 32),
             createButton.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
             createButton.widthAnchor.constraint(equalToConstant: 200),
             createButton.heightAnchor.constraint(equalToConstant: 50),
-            createButton.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor)
+            
+            hintLabel.topAnchor.constraint(equalTo: createButton.bottomAnchor, constant: 16),
+            hintLabel.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            hintLabel.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor)
         ])
     }
     
@@ -140,6 +150,7 @@ class MyCreationsViewController: UIViewController {
         let createVC = LEDCreateViewController()
         createVC.onSave = { [weak self] in
             self?.loadCreations()
+            self?.showToast(message: "添加成功!")
         }
         let nav = UINavigationController(rootViewController: createVC)
         nav.modalPresentationStyle = .fullScreen
@@ -185,64 +196,46 @@ class MyCreationsViewController: UIViewController {
 extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource {
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return creations.count + 1 // +1 for add button
+        return creations.count // 不再+1，移除添加按钮
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        if indexPath.row == 0 {
-            // 第一行是添加按钮
-            let cell = tableView.dequeueReusableCell(withIdentifier: "AddCell", for: indexPath) as! AddCreationTableCell
-            return cell
-        } else {
-            // 其他是创作内容
-            let cell = tableView.dequeueReusableCell(withIdentifier: "CreationCell", for: indexPath) as! CreationTableCell
-            cell.configure(with: creations[indexPath.row - 1])
-            return cell
-        }
+        // 直接返回创作内容
+        let cell = tableView.dequeueReusableCell(withIdentifier: "CreationCell", for: indexPath) as! CreationTableCell
+        cell.configure(with: creations[indexPath.row])
+        return cell
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        if indexPath.row == 0 {
-            return 120 // 添加按钮高度
-        } else {
-            // 16:9 宽高比计算
-            let screenWidth = UIScreen.main.bounds.width
-            let cardWidth = screenWidth - 32 // 左右各16px边距
-            let cardHeight = cardWidth * 9 / 16
-            return cardHeight + 16 // 上下各8px边距
-        }
+        // 16:9 宽高比计算 + 时间标签高度
+        let screenWidth = UIScreen.main.bounds.width
+        let cardWidth = screenWidth - 60 // 左右各30px边距
+        let cardHeight = cardWidth * 9 / 16
+        return cardHeight + 16 + 20 // 上下各8px边距 + 时间标签高度20px
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         tableView.deselectRow(at: indexPath, animated: true)
         
-        if indexPath.row == 0 {
-            // 点击添加按钮
-            createNewLED()
-        } else {
-            // 点击创作内容 - 优化方向切换，减少卡顿
-            let item = creations[indexPath.row - 1]
-            
-            // 先切换方向
-            AppDelegate.orientationLock = .landscape
-            
-            // 延迟一点再present，让方向切换更流畅
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                let displayVC = LEDFullScreenViewController(ledItem: item)
-                displayVC.modalPresentationStyle = .fullScreen
-                displayVC.modalTransitionStyle = .crossDissolve // 使用淡入淡出过渡，更流畅
-                self.present(displayVC, animated: true)
-            }
+        // 点击创作内容 - 优化方向切换，减少卡顿
+        let item = creations[indexPath.row]
+        
+        // 先切换方向
+        AppDelegate.orientationLock = .landscape
+        
+        // 延迟一点再present，让方向切换更流畅
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            let displayVC = LEDFullScreenViewController(ledItem: item)
+            displayVC.modalPresentationStyle = .fullScreen
+            displayVC.modalTransitionStyle = .crossDissolve // 使用淡入淡出过渡，更流畅
+            self.present(displayVC, animated: true)
         }
     }
     
     func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
-        // 添加按钮不显示滑动操作
-        guard indexPath.row > 0 else { return nil }
-        
         // 编辑操作
         let editAction = UIContextualAction(style: .normal, title: "") { [weak self] _, _, completionHandler in
-            self?.editCreation(at: indexPath.row - 1)
+            self?.editCreation(at: indexPath.row)
             completionHandler(true)
         }
         editAction.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFD/255.0, blue: 0xE6/255.0, alpha: 1.0)
@@ -255,7 +248,7 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
         
         // 删除操作
         let deleteAction = UIContextualAction(style: .destructive, title: "") { [weak self] _, _, completionHandler in
-            self?.confirmDelete(at: indexPath.row - 1)
+            self?.confirmDelete(at: indexPath.row)
             completionHandler(true)
         }
         deleteAction.backgroundColor = .systemRed
@@ -304,17 +297,18 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
         LEDDataManager.shared.saveItems(allItems)
         
         // 更新UI（带动画）
-        tableView.deleteRows(at: [IndexPath(row: index + 1, section: 0)], with: .fade)
+        tableView.deleteRows(at: [IndexPath(row: index, section: 0)], with: .fade)
         
-        // 如果删除后为空，只显示添加按钮
+        // 如果删除后为空，显示空状态视图
         if creations.isEmpty {
-            emptyStateView.isHidden = true
-            tableView.isHidden = false
+            emptyStateView.isHidden = false
+            tableView.isHidden = true
         }
     }
 }
 
-// MARK: - 添加创作TableCell
+// MARK: - 添加创作TableCell（已注释，不再使用）
+/*
 class AddCreationTableCell: UITableViewCell {
     
     private let containerView = UIView()
@@ -374,6 +368,7 @@ class AddCreationTableCell: UITableViewCell {
         ])
     }
 }
+*/
 
 // MARK: - 创作内容TableCell
 class CreationTableCell: UITableViewCell {
@@ -382,8 +377,7 @@ class CreationTableCell: UITableViewCell {
     private let previewView = UIView()
     private let backgroundImageView = UIImageView()
     private let ledTextLabel = UILabel() // 改名避免与UITableViewCell的textLabel冲突
-    private let timeOverlayView = UIView() // 时间遮罩
-    private let timeLabel = UILabel() // 时间标签
+    private let timeLabel = UILabel() // 时间标签（放在卡片下面）
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -425,28 +419,23 @@ class CreationTableCell: UITableViewCell {
         ledTextLabel.translatesAutoresizingMaskIntoConstraints = false
         previewView.addSubview(ledTextLabel)
         
-        // 时间遮罩（底部黑色半透明）
-        timeOverlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
-        timeOverlayView.translatesAutoresizingMaskIntoConstraints = false
-        previewView.addSubview(timeOverlayView)
-        
-        // 时间标签
-        timeLabel.textColor = .white
-        timeLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        // 时间标签（放在卡片下面，无遮罩）
+        timeLabel.textColor = .systemGray
+        timeLabel.font = .systemFont(ofSize: 13, weight: .regular) // 从11改为13
         timeLabel.textAlignment = .left
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        timeOverlayView.addSubview(timeLabel)
+        containerView.addSubview(timeLabel)
         
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
+            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 30), // 从16改为30
+            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -30), // 从-16改为-30
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
             
             previewView.topAnchor.constraint(equalTo: containerView.topAnchor),
             previewView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             previewView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            previewView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor),
+            previewView.heightAnchor.constraint(equalTo: previewView.widthAnchor, multiplier: 9.0/16.0), // 16:9比例
             
             backgroundImageView.topAnchor.constraint(equalTo: previewView.topAnchor),
             backgroundImageView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
@@ -458,14 +447,10 @@ class CreationTableCell: UITableViewCell {
             ledTextLabel.leadingAnchor.constraint(equalTo: previewView.leadingAnchor, constant: 16),
             ledTextLabel.trailingAnchor.constraint(equalTo: previewView.trailingAnchor, constant: -16),
             
-            timeOverlayView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
-            timeOverlayView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
-            timeOverlayView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
-            timeOverlayView.heightAnchor.constraint(equalToConstant: 28),
-            
-            timeLabel.leadingAnchor.constraint(equalTo: timeOverlayView.leadingAnchor, constant: 12),
-            timeLabel.trailingAnchor.constraint(equalTo: timeOverlayView.trailingAnchor, constant: -12),
-            timeLabel.centerYAnchor.constraint(equalTo: timeOverlayView.centerYAnchor)
+            timeLabel.topAnchor.constraint(equalTo: previewView.bottomAnchor, constant: 6),
+            timeLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 4),
+            timeLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -4),
+            timeLabel.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor)
         ])
     }
     
@@ -491,7 +476,7 @@ class CreationTableCell: UITableViewCell {
         ledTextLabel.layer.shadowOpacity = Float(item.glowIntensity * 0.3)
         ledTextLabel.layer.shadowOffset = .zero
         
-        // 格式化时间显示
+        // 格式化时间显示（放在卡片下面）
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd HH:mm"
         timeLabel.text = formatter.string(from: item.createdAt)
