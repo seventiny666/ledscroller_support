@@ -7,6 +7,7 @@ struct LEDItem: Codable {
     var fontSize: CGFloat
     var textColor: String
     var backgroundColor: String
+    var backgroundImageName: String? // 背景图片名称（如：neon_1, idol_2, led_3）
     var glowIntensity: CGFloat
     var scrollType: ScrollType
     var speed: CGFloat
@@ -15,6 +16,7 @@ struct LEDItem: Codable {
     var isFireworksBloom: Bool // 标识是否为烟花绽放效果（第二种）
     var isFlipClock: Bool // 标识是否为翻页时钟效果
     var isLoveRain: Bool // 标识是否为爱心流星雨效果
+    var isDefaultPreset: Bool // 标识是否为预设卡片（HAPPY BIRTHDAY等）
     var createdAt: Date
     
     enum ScrollType: String, Codable {
@@ -30,6 +32,7 @@ struct LEDItem: Codable {
          fontSize: CGFloat = 60,
          textColor: String = "#FF00FF",
          backgroundColor: String = "#000000",
+         backgroundImageName: String? = nil, // 背景图片名称
          glowIntensity: CGFloat = 2.5, // 默认2.5 (0-5范围)
          scrollType: ScrollType = .none,
          speed: CGFloat = 1.0,
@@ -38,12 +41,14 @@ struct LEDItem: Codable {
          isFireworksBloom: Bool = false,
          isFlipClock: Bool = false,
          isLoveRain: Bool = false,
+         isDefaultPreset: Bool = false,
          createdAt: Date = Date()) {
         self.id = id
         self.text = text
         self.fontSize = fontSize
         self.textColor = textColor
         self.backgroundColor = backgroundColor
+        self.backgroundImageName = backgroundImageName
         self.glowIntensity = glowIntensity
         self.scrollType = scrollType
         self.speed = speed
@@ -52,6 +57,7 @@ struct LEDItem: Codable {
         self.isFireworksBloom = isFireworksBloom
         self.isFlipClock = isFlipClock
         self.isLoveRain = isLoveRain
+        self.isDefaultPreset = isDefaultPreset
         self.createdAt = createdAt
     }
 }
@@ -80,13 +86,18 @@ class LEDDataManager {
         // 合并保存的数据和默认数据
         // 确保默认的特殊效果卡片始终存在
         let defaultItems = getDefaultItems()
-        var mergedItems = savedItems
+        var mergedItems: [LEDItem] = []
         
-        // 添加缺失的默认卡片
+        // 首先添加所有默认卡片（包括更新的预设卡片）
         for defaultItem in defaultItems {
-            // 检查是否已存在
-            if !mergedItems.contains(where: { $0.id == defaultItem.id }) {
-                mergedItems.append(defaultItem)
+            mergedItems.append(defaultItem)
+        }
+        
+        // 然后添加用户创建的卡片（排除默认卡片的ID）
+        let defaultIds = Set(defaultItems.map { $0.id })
+        for savedItem in savedItems {
+            if !defaultIds.contains(savedItem.id) {
+                mergedItems.append(savedItem)
             }
         }
         
@@ -114,7 +125,8 @@ class LEDDataManager {
                 backgroundColor: "#000000",
                 glowIntensity: 3.5,
                 scrollType: .scrollLeft,
-                speed: 1.5
+                speed: 1.5,
+                isDefaultPreset: true
             ),
             LEDItem(
                 id: "happy-new-year-default",
@@ -124,7 +136,8 @@ class LEDDataManager {
                 backgroundColor: "#1a1a2e",
                 glowIntensity: 3.0,
                 scrollType: .scrollRight,
-                speed: 1.8
+                speed: 1.8,
+                isDefaultPreset: true
             ),
             LEDItem(
                 id: "merry-christmas-default",
@@ -134,7 +147,8 @@ class LEDDataManager {
                 backgroundColor: "#0f3460",
                 glowIntensity: 2.8,
                 scrollType: .scrollLeft,
-                speed: 1.2
+                speed: 1.2,
+                isDefaultPreset: true
             ),
             LEDItem(
                 id: "marry-me-default",
@@ -144,7 +158,8 @@ class LEDDataManager {
                 backgroundColor: "#000000",
                 glowIntensity: 5.0,
                 scrollType: .none,
-                speed: 1.0
+                speed: 1.0,
+                isDefaultPreset: true
             ),
             LEDItem(
                 id: "i-heart-u-default",
@@ -154,7 +169,8 @@ class LEDDataManager {
                 backgroundColor: "#000000",
                 glowIntensity: 4.5,
                 scrollType: .none,
-                speed: 1.0
+                speed: 1.0,
+                isDefaultPreset: true
             ),
             LEDItem(
                 id: "i-love-u-default",
@@ -164,7 +180,8 @@ class LEDDataManager {
                 backgroundColor: "#1a1a2e",
                 glowIntensity: 3.5,
                 scrollType: .scrollLeft,
-                speed: 1.3
+                speed: 1.3,
+                isDefaultPreset: true
             ),
             LEDItem(
                 id: "fireworks-special",

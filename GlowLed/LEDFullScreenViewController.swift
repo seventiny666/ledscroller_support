@@ -4,6 +4,7 @@ import UIKit
 class LEDFullScreenViewController: UIViewController {
     
     private let ledItem: LEDItem
+    private let backgroundImageView = UIImageView() // 背景图片视图
     private let textLabel = UILabel()
     private var displayLink: CADisplayLink?
     
@@ -30,12 +31,21 @@ class LEDFullScreenViewController: UIViewController {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         
-        // 停止动画和屏幕常亮
-        UIApplication.shared.isIdleTimerDisabled = false
+        // 立即停止所有动画
         textLabel.layer.removeAllAnimations()
+        view.layer.removeAllAnimations()
         
-        // 恢复为竖屏
-        AppDelegate.orientationLock = .portrait
+        // 停止屏幕常亮
+        UIApplication.shared.isIdleTimerDisabled = false
+    }
+    
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        
+        // 在视图完全消失后再恢复竖屏，避免卡顿
+        DispatchQueue.main.async {
+            AppDelegate.orientationLock = .portrait
+        }
     }
     
     override var prefersStatusBarHidden: Bool {
@@ -51,7 +61,27 @@ class LEDFullScreenViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = UIColor(hex: ledItem.backgroundColor)
+        // 设置背景（图片或颜色）
+        if let imageName = ledItem.backgroundImageName, let image = UIImage(named: imageName) {
+            // 显示背景图片
+            backgroundImageView.image = image
+            backgroundImageView.contentMode = .scaleAspectFill
+            backgroundImageView.clipsToBounds = true
+            backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
+            view.addSubview(backgroundImageView)
+            
+            NSLayoutConstraint.activate([
+                backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
+                backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            ])
+            
+            view.backgroundColor = .clear
+        } else {
+            // 显示背景颜色
+            view.backgroundColor = UIColor(hex: ledItem.backgroundColor)
+        }
         
         textLabel.text = ledItem.text
         textLabel.font = UIFont(name: ledItem.fontName, size: ledItem.fontSize) ?? .boldSystemFont(ofSize: ledItem.fontSize)
@@ -61,9 +91,9 @@ class LEDFullScreenViewController: UIViewController {
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
         
-        // 霓虹发光效果 (支持0-5范围)
-        let glowRadius = 10 * ledItem.glowIntensity // 0-50的范围
-        let glowOpacity = min(ledItem.glowIntensity / 5.0, 1.0) // 归一化到0-1
+        // 霓虹发光效果 (支持0-10范围)
+        let glowRadius = 10 * ledItem.glowIntensity // 0-100的范围
+        let glowOpacity = min(ledItem.glowIntensity / 10.0, 1.0) // 归一化到0-1
         
         textLabel.layer.shadowColor = UIColor(hex: ledItem.textColor).cgColor
         textLabel.layer.shadowRadius = glowRadius
@@ -130,6 +160,13 @@ class LEDFullScreenViewController: UIViewController {
     }
     
     @objc private func dismissView() {
-        dismiss(animated: true)
+        // 先停止动画，再dismiss，减少卡顿
+        textLabel.layer.removeAllAnimations()
+        view.layer.removeAllAnimations()
+        
+        dismiss(animated: true) {
+            // dismiss完成后恢复竖屏
+            AppDelegate.orientationLock = .portrait
+        }
     }
 }

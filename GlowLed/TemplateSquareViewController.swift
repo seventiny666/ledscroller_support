@@ -265,8 +265,15 @@ class TemplateCategoryCell: UITableViewCell {
             }
             return items
         case .other:
-            // 返回其他所有已创建的卡片
-            return allItems.filter { !$0.isFlipClock && !$0.isNeonTemplate && !$0.isIdolTemplate && !$0.isLEDTemplate }
+            // 返回预设卡片 + 用户创建的卡片
+            let presetItems = allItems.filter { $0.isDefaultPreset }
+            let userItems = allItems.filter { 
+                !$0.isFlipClock && !$0.isNeonTemplate && !$0.isIdolTemplate && 
+                !$0.isLEDTemplate && !$0.isDefaultPreset && 
+                !$0.isFireworks && !$0.isFireworksBloom && !$0.isLoveRain
+            }
+            // 预设卡片在前，用户创建的在后
+            return presetItems + userItems
         case .neon:
             // 霓虹灯看板模版（占位）- 改为4个
             return createPlaceholderItems(category: "neon", count: 4)
