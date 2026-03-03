@@ -37,6 +37,7 @@
 /* Begin PBXFileReference section */
 		140966C82F55CD1A0095A3EA /* LEDPreviewViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LEDPreviewViewController.swift; sourceTree = "<group>"; };
 		141382192F56769B00F73105 /* LanguageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
+		141382AA2F56825C00F73105 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1413821D2F56825C00F73105 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1413821E2F56825C00F73105 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		1413821F2F56825C00F73105 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -367,6 +368,7 @@
 		1413821C2F56825C00F73105 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
+				141382AA2F56825C00F73105 /* en */,
 				1413821D2F56825C00F73105 /* de */,
 				1413821E2F56825C00F73105 /* zh-Hans */,
 				1413821F2F56825C00F73105 /* ja */,

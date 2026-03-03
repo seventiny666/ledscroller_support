@@ -75,8 +75,10 @@ class LanguageManager {
         let language = currentLanguage
         if let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj") {
             bundle = Bundle(path: path)
+            print("🔍 LanguageManager init: Bundle loaded for \(language.rawValue)")
         } else {
             bundle = Bundle.main
+            print("⚠️ LanguageManager init: Could not find bundle for \(language.rawValue), using main bundle")
         }
     }
     
