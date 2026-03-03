@@ -8,6 +8,16 @@ enum TemplateCategory: String, CaseIterable {
     case clock = "数字时钟"
     case other = "其他分类"
     
+    var localizedName: String {
+        switch self {
+        case .neon: return "neon".localized
+        case .idol: return "idol".localized
+        case .ledScreen: return "led".localized
+        case .clock: return "clock".localized
+        case .other: return "other".localized
+        }
+    }
+    
     var titleColor: UIColor {
         switch self {
         case .neon:
@@ -22,14 +32,33 @@ enum TemplateCategory: String, CaseIterable {
     }
 }
 
+// Tab类型
+enum TemplateTab: String {
+    case popular = "热门模版"
+    case animation = "动画模版"
+    
+    var localizedName: String {
+        switch self {
+        case .popular: return "popular".localized
+        case .animation: return "animation".localized
+        }
+    }
+}
+
 // 模版广场视图控制器
 class TemplateSquareViewController: UIViewController {
     
     private var tableView: UITableView!
-    private var categories: [TemplateCategory] = TemplateCategory.allCases
+    private var categories: [TemplateCategory] = []
+    private var currentTab: TemplateTab = .popular
+    private lazy var segmentedControl: UISegmentedControl = {
+        let items = [TemplateTab.popular.localizedName, TemplateTab.animation.localizedName]
+        return UISegmentedControl(items: items)
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        updateCategories()
         setupUI()
     }
     
@@ -37,31 +66,87 @@ class TemplateSquareViewController: UIViewController {
         super.viewWillAppear(animated)
         // 强制恢复竖屏
         AppDelegate.orientationLock = .portrait
+        
+        // 刷新UI以应用语言更改
+        refreshUI()
+        
+        // 强制刷新布局，修复从横屏返回后卡片尺寸异常的问题
+        tableView.reloadData()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 确保分段控制器是胶囊形状（圆角为高度的一半）
+        if segmentedControl.bounds.height > 0 {
+            segmentedControl.layer.cornerRadius = segmentedControl.bounds.height / 2
+            segmentedControl.layer.masksToBounds = true
+        }
+    }
+    
+    private func updateCategories() {
+        switch currentTab {
+        case .popular:
+            // 热门模版：霓虹灯看板、偶像应援、LED横幅
+            categories = [.neon, .idol, .ledScreen]
+        case .animation:
+            // 动画模版：数字时钟、其他分类
+            categories = [.clock, .other]
+        }
     }
     
     private func setupUI() {
-        title = "模版"
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1) // 纯黑背景
+        
+        // 隐藏导航栏标题
+        title = ""
         
         // 设置导航栏样式
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
         
-        // 标题居中，字体缩小
-        appearance.titleTextAttributes = [
-            .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 16, weight: .semibold)
-        ]
-        appearance.largeTitleTextAttributes = [
-            .foregroundColor: UIColor.white,
-            .font: UIFont.systemFont(ofSize: 28, weight: .bold)
-        ]
-        
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
-        navigationController?.navigationBar.prefersLargeTitles = false // 关闭大标题，使用普通标题居中
+        navigationController?.navigationBar.prefersLargeTitles = false
+        
+        // 设置分段控制器 - 放在导航栏标题位置
+        segmentedControl.selectedSegmentIndex = 0
+        segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
+        
+        // 自定义分段控制器样式 - 简单的胶囊背景 + 文字
+        segmentedControl.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1) // 深色胶囊背景
+        
+        if #available(iOS 13.0, *) {
+            // iOS 13+ 使用新的API
+            // 选中背景颜色（青色胶囊）
+            segmentedControl.selectedSegmentTintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        } else {
+            // iOS 12 及以下
+            segmentedControl.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        }
+        
+        // 未选中状态：白色半透明文字
+        segmentedControl.setTitleTextAttributes([
+            .foregroundColor: UIColor.white.withAlphaComponent(0.6),
+            .font: UIFont.systemFont(ofSize: 13, weight: .medium)
+        ], for: .normal)
+        
+        // 选中状态：黑色文字
+        segmentedControl.setTitleTextAttributes([
+            .foregroundColor: UIColor.black,
+            .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
+        ], for: .selected)
+        
+        // 将分段控制器设置为导航栏的titleView
+        navigationItem.titleView = segmentedControl
+        
+        // 设置分段控制器的固定尺寸（增加高度以显示内边距效果）
+        segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            segmentedControl.widthAnchor.constraint(equalToConstant: 220),
+            segmentedControl.heightAnchor.constraint(equalToConstant: 40) // 从36增加到40，让选中背景看起来有内边距
+        ])
         
         // 创建表格视图
         tableView = UITableView(frame: .zero, style: .grouped)
@@ -70,20 +155,71 @@ class TemplateSquareViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(TemplateCategoryCell.self, forCellReuseIdentifier: "CategoryCell")
-        tableView.contentInset = UIEdgeInsets(top: 10, left: 0, bottom: 20, right: 0) // 顶部10px，底部20px
+        tableView.contentInset = UIEdgeInsets(top: 14, left: 0, bottom: 20, right: 0)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            // 表格视图直接从顶部开始
+            tableView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
     
+    @objc private func segmentChanged() {
+        currentTab = segmentedControl.selectedSegmentIndex == 0 ? .popular : .animation
+        updateCategories()
+        tableView.reloadData()
+    }
+    
     func reloadData() {
         tableView.reloadData()
+    }
+    
+    private func refreshUI() {
+        // 更新分段控制器的标题
+        segmentedControl.setTitle(TemplateTab.popular.localizedName, forSegmentAt: 0)
+        segmentedControl.setTitle(TemplateTab.animation.localizedName, forSegmentAt: 1)
+        
+        // 刷新表格视图以更新分类标题
+        tableView.reloadData()
+    }
+    
+    func showToast(message: String) {
+        let toast = UILabel()
+        toast.text = message
+        toast.textColor = .white
+        toast.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        toast.font = .systemFont(ofSize: 14, weight: .medium)
+        toast.textAlignment = .center
+        toast.layer.cornerRadius = 8
+        toast.clipsToBounds = true
+        toast.numberOfLines = 0
+        toast.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(toast)
+        
+        NSLayoutConstraint.activate([
+            toast.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            toast.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            toast.widthAnchor.constraint(greaterThanOrEqualToConstant: 200),
+            toast.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        toast.alpha = 0
+        UIView.animate(withDuration: 0.3) {
+            toast.alpha = 1
+        }
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            UIView.animate(withDuration: 0.3, animations: {
+                toast.alpha = 0
+            }) { _ in
+                toast.removeFromSuperview()
+            }
+        }
     }
 }
 
@@ -101,7 +237,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "CategoryCell", for: indexPath) as! TemplateCategoryCell
         let category = categories[indexPath.section]
-        cell.configure(with: category)
+        cell.configure(with: category, tab: currentTab)
         cell.onItemTapped = { [weak self] item in
             self?.handleItemTap(item)
         }
@@ -111,8 +247,8 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let category = categories[indexPath.section]
         // 时钟分类只有1个，其他分类有4个（2行×2列）
-        // 增加高度确保底部卡片完全显示
-        return category == .clock ? 200 : 350
+        // 增加高度确保底部卡片完全显示，增加额外的20px底部空间
+        return category == .clock ? 220 : 380
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -121,39 +257,16 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         
         let category = categories[section]
         
-        // 渐变图标（圆角矩形）
-        let gradientIcon = UIView()
-        gradientIcon.layer.cornerRadius = 10.2
-        gradientIcon.clipsToBounds = true
-        gradientIcon.translatesAutoresizingMaskIntoConstraints = false
-        headerView.addSubview(gradientIcon)
-        
-        // 添加渐变层
-        let gradientLayer = CAGradientLayer()
-        gradientLayer.colors = [
-            UIColor(red: 0xC1/255.0, green: 0xFF/255.0, blue: 0xF4/255.0, alpha: 1.0).cgColor,
-            UIColor(red: 0xFF/255.0, green: 0x6B/255.0, blue: 0xD6/255.0, alpha: 1.0).cgColor
-        ]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
-        gradientLayer.frame = CGRect(x: 0, y: 0, width: 24, height: 24)
-        gradientLayer.cornerRadius = 10.2
-        gradientIcon.layer.addSublayer(gradientLayer)
-        
+        // 标题文字（去掉图标）
         let label = UILabel()
-        label.text = category.rawValue
-        label.textColor = category.titleColor // 使用分类对应的颜色
+        label.text = category.localizedName
+        label.textColor = UIColor.white.withAlphaComponent(0.9) // 白色 0.9透明度
         label.font = .systemFont(ofSize: 18, weight: .bold)
         label.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(label)
         
         NSLayoutConstraint.activate([
-            gradientIcon.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
-            gradientIcon.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
-            gradientIcon.widthAnchor.constraint(equalToConstant: 24),
-            gradientIcon.heightAnchor.constraint(equalToConstant: 24),
-            
-            label.leadingAnchor.constraint(equalTo: gradientIcon.trailingAnchor, constant: 12),
+            label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
             label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
         ])
         
@@ -161,7 +274,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return section == 0 ? 44 : 54 // 第一个section 44px，其他section 54px（44 + 10间距，再减少15px）
+        return section == 0 ? 54 : 44 // 第一个section 54px，其他section 44px
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
@@ -188,14 +301,14 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let fireworksVC = FireworksViewController()
             fireworksVC.modalPresentationStyle = .fullScreen
             present(fireworksVC, animated: true)
-        } else if item.isNeonTemplate || item.isIdolTemplate || item.isLEDTemplate {
-            // 模版卡片跳转到新的预览页面（带编辑和预览按钮）
+        } else if currentTab == .popular && (item.isNeonTemplate || item.isIdolTemplate || item.isLEDTemplate) {
+            // 热门模版：点击封面直接进入全屏预览（无按钮）
             AppDelegate.orientationLock = .landscape
-            let previewVC = LEDPreviewViewController(ledItem: item)
-            previewVC.modalPresentationStyle = .fullScreen
-            present(previewVC, animated: true)
+            let displayVC = LEDFullScreenViewController(ledItem: item)
+            displayVC.modalPresentationStyle = .fullScreen
+            present(displayVC, animated: true)
         } else {
-            // 普通LED卡片直接全屏预览
+            // 其他：普通LED卡片直接全屏预览
             AppDelegate.orientationLock = .landscape
             let displayVC = LEDFullScreenViewController(ledItem: item)
             displayVC.modalPresentationStyle = .fullScreen
@@ -209,6 +322,7 @@ class TemplateCategoryCell: UITableViewCell {
     
     private var collectionView: UICollectionView!
     private var items: [LEDItem] = []
+    private var currentTab: TemplateTab = .popular
     var onItemTapped: ((LEDItem) -> Void)?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
@@ -220,14 +334,20 @@ class TemplateCategoryCell: UITableViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 强制刷新CollectionView布局，修复从横屏返回后尺寸异常的问题
+        collectionView.collectionViewLayout.invalidateLayout()
+    }
+    
     private func setupUI() {
         backgroundColor = .clear
         selectionStyle = .none
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 12
-        layout.minimumLineSpacing = 12
+        layout.minimumInteritemSpacing = 14
+        layout.minimumLineSpacing = 14
         layout.sectionInset = UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -236,6 +356,7 @@ class TemplateCategoryCell: UITableViewCell {
         collectionView.dataSource = self
         collectionView.register(TemplateItemCell.self, forCellWithReuseIdentifier: "ItemCell")
         collectionView.isScrollEnabled = false
+        collectionView.clipsToBounds = false // 关闭裁剪，让底部卡片完全显示
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(collectionView)
         
@@ -247,7 +368,8 @@ class TemplateCategoryCell: UITableViewCell {
         ])
     }
     
-    func configure(with category: TemplateCategory) {
+    func configure(with category: TemplateCategory, tab: TemplateTab) {
+        currentTab = tab
         items = getItems(for: category)
         collectionView.reloadData()
     }
@@ -310,17 +432,36 @@ class TemplateCategoryCell: UITableViewCell {
             texts = ["TEXT 1", "TEXT 2", "TEXT 3", "TEXT 4"]
         }
         
+        // 根据分类设置不同的滚动类型
+        let scrollType: LEDItem.ScrollType
+        let speed: Double
+        switch category {
+        case "neon", "idol":
+            // 霓虹灯和偶像屏幕：使用闪烁效果
+            scrollType = .blink
+            speed = 0.5 // 闪烁速度（更快）
+        case "led":
+            // LED屏幕：从右到左滚动
+            scrollType = .scrollLeft
+            speed = 2.0 // 滚动速度
+        default:
+            scrollType = .none
+            speed = 1.5
+        }
+        
         for i in 1...count {
             let text = i <= texts.count ? texts[i - 1] : "TEXT \(i)"
+            let imageName = "\(category)_\(i)" // 例如：neon_1, idol_2, led_3
             let item = LEDItem(
                 id: "\(category)-\(i)",
                 text: text,
                 fontSize: 60, // iPhone 14样式
                 textColor: "#FFFFFF", // 白色
                 backgroundColor: "#1a1a2e",
+                backgroundImageName: imageName, // 添加背景图片
                 glowIntensity: 3.0,
-                scrollType: .scrollLeft, // 向左滚动
-                speed: 1.5
+                scrollType: scrollType,
+                speed: speed
             )
             items.append(item)
         }
@@ -337,17 +478,46 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "ItemCell", for: indexPath) as! TemplateItemCell
-        cell.configure(with: items[indexPath.item])
+        let item = items[indexPath.item]
+        cell.configure(with: item, tab: currentTab)
+        
+        if currentTab == .popular {
+            // 热门模版：只有试用按钮
+            cell.onTryTapped = { [weak self] item in
+                // 试用：进入编辑页面
+                guard let self = self else { return }
+                if let parentVC = self.parentViewController as? TemplateSquareViewController {
+                    let createVC = LEDCreateViewController(editingItem: item, isTemplateEdit: true)
+                    createVC.onSave = {
+                        parentVC.showToast(message: "saved".localized)
+                    }
+                    let nav = UINavigationController(rootViewController: createVC)
+                    nav.modalPresentationStyle = .fullScreen
+                    parentVC.present(nav, animated: true)
+                }
+            }
+            
+            cell.onPreviewTapped = { [weak self] item in
+                // 点击封面：直接进入全屏预览（无按钮）
+                self?.onItemTapped?(item)
+            }
+        } else {
+            // 动画模版：点击封面直接进入对应效果
+            cell.onPreviewTapped = { [weak self] item in
+                self?.onItemTapped?(item)
+            }
+        }
+        
         return cell
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 52) / 2 // 2列，左右各20，中间12
-        return CGSize(width: width, height: width * 0.85)
+        let width = (collectionView.bounds.width - 54) / 2 // 2列，左右各20，中间14
+        return CGSize(width: width, height: width * 0.95) // 增加高度以容纳按钮
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        onItemTapped?(items[indexPath.item])
+        // 不再需要，因为点击由cell内部处理
     }
 }
 
@@ -355,9 +525,15 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
 class TemplateItemCell: UICollectionViewCell {
     
     private let imageView = UIImageView()
-    private let titleLabel = UILabel()
     private let overlayTextLabel = UILabel() // 封面图片上的文字
+    private let titleLabel = UILabel() // 卡片下方的标题（动画模版用）
     private let containerView = UIView()
+    private let buttonStack = UIStackView() // 按钮容器
+    private let tryButton = UIButton(type: .system) // 试用按钮
+    private let previewButton = UIButton(type: .system) // 预览按钮
+    private var currentItem: LEDItem?
+    var onTryTapped: ((LEDItem) -> Void)?
+    var onPreviewTapped: ((LEDItem) -> Void)?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -370,9 +546,9 @@ class TemplateItemCell: UICollectionViewCell {
     
     private func setupUI() {
         // 容器
-        containerView.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1)
+        containerView.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.18)
         containerView.layer.cornerRadius = 16
-        containerView.clipsToBounds = true
+        containerView.clipsToBounds = false // 改为false，避免裁剪底部内容
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
         
@@ -382,11 +558,16 @@ class TemplateItemCell: UICollectionViewCell {
         imageView.layer.cornerRadius = 12
         imageView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
         imageView.translatesAutoresizingMaskIntoConstraints = false
+        imageView.isUserInteractionEnabled = true
         containerView.addSubview(imageView)
+        
+        // 添加点击手势到图片
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(imageTapped))
+        imageView.addGestureRecognizer(tapGesture)
         
         // 封面图片上的文字（霓虹效果）
         overlayTextLabel.textColor = .white
-        overlayTextLabel.font = .systemFont(ofSize: 20, weight: .bold) // 封面上的文字稍小
+        overlayTextLabel.font = .systemFont(ofSize: 20, weight: .bold)
         overlayTextLabel.textAlignment = .center
         overlayTextLabel.numberOfLines = 2
         overlayTextLabel.adjustsFontSizeToFitWidth = true
@@ -394,13 +575,44 @@ class TemplateItemCell: UICollectionViewCell {
         overlayTextLabel.translatesAutoresizingMaskIntoConstraints = false
         imageView.addSubview(overlayTextLabel)
         
-        // 标题
+        // 标题（动画模版用）
         titleLabel.textColor = .white
         titleLabel.font = .systemFont(ofSize: 13, weight: .medium)
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 1
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(titleLabel)
+        
+        // 按钮容器
+        buttonStack.axis = .horizontal
+        buttonStack.spacing = 8
+        buttonStack.distribution = .fillEqually
+        buttonStack.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(buttonStack)
+        
+        // 试用模版按钮（胶囊形状）
+        tryButton.setTitle("try".localized, for: .normal)
+        tryButton.setTitleColor(.white, for: .normal)
+        tryButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
+        tryButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.3)
+        tryButton.layer.cornerRadius = 7 // 胶囊形状（高度14px的一半）
+        tryButton.layer.masksToBounds = true
+        tryButton.layer.borderWidth = 1
+        tryButton.layer.borderColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0).cgColor
+        tryButton.addTarget(self, action: #selector(tryButtonTapped), for: .touchUpInside)
+        buttonStack.addArrangedSubview(tryButton)
+        
+        // 预览模版按钮（胶囊形状）
+        previewButton.setTitle("preview".localized, for: .normal)
+        previewButton.setTitleColor(.white, for: .normal)
+        previewButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
+        previewButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)
+        previewButton.layer.cornerRadius = 7 // 胶囊形状（高度14px的一半）
+        previewButton.layer.masksToBounds = true
+        previewButton.layer.borderWidth = 1
+        previewButton.layer.borderColor = UIColor.systemPink.cgColor
+        previewButton.addTarget(self, action: #selector(previewButtonTapped), for: .touchUpInside)
+        buttonStack.addArrangedSubview(previewButton)
         
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
@@ -409,8 +621,8 @@ class TemplateItemCell: UICollectionViewCell {
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
             imageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
-            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
-            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 9),
+            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -9),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 9.0/16.0),
             
             overlayTextLabel.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
@@ -421,23 +633,73 @@ class TemplateItemCell: UICollectionViewCell {
             titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
-            titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12)
+            titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
+            
+            buttonStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 14),
+            buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 30),
+            buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -30),
+            buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16),
+            buttonStack.heightAnchor.constraint(equalToConstant: 14) // 高度14px
         ])
     }
     
-    func configure(with item: LEDItem) {
-        titleLabel.text = item.text
-        overlayTextLabel.text = item.text // 封面图片上也显示文字
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        // 确保按钮始终是胶囊形状（圆角为高度的一半）
+        // 使用实际高度来计算，确保完美的胶囊形状
+        if tryButton.bounds.height > 0 {
+            tryButton.layer.cornerRadius = tryButton.bounds.height / 2
+        }
+        if previewButton.bounds.height > 0 {
+            previewButton.layer.cornerRadius = previewButton.bounds.height / 2
+        }
+    }
+    
+    @objc private func imageTapped() {
+        guard let item = currentItem else { return }
+        onPreviewTapped?(item)
+    }
+    
+    @objc private func tryButtonTapped() {
+        guard let item = currentItem else { return }
+        onTryTapped?(item)
+    }
+    
+    @objc private func previewButtonTapped() {
+        guard let item = currentItem else { return }
+        onPreviewTapped?(item)
+    }
+    
+    func configure(with item: LEDItem, tab: TemplateTab) {
+        currentItem = item
         
-        // 添加霓虹文字阴影效果（iPhone 14样式）
-        // text-shadow: 0 0 27px rgba(255,31,157,0.75)
-        titleLabel.layer.shadowColor = UIColor(red: 255/255.0, green: 31/255.0, blue: 157/255.0, alpha: 0.75).cgColor
-        titleLabel.layer.shadowRadius = 27
-        titleLabel.layer.shadowOpacity = 1.0
-        titleLabel.layer.shadowOffset = .zero
-        titleLabel.layer.masksToBounds = false
+        if tab == .popular {
+            // 热门模版：只显示试用按钮，隐藏预览按钮和标题
+            overlayTextLabel.text = item.text
+            overlayTextLabel.isHidden = false
+            titleLabel.isHidden = true
+            buttonStack.isHidden = false
+            tryButton.isHidden = false
+            previewButton.isHidden = true
+            
+            // 调整按钮高度
+            buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
+            buttonStack.addArrangedSubview(tryButton)
+            
+            // 强制立即布局并更新按钮圆角
+            layoutIfNeeded()
+            if tryButton.bounds.height > 0 {
+                tryButton.layer.cornerRadius = tryButton.bounds.height / 2
+            }
+        } else {
+            // 动画模版：显示标题，隐藏按钮和封面文字
+            overlayTextLabel.isHidden = true
+            titleLabel.text = item.text
+            titleLabel.isHidden = false
+            buttonStack.isHidden = true
+        }
         
-        // 封面图片上的文字也添加霓虹效果
+        // 封面图片上的文字添加霓虹效果
         overlayTextLabel.layer.shadowColor = UIColor(red: 255/255.0, green: 31/255.0, blue: 157/255.0, alpha: 0.75).cgColor
         overlayTextLabel.layer.shadowRadius = 20
         overlayTextLabel.layer.shadowOpacity = 1.0
@@ -447,12 +709,10 @@ class TemplateItemCell: UICollectionViewCell {
         // 尝试加载图片，如果没有则使用占位颜色
         if let imageName = item.imageName, !imageName.isEmpty {
             imageView.image = UIImage(named: imageName)
-            overlayTextLabel.isHidden = false // 有图片时显示文字
         } else {
             // 使用占位颜色
             imageView.image = nil
             imageView.backgroundColor = UIColor(hex: item.backgroundColor)
-            overlayTextLabel.isHidden = true // 无图片时隐藏封面文字（因为下面已经有标题了）
         }
     }
 }
@@ -483,6 +743,20 @@ extension LEDItem {
         } else if isFlipClock {
             // 翻页时钟使用 clock_1
             return "clock_1"
+        }
+        return nil
+    }
+}
+
+// UIView扩展：获取父视图控制器
+extension UIView {
+    var parentViewController: UIViewController? {
+        var parentResponder: UIResponder? = self
+        while parentResponder != nil {
+            parentResponder = parentResponder?.next
+            if let viewController = parentResponder as? UIViewController {
+                return viewController
+            }
         }
         return nil
     }

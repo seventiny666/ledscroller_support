@@ -21,7 +21,7 @@ class MyCreationsViewController: UIViewController {
     }
     
     private func setupUI() {
-        title = "我的创作" // 从"创作"改为"我的创作"
+        title = "creations".localized // 从"创作"改为"我的创作"
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1) // 纯黑背景
         
         // 导航栏样式 - 标题和按钮在同一高度（关闭大标题）
@@ -79,20 +79,20 @@ class MyCreationsViewController: UIViewController {
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         emptyStateView.addSubview(iconImageView)
         
-        // 创建按钮（圆角矩形）
+        // 创建按钮（胶囊形状）
         createButton = UIButton(type: .system)
-        createButton.setTitle("创建LED", for: .normal)
+        createButton.setTitle("createLED".localized, for: .normal)
         createButton.setTitleColor(.black, for: .normal) // 黑色文字
         createButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         createButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
-        createButton.layer.cornerRadius = 12
+        createButton.layer.cornerRadius = 25 // 胶囊形状（高度50的一半）
         createButton.addTarget(self, action: #selector(createNewLED), for: .touchUpInside)
         createButton.translatesAutoresizingMaskIntoConstraints = false
         emptyStateView.addSubview(createButton)
         
         // 提示文字（放在按钮下面）
         let hintLabel = UILabel()
-        hintLabel.text = "开始创作您的第一个LED屏幕吧"
+        hintLabel.text = "createFirstLED".localized
         hintLabel.textColor = .systemGray
         hintLabel.font = .systemFont(ofSize: 14, weight: .regular)
         hintLabel.textAlignment = .center
@@ -150,7 +150,7 @@ class MyCreationsViewController: UIViewController {
         let createVC = LEDCreateViewController()
         createVC.onSave = { [weak self] in
             self?.loadCreations()
-            self?.showToast(message: "添加成功!")
+            self?.showToast(message: "addSuccess".localized)
         }
         let nav = UINavigationController(rootViewController: createVC)
         nav.modalPresentationStyle = .fullScreen
@@ -207,11 +207,13 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        // 16:9 宽高比计算 + 时间标签高度
+        // 16:9 宽高比计算 + 时间标签高度 + 新的边距
         let screenWidth = UIScreen.main.bounds.width
-        let cardWidth = screenWidth - 60 // 左右各30px边距
+        // backgroundCard左右边距40px，containerView在backgroundCard内左右边距16px
+        let cardWidth = screenWidth - 80 - 32 // 40*2 + 16*2
         let cardHeight = cardWidth * 9 / 16
-        return cardHeight + 16 + 20 // 上下各8px边距 + 时间标签高度20px
+        // cell上边距29（从38减少9） + 下边距0（从8减少8） + backgroundCard内上边距10 + 下边距20 + 时间标签高度20 + 时间标签上边距16
+        return cardHeight + 29 + 0 + 10 + 20 + 20 + 16
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -269,7 +271,7 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
         let createVC = LEDCreateViewController(editingItem: item)
         createVC.onSave = { [weak self] in
             self?.loadCreations()
-            self?.showToast(message: "更新保存成功!")
+            self?.showToast(message: "updateSuccess".localized)
         }
         let nav = UINavigationController(rootViewController: createVC)
         nav.modalPresentationStyle = .fullScreen
@@ -277,10 +279,10 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
     }
     
     private func confirmDelete(at index: Int) {
-        let alert = UIAlertController(title: "确认删除", message: "确定要删除这个LED屏幕吗？", preferredStyle: .alert)
+        let alert = UIAlertController(title: "confirmDelete".localized, message: "confirmDeleteMessage".localized, preferredStyle: .alert)
         
-        alert.addAction(UIAlertAction(title: "取消", style: .cancel))
-        alert.addAction(UIAlertAction(title: "删除", style: .destructive) { [weak self] _ in
+        alert.addAction(UIAlertAction(title: "cancel".localized, style: .cancel))
+        alert.addAction(UIAlertAction(title: "delete".localized, style: .destructive) { [weak self] _ in
             self?.deleteCreation(at: index)
         })
         
@@ -373,6 +375,7 @@ class AddCreationTableCell: UITableViewCell {
 // MARK: - 创作内容TableCell
 class CreationTableCell: UITableViewCell {
     
+    private let backgroundCard = UIView() // 深色圆角背景
     private let containerView = UIView()
     private let previewView = UIView()
     private let backgroundImageView = UIImageView()
@@ -392,10 +395,16 @@ class CreationTableCell: UITableViewCell {
         backgroundColor = .clear
         selectionStyle = .none
         
-        // 容器视图
+        // 深色圆角背景卡片（类似设置页面的卡片样式）
+        backgroundCard.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1)
+        backgroundCard.layer.cornerRadius = 16
+        backgroundCard.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(backgroundCard)
+        
+        // 容器视图（放在backgroundCard内）
         containerView.backgroundColor = .clear
         containerView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(containerView)
+        backgroundCard.addSubview(containerView)
         
         // 预览区域
         previewView.layer.cornerRadius = 18 // 增大圆角从12到18
@@ -419,18 +428,24 @@ class CreationTableCell: UITableViewCell {
         ledTextLabel.translatesAutoresizingMaskIntoConstraints = false
         previewView.addSubview(ledTextLabel)
         
-        // 时间标签（放在卡片下面，无遮罩）
+        // 时间标签（放在卡片下面，在backgroundCard内）
         timeLabel.textColor = .systemGray
-        timeLabel.font = .systemFont(ofSize: 13, weight: .regular) // 从11改为13
+        timeLabel.font = .systemFont(ofSize: 15, weight: .regular) // 从13改为15（增大2px）
         timeLabel.textAlignment = .left
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(timeLabel)
+        backgroundCard.addSubview(timeLabel)
         
         NSLayoutConstraint.activate([
-            containerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 8),
-            containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 30), // 从16改为30
-            containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -30), // 从-16改为-30
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
+            // backgroundCard: 距离屏幕左右边距40px，顶部距离29px（从38减少9），底部距离0px（从-8增加8，总共减少17px，接近18px）
+            backgroundCard.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 29),
+            backgroundCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
+            backgroundCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
+            backgroundCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0),
+            
+            // containerView: 在backgroundCard内，上边距10px，下边距20px，左右边距16px
+            containerView.topAnchor.constraint(equalTo: backgroundCard.topAnchor, constant: 10),
+            containerView.leadingAnchor.constraint(equalTo: backgroundCard.leadingAnchor, constant: 16),
+            containerView.trailingAnchor.constraint(equalTo: backgroundCard.trailingAnchor, constant: -16),
             
             previewView.topAnchor.constraint(equalTo: containerView.topAnchor),
             previewView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
@@ -447,10 +462,14 @@ class CreationTableCell: UITableViewCell {
             ledTextLabel.leadingAnchor.constraint(equalTo: previewView.leadingAnchor, constant: 16),
             ledTextLabel.trailingAnchor.constraint(equalTo: previewView.trailingAnchor, constant: -16),
             
-            timeLabel.topAnchor.constraint(equalTo: previewView.bottomAnchor, constant: 6),
-            timeLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 4),
-            timeLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -4),
-            timeLabel.bottomAnchor.constraint(lessThanOrEqualTo: containerView.bottomAnchor)
+            // 时间标签：放在卡片下面，在backgroundCard内，下边距20px（从30减少10），上边距16px
+            timeLabel.topAnchor.constraint(equalTo: previewView.bottomAnchor, constant: 16),
+            timeLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            timeLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            timeLabel.bottomAnchor.constraint(equalTo: backgroundCard.bottomAnchor, constant: -20),
+            
+            // containerView底部约束（确保布局正确）
+            containerView.bottomAnchor.constraint(lessThanOrEqualTo: timeLabel.topAnchor, constant: -16)
         ])
     }
     

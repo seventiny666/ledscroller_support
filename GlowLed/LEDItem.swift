@@ -25,6 +25,7 @@ struct LEDItem: Codable {
         case scrollRight = "右滚"
         case scrollUp = "上滚"
         case scrollDown = "下滚"
+        case blink = "闪烁"
     }
     
     init(id: String = UUID().uuidString,
@@ -208,7 +209,7 @@ class LEDDataManager {
             ),
             LEDItem(
                 id: "flip-clock-special",
-                text: "🕐 翻页时钟",
+                text: "",
                 fontSize: 45,
                 textColor: "#FFFFFF",
                 backgroundColor: "#0D0D0D",

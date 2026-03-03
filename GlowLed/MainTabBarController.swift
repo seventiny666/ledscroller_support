@@ -30,21 +30,23 @@ class MainTabBarController: UITabBarController {
     }
     
     private func setupViewControllers() {
-        // 1. 模版
+        // 1. 首页
         let templateVC = TemplateSquareViewController()
         let templateNav = UINavigationController(rootViewController: templateVC)
+        
+        // 使用 .localized 以支持应用内语言切换
         templateNav.tabBarItem = UITabBarItem(
-            title: "模版",
+            title: "home".localized,
             image: UIImage(systemName: "square.grid.2x2"),
             selectedImage: UIImage(systemName: "square.grid.2x2.fill")
         )
         templateNav.tabBarItem.tag = 0
         
-        // 2. 创作 - 使用圆形加号图标
+        // 2. 创作
         let creationsVC = MyCreationsViewController()
         let creationsNav = UINavigationController(rootViewController: creationsVC)
         creationsNav.tabBarItem = UITabBarItem(
-            title: "创作",
+            title: "creations".localized,
             image: UIImage(systemName: "plus.circle"),
             selectedImage: UIImage(systemName: "plus.circle.fill")
         )
@@ -54,7 +56,7 @@ class MainTabBarController: UITabBarController {
         let settingsVC = SettingsViewController()
         let settingsNav = UINavigationController(rootViewController: settingsVC)
         settingsNav.tabBarItem = UITabBarItem(
-            title: "设置",
+            title: "settings".localized,
             image: UIImage(systemName: "gearshape"),
             selectedImage: UIImage(systemName: "gearshape.fill")
         )

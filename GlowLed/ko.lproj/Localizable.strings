@@ -1,0 +1,105 @@
+/* Tab Bar */
+"home" = "홈";
+"templates" = "템플릿";
+"creations" = "작품";
+"settings" = "설정";
+
+/* Template Categories */
+"neon" = "네온 스크린";
+"idol" = "아이돌 스크린";
+"led" = "LED 스크린";
+"clock" = "시계 스크린";
+"other" = "기타 스크린";
+
+/* Buttons */
+"try" = "시도";
+"preview" = "미리보기";
+"edit" = "편집";
+"save" = "저장";
+"cancel" = "취소";
+"delete" = "삭제";
+"create" = "만들기";
+"done" = "완료";
+
+/* Settings */
+"language" = "언어";
+"about" = "정보";
+"version" = "버전";
+"feedback" = "피드백";
+"rate" = "평가";
+"share" = "공유";
+"restorePurchase" = "구매 복원";
+
+/* Messages */
+"saved" = "새 페이지가 내 작품에 저장되었습니다";
+"deleted" = "삭제되었습니다";
+"error" = "작업 실패";
+"languageChanged" = "언어가 변경되었습니다";
+"restartRequired" = "새 언어 설정을 적용하려면 앱을 다시 시작하세요";
+"noRestorableItems" = "복원 가능한 구매 항목이 없습니다";
+
+/* About Messages */
+"aboutMessage" = "GlowLed - 텍스트를 빛나게 하세요\n\n전문 LED 디스플레이 시뮬레이션 앱";
+"versionMessage" = "현재 버전: 1.0\n\n사용해 주셔서 감사합니다!";
+"feedbackMessage" = "이메일을 보내주세요:\n784430005@qq.com";
+"rateMessage" = "지원해 주셔서 감사합니다!\nApp Store에서 평가해 주세요";
+
+/* Create LED */
+"createTitle" = "LED 만들기";
+"editTitle" = "LED 편집";
+"textContent" = "텍스트 내용";
+"textPlaceholder" = "LED 텍스트 입력";
+"previewText" = "미리보기";
+"fontSize" = "글꼴 크기";
+"fontSelection" = "글꼴 선택";
+"textColor" = "텍스트 색상";
+"gradientColor" = "그라데이션 색상";
+"glowIntensity" = "글로우 강도";
+"backgroundColor" = "배경색";
+"backgroundGradient" = "배경 그라데이션";
+"scrollType" = "스크롤 유형";
+"speed" = "재생 속도";
+
+/* Font Names */
+"pingfang" = "PingFang";
+"heiti" = "Heiti";
+"songti" = "Songti";
+"kaiti" = "Kaiti";
+
+/* Scroll Types */
+"static" = "정지";
+"scrollLeft" = "왼쪽 스크롤";
+"scrollRight" = "오른쪽 스크롤";
+"scrollUp" = "위로 스크롤";
+"scrollDown" = "아래로 스크롤";
+
+/* Tab Segments */
+"popular" = "인기";
+"animation" = "애니메이션";
+"font" = "글꼴";
+"background" = "배경";
+
+/* Presets */
+"happyBirthday" = "생일 축하합니다";
+"happyNewYear" = "새해 복 많이 받으세요";
+"merryChristmas" = "메리 크리스마스";
+"marryMe" = "결혼해 주세요";
+"iLoveU" = "사랑해요";
+
+/* Special Effects */
+"loveRain" = "💖 하트 비";
+"flipClock" = "디지털 시계";
+"fireworks" = "불꽃놀이";
+
+/* My Creations */
+"createFirstLED" = "첫 번째 LED 스크린을 만들어 보세요";
+"createLED" = "LED 만들기";
+"confirmDelete" = "삭제 확인";
+"confirmDeleteMessage" = "이 LED 스크린을 삭제하시겠습니까?";
+"addSuccess" = "추가되었습니다!";
+"updateSuccess" = "업데이트가 저장되었습니다!";
+
+/* Language Confirmation */
+"selectLanguage" = "언어 선택";
+"confirmLanguageTitle" = "%@을(를) 기본 언어로 설정하시겠습니까?";
+"useLanguage" = "%@ 사용";

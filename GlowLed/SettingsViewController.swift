@@ -2,6 +2,7 @@ import UIKit
 
 // 设置项
 enum SettingItem {
+    case language
     case aboutUs
     case version
     case restorePurchase
@@ -10,16 +11,18 @@ enum SettingItem {
     
     var title: String {
         switch self {
-        case .aboutUs: return "关于我们"
-        case .version: return "版本"
-        case .restorePurchase: return "恢复购买"
-        case .feedback: return "反馈意见"
-        case .rate: return "评价应用"
+        case .language: return "language".localized
+        case .aboutUs: return "about".localized
+        case .version: return "version".localized
+        case .restorePurchase: return "restorePurchase".localized
+        case .feedback: return "feedback".localized
+        case .rate: return "rate".localized
         }
     }
     
     var icon: String {
         switch self {
+        case .language: return "globe"
         case .aboutUs: return "info.circle"
         case .version: return "app.badge"
         case .restorePurchase: return "arrow.clockwise.circle"
@@ -34,7 +37,7 @@ class SettingsViewController: UIViewController {
     
     private var scrollView: UIScrollView!
     private var stackView: UIStackView!
-    private let settings: [SettingItem] = [.aboutUs, .version, .restorePurchase, .feedback, .rate]
+    private let settings: [SettingItem] = [.language, .aboutUs, .version, .restorePurchase, .feedback, .rate]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -42,7 +45,7 @@ class SettingsViewController: UIViewController {
     }
     
     private func setupUI() {
-        title = "设置"
+        title = "settings".localized
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1)
         
         // 设置导航栏样式
@@ -169,22 +172,417 @@ class SettingsViewController: UIViewController {
     
     private func handleSettingTap(_ item: SettingItem) {
         switch item {
+        case .language:
+            showLanguageSelector()
         case .aboutUs:
-            showAlert(title: "关于我们", message: "GlowLed - 让你的文字发光\n\n一款专业的LED显示屏模拟应用")
+            showAlert(title: "about".localized, message: "aboutMessage".localized)
         case .version:
-            showAlert(title: "版本信息", message: "当前版本：1.0\n\n感谢您的使用！")
+            showAlert(title: "version".localized, message: "versionMessage".localized)
         case .restorePurchase:
-            showAlert(title: "恢复购买", message: "暂无可恢复的购买项目")
+            showAlert(title: "restorePurchase".localized, message: "noRestorableItems".localized)
         case .feedback:
-            showAlert(title: "反馈意见", message: "请发送邮件至：\n784430005@qq.com")
+            showAlert(title: "feedback".localized, message: "feedbackMessage".localized)
         case .rate:
-            showAlert(title: "评价应用", message: "感谢您的支持！\n请前往App Store为我们评分")
+            showAlert(title: "rate".localized, message: "rateMessage".localized)
         }
+    }
+    
+    private func showLanguageSelector() {
+        // 使用自定义暗色弹窗
+        let languageSelectorView = LanguageSelectorView()
+        languageSelectorView.onLanguageSelected = { [weak self] language in
+            self?.confirmLanguageChange(to: language)
+        }
+        languageSelectorView.show(in: self)
+    }
+    
+    private func confirmLanguageChange(to language: LanguageManager.Language) {
+        // 如果选择的是当前语言，不需要确认
+        if language == LanguageManager.shared.currentLanguage {
+            return
+        }
+        
+        // 显示自定义确认弹窗
+        let languageName = language.displayName
+        let confirmView = LanguageConfirmView(languageName: languageName)
+        confirmView.onConfirm = { [weak self] in
+            self?.changeLanguage(to: language)
+        }
+        confirmView.show(in: self)
+    }
+    
+    private func changeLanguage(to language: LanguageManager.Language) {
+        // 保存语言设置
+        LanguageManager.shared.currentLanguage = language
+        
+        // 立即刷新整个应用界面
+        reloadApplication()
+    }
+    
+    private func reloadApplication() {
+        // 获取window scene
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first else {
+            return
+        }
+        
+        // 创建新的TabBarController
+        let newTabBarController = MainTabBarController()
+        
+        // 使用动画切换根视图控制器
+        UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {
+            window.rootViewController = newTabBarController
+        }, completion: nil)
     }
     
     private func showAlert(title: String, message: String) {
         let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        alert.addAction(UIAlertAction(title: "done".localized, style: .default))
         present(alert, animated: true)
+    }
+}
+
+
+// MARK: - 语言选择弹窗视图
+class LanguageSelectorView: UIView {
+    
+    var onLanguageSelected: ((LanguageManager.Language) -> Void)?
+    var onCancel: (() -> Void)?
+    
+    private let containerView = UIView()
+    private let titleLabel = UILabel()
+    private let scrollView = UIScrollView()
+    private let stackView = UIStackView()
+    private let cancelButton = UIButton(type: .system)
+    private weak var presentingVC: UIViewController?
+    
+    init() {
+        super.init(frame: .zero)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        // 半透明背景
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+        // 容器视图
+        containerView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
+        containerView.layer.cornerRadius = 20
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(containerView)
+        
+        // 标题
+        titleLabel.text = "language".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(titleLabel)
+        
+        // 滚动视图
+        scrollView.showsVerticalScrollIndicator = true
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(scrollView)
+        
+        // 语言列表堆栈
+        stackView.axis = .vertical
+        stackView.spacing = 0
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(stackView)
+        
+        // 添加语言选项
+        let currentLanguage = LanguageManager.shared.currentLanguage
+        for language in LanguageManager.Language.allCases {
+            let button = createLanguageButton(language: language, isSelected: language == currentLanguage)
+            stackView.addArrangedSubview(button)
+        }
+        
+        // 取消按钮（胶囊形状）
+        cancelButton.setTitle("cancel".localized, for: .normal)
+        cancelButton.setTitleColor(.white, for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        cancelButton.backgroundColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1)
+        cancelButton.layer.cornerRadius = 25 // 胶囊形状（高度50的一半）
+        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(cancelButton)
+        
+        NSLayoutConstraint.activate([
+            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            containerView.widthAnchor.constraint(equalToConstant: 300),
+            containerView.heightAnchor.constraint(lessThanOrEqualToConstant: 620),
+            
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            
+            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            scrollView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16),
+            scrollView.heightAnchor.constraint(lessThanOrEqualToConstant: 440),
+            
+            stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            stackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
+            
+            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -24),
+            cancelButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        // 添加点击背景关闭手势
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tapGesture.delegate = self
+        addGestureRecognizer(tapGesture)
+    }
+    
+    private func createLanguageButton(language: LanguageManager.Language, isSelected: Bool) -> UIButton {
+        let button = UIButton(type: .system)
+        button.setTitle(language.displayName, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 16, weight: isSelected ? .semibold : .regular)
+        button.contentHorizontalAlignment = .left
+        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        button.backgroundColor = isSelected ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.2) : .clear
+        button.layer.cornerRadius = 8
+        button.translatesAutoresizingMaskIntoConstraints = false
+        button.heightAnchor.constraint(equalToConstant: 44).isActive = true
+        
+        // 添加选中标记
+        if isSelected {
+            let checkmark = UILabel()
+            checkmark.text = "✓"
+            checkmark.textColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+            checkmark.font = .systemFont(ofSize: 18, weight: .bold)
+            checkmark.translatesAutoresizingMaskIntoConstraints = false
+            button.addSubview(checkmark)
+            
+            NSLayoutConstraint.activate([
+                checkmark.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
+                checkmark.centerYAnchor.constraint(equalTo: button.centerYAnchor)
+            ])
+        }
+        
+        button.tag = LanguageManager.Language.allCases.firstIndex(of: language) ?? 0
+        button.addTarget(self, action: #selector(languageButtonTapped(_:)), for: .touchUpInside)
+        
+        return button
+    }
+    
+    func show(in viewController: UIViewController) {
+        presentingVC = viewController
+        
+        guard let window = viewController.view.window else { return }
+        
+        frame = window.bounds
+        translatesAutoresizingMaskIntoConstraints = false
+        window.addSubview(self)
+        
+        NSLayoutConstraint.activate([
+            topAnchor.constraint(equalTo: window.topAnchor),
+            leadingAnchor.constraint(equalTo: window.leadingAnchor),
+            trailingAnchor.constraint(equalTo: window.trailingAnchor),
+            bottomAnchor.constraint(equalTo: window.bottomAnchor)
+        ])
+        
+        // 动画显示
+        alpha = 0
+        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseOut) {
+            self.alpha = 1
+            self.containerView.transform = .identity
+        }
+    }
+    
+    private func dismiss() {
+        UIView.animate(withDuration: 0.2, animations: {
+            self.alpha = 0
+            self.containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in
+            self.removeFromSuperview()
+        }
+    }
+    
+    @objc private func languageButtonTapped(_ sender: UIButton) {
+        let languages = LanguageManager.Language.allCases
+        guard sender.tag < languages.count else { return }
+        let selectedLanguage = languages[sender.tag]
+        
+        dismiss()
+        onLanguageSelected?(selectedLanguage)
+    }
+    
+    @objc private func cancelTapped() {
+        dismiss()
+        onCancel?()
+    }
+    
+    @objc private func backgroundTapped() {
+        dismiss()
+        onCancel?()
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension LanguageSelectorView: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // 只有点击背景时才触发，点击容器内部不触发
+        return touch.view == self
+    }
+}
+
+// MARK: - 语言确认弹窗视图
+class LanguageConfirmView: UIView {
+    
+    var onConfirm: (() -> Void)?
+    var onCancel: (() -> Void)?
+    
+    private let containerView = UIView()
+    private let titleLabel = UILabel()
+    private let confirmButton = UIButton(type: .system)
+    private let cancelButton = UIButton(type: .system)
+    private weak var presentingVC: UIViewController?
+    
+    init(languageName: String) {
+        super.init(frame: .zero)
+        setupUI(languageName: languageName)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI(languageName: String) {
+        // 半透明背景
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+        // 容器视图
+        containerView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
+        containerView.layer.cornerRadius = 20
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(containerView)
+        
+        // 标题
+        titleLabel.text = "selectLanguage".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(titleLabel)
+        
+        // 确认按钮（胶囊形状）
+        let useLanguageText = String(format: "useLanguage".localized, languageName)
+        confirmButton.setTitle(useLanguageText, for: .normal)
+        confirmButton.setTitleColor(.black, for: .normal)
+        confirmButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        confirmButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        confirmButton.layer.cornerRadius = 25 // 胶囊形状（高度50的一半）
+        confirmButton.addTarget(self, action: #selector(confirmTapped), for: .touchUpInside)
+        confirmButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(confirmButton)
+        
+        // 取消按钮（胶囊形状）
+        cancelButton.setTitle("cancel".localized, for: .normal)
+        cancelButton.setTitleColor(.white, for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        cancelButton.backgroundColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1)
+        cancelButton.layer.cornerRadius = 25 // 胶囊形状（高度50的一半）
+        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(cancelButton)
+        
+        NSLayoutConstraint.activate([
+            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            containerView.widthAnchor.constraint(equalToConstant: 280),
+            
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            
+            confirmButton.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 24),
+            confirmButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            confirmButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            confirmButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            cancelButton.topAnchor.constraint(equalTo: confirmButton.bottomAnchor, constant: 12),
+            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            cancelButton.heightAnchor.constraint(equalToConstant: 50),
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -24)
+        ])
+        
+        // 添加点击背景关闭手势
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tapGesture.delegate = self
+        addGestureRecognizer(tapGesture)
+    }
+    
+    func show(in viewController: UIViewController) {
+        presentingVC = viewController
+        
+        guard let window = viewController.view.window else { return }
+        
+        frame = window.bounds
+        translatesAutoresizingMaskIntoConstraints = false
+        window.addSubview(self)
+        
+        NSLayoutConstraint.activate([
+            topAnchor.constraint(equalTo: window.topAnchor),
+            leadingAnchor.constraint(equalTo: window.leadingAnchor),
+            trailingAnchor.constraint(equalTo: window.trailingAnchor),
+            bottomAnchor.constraint(equalTo: window.bottomAnchor)
+        ])
+        
+        // 动画显示
+        alpha = 0
+        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: .curveEaseOut) {
+            self.alpha = 1
+            self.containerView.transform = .identity
+        }
+    }
+    
+    private func dismiss() {
+        UIView.animate(withDuration: 0.2, animations: {
+            self.alpha = 0
+            self.containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in
+            self.removeFromSuperview()
+        }
+    }
+    
+    @objc private func confirmTapped() {
+        dismiss()
+        onConfirm?()
+    }
+    
+    @objc private func cancelTapped() {
+        dismiss()
+        onCancel?()
+    }
+    
+    @objc private func backgroundTapped() {
+        dismiss()
+        onCancel?()
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension LanguageConfirmView: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        // 只有点击背景时才触发，点击容器内部不触发
+        return touch.view == self
     }
 }

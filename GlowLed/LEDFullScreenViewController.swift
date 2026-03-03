@@ -61,8 +61,10 @@ class LEDFullScreenViewController: UIViewController {
     }
     
     private func setupUI() {
-        // 设置背景（图片或颜色）
-        if let imageName = ledItem.backgroundImageName, let image = UIImage(named: imageName) {
+        // 设置背景（优先使用backgroundImageName，如果没有则使用imageName，最后才用颜色）
+        let imageNameToUse = ledItem.backgroundImageName ?? ledItem.imageName
+        
+        if let imageName = imageNameToUse, !imageName.isEmpty, let image = UIImage(named: imageName) {
             // 显示背景图片
             backgroundImageView.image = image
             backgroundImageView.contentMode = .scaleAspectFill
@@ -84,10 +86,24 @@ class LEDFullScreenViewController: UIViewController {
         }
         
         textLabel.text = ledItem.text
-        textLabel.font = UIFont(name: ledItem.fontName, size: ledItem.fontSize) ?? .boldSystemFont(ofSize: ledItem.fontSize)
+        
+        // 根据屏幕尺寸动态调整字体大小
+        // 横屏时屏幕更大，需要放大字体以保持视觉比例
+        let screenWidth = UIScreen.main.bounds.width
+        let screenHeight = UIScreen.main.bounds.height
+        let maxDimension = max(screenWidth, screenHeight) // 横屏时的长边
+        
+        // 计算缩放比例：以iPhone 14 Pro的宽度(393)为基准
+        // 横屏时长边约为852，所以缩放比例约为2.17
+        let scaleFactor = maxDimension / 393.0
+        let adjustedFontSize = ledItem.fontSize * scaleFactor
+        
+        textLabel.font = UIFont(name: ledItem.fontName, size: adjustedFontSize) ?? .boldSystemFont(ofSize: adjustedFontSize)
         textLabel.textColor = UIColor(hex: ledItem.textColor)
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0
+        textLabel.adjustsFontSizeToFitWidth = true
+        textLabel.minimumScaleFactor = 0.3
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
         
@@ -119,7 +135,11 @@ class LEDFullScreenViewController: UIViewController {
     private func startAnimation() {
         switch ledItem.scrollType {
         case .none:
-            break
+            // 无滚动时添加闪动效果
+            animateBlink()
+        case .blink:
+            // 快速闪烁效果（用于霓虹灯和偶像屏幕）
+            animateFastBlink()
         case .scrollLeft:
             animateScrollLeft()
         case .scrollRight:
@@ -129,6 +149,28 @@ class LEDFullScreenViewController: UIViewController {
         case .scrollDown:
             animateScrollDown()
         }
+    }
+    
+    // 闪动动画（慢速）
+    private func animateBlink() {
+        let animation = CABasicAnimation(keyPath: "opacity")
+        animation.fromValue = 1.0
+        animation.toValue = 0.3
+        animation.duration = 0.8
+        animation.autoreverses = true
+        animation.repeatCount = .infinity
+        textLabel.layer.add(animation, forKey: "blinkAnimation")
+    }
+    
+    // 快速闪烁动画（用于霓虹灯和偶像屏幕）
+    private func animateFastBlink() {
+        let animation = CABasicAnimation(keyPath: "opacity")
+        animation.fromValue = 1.0
+        animation.toValue = 0.4
+        animation.duration = 0.3 // 更快的闪烁频率
+        animation.autoreverses = true
+        animation.repeatCount = .infinity
+        textLabel.layer.add(animation, forKey: "blinkAnimation")
     }
     
     private func animateScrollLeft() {

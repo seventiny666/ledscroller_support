@@ -44,21 +44,29 @@ class LEDPreviewViewController: UIViewController {
             backgroundImageView.backgroundColor = UIColor(hex: ledItem.backgroundColor)
         }
         
-        // LED文字
+        // LED文字 - 动态计算字体大小（屏幕高度的70%）
+        let screenHeight = UIScreen.main.bounds.height
+        let fontSize = screenHeight * 0.7 / 1.2 // 除以1.2是因为字体实际高度约为fontSize的1.2倍
+        
         textLabel.text = ledItem.text
-        textLabel.font = UIFont(name: ledItem.fontName, size: ledItem.fontSize) ?? .boldSystemFont(ofSize: ledItem.fontSize)
-        textLabel.textColor = UIColor(hex: ledItem.textColor)
+        textLabel.font = .boldSystemFont(ofSize: fontSize)
+        textLabel.textColor = .white
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0
+        textLabel.adjustsFontSizeToFitWidth = true
+        textLabel.minimumScaleFactor = 0.3
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
 
-        // 霓虹效果
-        textLabel.layer.shadowColor = UIColor(hex: ledItem.textColor).cgColor
-        textLabel.layer.shadowRadius = 15 * ledItem.glowIntensity
-        textLabel.layer.shadowOpacity = Float(ledItem.glowIntensity * 0.8)
+        // 粉色霓虹效果
+        textLabel.layer.shadowColor = UIColor(red: 255/255.0, green: 31/255.0, blue: 157/255.0, alpha: 0.75).cgColor
+        textLabel.layer.shadowRadius = 27
+        textLabel.layer.shadowOpacity = 1.0
         textLabel.layer.shadowOffset = .zero
         textLabel.layer.masksToBounds = false
+        
+        // 添加闪动动画
+        startBlinkAnimation()
         
         // 按钮容器
         let buttonStack = UIStackView()
@@ -68,8 +76,8 @@ class LEDPreviewViewController: UIViewController {
         buttonStack.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(buttonStack)
         
-        // 编辑按钮
-        editButton.setTitle("编辑", for: .normal)
+        // 编辑按钮改为"试用模版"
+        editButton.setTitle("试用模版", for: .normal)
         editButton.setTitleColor(.white, for: .normal)
         editButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         editButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.3)
@@ -79,8 +87,8 @@ class LEDPreviewViewController: UIViewController {
         editButton.addTarget(self, action: #selector(editTapped), for: .touchUpInside)
         buttonStack.addArrangedSubview(editButton)
         
-        // 预览按钮
-        previewButton.setTitle("预览", for: .normal)
+        // 预览按钮改为"预览模版"
+        previewButton.setTitle("预览模版", for: .normal)
         previewButton.setTitleColor(.white, for: .normal)
         previewButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         previewButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)
@@ -142,6 +150,17 @@ class LEDPreviewViewController: UIViewController {
     
     @objc private func closeTapped() {
         dismiss(animated: true)
+    }
+    
+    // 闪动动画
+    private func startBlinkAnimation() {
+        let animation = CABasicAnimation(keyPath: "opacity")
+        animation.fromValue = 1.0
+        animation.toValue = 0.3
+        animation.duration = 0.8
+        animation.autoreverses = true
+        animation.repeatCount = .infinity
+        textLabel.layer.add(animation, forKey: "blinkAnimation")
     }
 
     private func showToast(message: String) {
