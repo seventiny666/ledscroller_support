@@ -81,6 +81,11 @@
 "animation" = "Animação";
 "font" = "Fonte";
 "background" = "Fundo";
+"border" = "Borda";
+"gradientBackground" = "Fundo Gradiente";
+"marqueeBorder" = "Borda Marquise";
+"marqueeBorderDesc" = "Borda marquise de pontos LED retangulares arredondados, um círculo de pontos que fluem e brilham";
+"lightBoardBorder" = "Borda de Painel Luminoso";
 
 /* Presets */
 "happyBirthday" = "FELIZ ANIVERSÁRIO";

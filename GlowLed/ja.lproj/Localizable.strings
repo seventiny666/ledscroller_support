@@ -81,6 +81,11 @@
 "animation" = "アニメーション";
 "font" = "フォント";
 "background" = "背景";
+"border" = "ボーダー";
+"gradientBackground" = "グラデーション背景";
+"marqueeBorder" = "マーキーボーダー";
+"marqueeBorderDesc" = "角丸長方形LEDドットボーダーマーキー、流れて光るドットの円";
+"lightBoardBorder" = "ライトボードボーダー";
 
 /* Presets */
 "happyBirthday" = "お誕生日おめでとう";

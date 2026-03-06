@@ -12,6 +12,8 @@ struct LEDItem: Codable {
     var scrollType: ScrollType
     var speed: CGFloat
     var fontName: String
+    var borderStyle: Int? // 跑马灯边框样式索引（0-11对应12种样式，nil表示无边框）
+    var lightBoardStyle: Int? // 灯牌边框样式索引（0-7对应8种样式，nil表示无边框）
     var isFireworks: Bool // 标识是否为烟花效果
     var isFireworksBloom: Bool // 标识是否为烟花绽放效果（第二种）
     var isFlipClock: Bool // 标识是否为翻页时钟效果
@@ -38,6 +40,8 @@ struct LEDItem: Codable {
          scrollType: ScrollType = .none,
          speed: CGFloat = 1.0,
          fontName: String = "PingFangSC-Regular",
+         borderStyle: Int? = nil, // 跑马灯边框样式
+         lightBoardStyle: Int? = nil, // 灯牌边框样式
          isFireworks: Bool = false,
          isFireworksBloom: Bool = false,
          isFlipClock: Bool = false,
@@ -54,6 +58,8 @@ struct LEDItem: Codable {
         self.scrollType = scrollType
         self.speed = speed
         self.fontName = fontName
+        self.borderStyle = borderStyle
+        self.lightBoardStyle = lightBoardStyle
         self.isFireworks = isFireworks
         self.isFireworksBloom = isFireworksBloom
         self.isFlipClock = isFlipClock

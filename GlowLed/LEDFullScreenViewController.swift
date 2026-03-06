@@ -5,6 +5,8 @@ class LEDFullScreenViewController: UIViewController {
     
     private let ledItem: LEDItem
     private let backgroundImageView = UIImageView() // 背景图片视图
+    private let borderView = MarqueeBorderView(displayMode: .fullScreen) // 跑马灯边框视图
+    private let lightBoardView = LightBoardBorderView() // 灯牌边框视图
     private let textLabel = UILabel()
     private var displayLink: CADisplayLink?
     
@@ -85,18 +87,57 @@ class LEDFullScreenViewController: UIViewController {
             view.backgroundColor = UIColor(hex: ledItem.backgroundColor)
         }
         
+        // 设置边框
+        borderView.setAnimated(true) // 全屏页面的边框启用动画
+        borderView.translatesAutoresizingMaskIntoConstraints = false
+        borderView.isHidden = true // 默认隐藏
+        view.addSubview(borderView)
+        
+        // 灯牌边框视图
+        lightBoardView.translatesAutoresizingMaskIntoConstraints = false
+        lightBoardView.isHidden = true // 默认隐藏
+        view.addSubview(lightBoardView)
+        
+        if let borderStyleIndex = ledItem.borderStyle,
+           borderStyleIndex >= 0 && borderStyleIndex < MarqueeBorderStyle.allCases.count {
+            let style = MarqueeBorderStyle.allCases[borderStyleIndex]
+            borderView.setStyle(style)
+            borderView.isHidden = false
+            lightBoardView.isHidden = true
+        } else if let lightBoardStyleIndex = ledItem.lightBoardStyle,
+                  lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
+            let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
+            lightBoardView.setStyle(style)
+            lightBoardView.isHidden = false
+            borderView.isHidden = true
+        } else {
+            borderView.isHidden = true
+            lightBoardView.isHidden = true
+        }
+        
+        NSLayoutConstraint.activate([
+            borderView.topAnchor.constraint(equalTo: view.topAnchor),
+            borderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            borderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            borderView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            lightBoardView.topAnchor.constraint(equalTo: view.topAnchor),
+            lightBoardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            lightBoardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            lightBoardView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+        
         textLabel.text = ledItem.text
         
-        // 根据屏幕尺寸动态调整字体大小
-        // 横屏时屏幕更大，需要放大字体以保持视觉比例
+        // 统一字体大小计算：基于全屏横屏尺寸等比缩放
+        // 全屏横屏基准：852px宽度（iPhone 14 Pro横屏）
+        // fontSize值对应全屏横屏时的实际pt大小
         let screenWidth = UIScreen.main.bounds.width
         let screenHeight = UIScreen.main.bounds.height
-        let maxDimension = max(screenWidth, screenHeight) // 横屏时的长边
+        let landscapeWidth = max(screenWidth, screenHeight) // 横屏宽度
         
-        // 计算缩放比例：以iPhone 14 Pro的宽度(393)为基准
-        // 横屏时长边约为852，所以缩放比例约为2.17
-        let scaleFactor = maxDimension / 393.0
-        let adjustedFontSize = ledItem.fontSize * scaleFactor
+        // 直接使用fontSize值，这就是全屏横屏时的实际大小
+        let adjustedFontSize = ledItem.fontSize
         
         textLabel.font = UIFont(name: ledItem.fontName, size: adjustedFontSize) ?? .boldSystemFont(ofSize: adjustedFontSize)
         textLabel.textColor = UIColor(hex: ledItem.textColor)

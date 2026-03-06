@@ -5,6 +5,8 @@ class LEDPreviewViewController: UIViewController {
     
     private let ledItem: LEDItem
     private let backgroundImageView = UIImageView()
+    private let borderView = MarqueeBorderView() // 跑马灯边框视图
+    private let lightBoardView = LightBoardBorderView() // 灯牌边框视图
     private let textLabel = UILabel()
     private let editButton = UIButton(type: .system)
     private let previewButton = UIButton(type: .system)
@@ -55,6 +57,17 @@ class LEDPreviewViewController: UIViewController {
         backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
         previewContainer.addSubview(backgroundImageView)
         
+        // 边框视图
+        borderView.setAnimated(true) // 预览页面的边框启用动画
+        borderView.translatesAutoresizingMaskIntoConstraints = false
+        borderView.isHidden = true // 默认隐藏
+        previewContainer.addSubview(borderView)
+        
+        // 灯牌边框视图
+        lightBoardView.translatesAutoresizingMaskIntoConstraints = false
+        lightBoardView.isHidden = true // 默认隐藏
+        previewContainer.addSubview(lightBoardView)
+        
         // 设置背景（图片或颜色）
         if let imageName = ledItem.imageName, !imageName.isEmpty, let image = UIImage(named: imageName) {
             backgroundImageView.image = image
@@ -62,11 +75,34 @@ class LEDPreviewViewController: UIViewController {
             backgroundImageView.backgroundColor = UIColor(hex: ledItem.backgroundColor)
         }
         
-        // LED文字 - 使用与创作页面相同的动态字体大小计算
+        // 设置边框
+        if let borderStyleIndex = ledItem.borderStyle,
+           borderStyleIndex >= 0 && borderStyleIndex < MarqueeBorderStyle.allCases.count {
+            let style = MarqueeBorderStyle.allCases[borderStyleIndex]
+            borderView.setStyle(style)
+            borderView.isHidden = false
+            lightBoardView.isHidden = true
+        } else if let lightBoardStyleIndex = ledItem.lightBoardStyle,
+                  lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
+            let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
+            lightBoardView.setStyle(style)
+            lightBoardView.isHidden = false
+            borderView.isHidden = true
+        } else {
+            borderView.isHidden = true
+            lightBoardView.isHidden = true
+        }
+        
+        // LED文字 - 统一字体大小计算：基于全屏横屏尺寸等比缩放
+        // 全屏横屏基准：852px宽度（iPhone 14 Pro横屏）
+        // fontSize值对应全屏横屏时的实际pt大小
         let containerWidth = UIScreen.main.bounds.width - 120 // 左右各60px边距
-        let containerHeight = containerWidth * (9.0/19.5) // 19.5:9比例
-        let maxTextHeight = containerHeight * 0.95
-        let calculatedFontSize = maxTextHeight * (ledItem.fontSize / 100.0)
+        let _ = containerWidth * (9.0/19.5) // 19.5:9比例
+        let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+        
+        // 按容器宽度比例缩放字体
+        let scaleFactor = containerWidth / landscapeWidth
+        let calculatedFontSize = ledItem.fontSize * scaleFactor
         
         textLabel.text = ledItem.text
         textLabel.font = UIFont(name: ledItem.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
@@ -141,6 +177,18 @@ class LEDPreviewViewController: UIViewController {
             backgroundImageView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
             backgroundImageView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
             backgroundImageView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
+            
+            // 边框视图填满预览容器
+            borderView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+            borderView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+            borderView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+            borderView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
+            
+            // 灯牌边框视图填满预览容器
+            lightBoardView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+            lightBoardView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+            lightBoardView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+            lightBoardView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
             
             // 文字居中显示
             textLabel.centerXAnchor.constraint(equalTo: previewContainer.centerXAnchor),

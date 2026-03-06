@@ -81,6 +81,11 @@
 "animation" = "Animation";
 "font" = "Police";
 "background" = "Fond";
+"border" = "Bordure";
+"gradientBackground" = "Fond Dégradé";
+"marqueeBorder" = "Bordure Défilante";
+"marqueeBorderDesc" = "Bordure défilante de points LED rectangulaires arrondis, un cercle de points qui coulent et brillent";
+"lightBoardBorder" = "Bordure de Panneau Lumineux";
 
 /* Presets */
 "happyBirthday" = "JOYEUX ANNIVERSAIRE";

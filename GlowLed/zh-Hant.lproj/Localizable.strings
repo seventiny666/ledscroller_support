@@ -92,6 +92,11 @@
 "animation" = "動畫";
 "font" = "字體";
 "background" = "背景";
+"border" = "邊框";
+"gradientBackground" = "漸變背景";
+"marqueeBorder" = "跑馬燈邊框";
+"marqueeBorderDesc" = "圓角矩形LED圓點邊框跑馬燈，一圈圓點流動發光";
+"lightBoardBorder" = "燈牌邊框";
 
 /* Presets */
 "happyBirthday" = "生日快樂";

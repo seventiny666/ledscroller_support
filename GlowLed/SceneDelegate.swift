@@ -86,23 +86,29 @@ class LaunchAnimationViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1)
+        view.backgroundColor = UIColor.black // 纯黑背景更突出霓虹效果
         
         // GlowLed Logo文字
         logoLabel.text = "GlowLed"
-        logoLabel.font = .boldSystemFont(ofSize: 48)
-        logoLabel.textColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        logoLabel.font = .boldSystemFont(ofSize: 52) // 稍微增大字体
+        logoLabel.textColor = UIColor(red: 0x00/255.0, green: 0xFF/255.0, blue: 0xFF/255.0, alpha: 1.0) // 更鲜艳的青色
         logoLabel.textAlignment = .center
         logoLabel.alpha = 0
-        logoLabel.transform = CGAffineTransform(scaleX: 0.5, y: 0.5)
+        logoLabel.transform = CGAffineTransform(scaleX: 0.3, y: 0.3) // 从更小开始
         logoLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(logoLabel)
         
-        // 添加霓虹发光效果
-        logoLabel.layer.shadowColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0).cgColor
-        logoLabel.layer.shadowRadius = 20
-        logoLabel.layer.shadowOpacity = 0.8
+        // 添加多层霓虹发光效果
+        logoLabel.layer.shadowColor = UIColor(red: 0x00/255.0, green: 0xFF/255.0, blue: 0xFF/255.0, alpha: 1.0).cgColor
+        logoLabel.layer.shadowRadius = 25
+        logoLabel.layer.shadowOpacity = 1.0
         logoLabel.layer.shadowOffset = .zero
+        
+        // 添加外层发光
+        let outerGlow = CALayer()
+        outerGlow.backgroundColor = UIColor(red: 0x00/255.0, green: 0xFF/255.0, blue: 0xFF/255.0, alpha: 0.3).cgColor
+        outerGlow.cornerRadius = 30
+        view.layer.insertSublayer(outerGlow, below: logoLabel.layer)
         
         NSLayoutConstraint.activate([
             logoLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -111,30 +117,43 @@ class LaunchAnimationViewController: UIViewController {
     }
     
     private func startAnimation() {
-        // 第一阶段：淡入+放大
-        UIView.animate(withDuration: 0.8, delay: 0.2, usingSpringWithDamping: 0.6, initialSpringVelocity: 0.5, options: .curveEaseOut, animations: {
+        // 第一阶段：快速闪现 + 弹性放大
+        UIView.animate(withDuration: 0.1, delay: 0.1, options: .curveEaseOut, animations: {
             self.logoLabel.alpha = 1.0
-            self.logoLabel.transform = .identity
         }) { _ in
-            // 第二阶段：脉动效果
-            self.pulseAnimation()
+            // 第二阶段：弹性放大到正常大小
+            UIView.animate(withDuration: 0.8, delay: 0, usingSpringWithDamping: 0.5, initialSpringVelocity: 1.0, options: .curveEaseOut, animations: {
+                self.logoLabel.transform = .identity
+                self.logoLabel.layer.shadowRadius = 35
+            }) { _ in
+                // 第三阶段：连续脉动效果
+                self.continuousPulseAnimation()
+            }
         }
     }
     
-    private func pulseAnimation() {
-        UIView.animate(withDuration: 0.6, delay: 0, options: [.autoreverse], animations: {
-            self.logoLabel.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
-            self.logoLabel.layer.shadowRadius = 30
-        }) { _ in
-            // 第三阶段：淡出
+    private func continuousPulseAnimation() {
+        // 连续脉动3次
+        UIView.animate(withDuration: 0.4, delay: 0, options: [.autoreverse, .repeat], animations: {
+            self.logoLabel.transform = CGAffineTransform(scaleX: 1.15, y: 1.15)
+            self.logoLabel.layer.shadowRadius = 45
+            // 颜色变化效果
+            self.logoLabel.textColor = UIColor(red: 0xFF/255.0, green: 0x00/255.0, blue: 0xFF/255.0, alpha: 1.0) // 变为洋红色
+            self.logoLabel.layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x00/255.0, blue: 0xFF/255.0, alpha: 1.0).cgColor
+        })
+        
+        // 2秒后停止脉动并淡出
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            self.logoLabel.layer.removeAllAnimations()
             self.fadeOutAnimation()
         }
     }
     
     private func fadeOutAnimation() {
-        UIView.animate(withDuration: 0.5, delay: 0.3, options: .curveEaseIn, animations: {
+        UIView.animate(withDuration: 0.6, delay: 0.2, options: .curveEaseIn, animations: {
             self.logoLabel.alpha = 0
-            self.logoLabel.transform = CGAffineTransform(scaleX: 1.2, y: 1.2)
+            self.logoLabel.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+            self.logoLabel.layer.shadowRadius = 60 // 最后一次强烈发光
         }) { _ in
             // 动画完成，通知回调
             self.onAnimationComplete?()

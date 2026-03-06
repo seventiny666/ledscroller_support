@@ -92,7 +92,11 @@
 "animation" = "Animation";
 "font" = "Font";
 "background" = "Background";
+"border" = "Border";
 "gradientBackground" = "Gradient Background";
+"marqueeBorder" = "Marquee Border";
+"marqueeBorderDesc" = "Rounded rectangle LED dot border marquee, a circle of dots flowing and glowing";
+"lightBoardBorder" = "Light Board Border";
 
 /* Presets */
 "happyBirthday" = "HAPPY BIRTHDAY";

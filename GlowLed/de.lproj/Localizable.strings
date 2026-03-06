@@ -81,6 +81,11 @@
 "animation" = "Animation";
 "font" = "Schrift";
 "background" = "Hintergrund";
+"border" = "Rahmen";
+"gradientBackground" = "Verlaufshintergrund";
+"marqueeBorder" = "Laufschrift-Rahmen";
+"marqueeBorderDesc" = "Abgerundeter rechteckiger LED-Punkt-Rahmen-Laufschrift, ein Kreis von fließenden und leuchtenden Punkten";
+"lightBoardBorder" = "Leuchtschild-Rahmen";
 
 /* Presets */
 "happyBirthday" = "ALLES GUTE ZUM GEBURTSTAG";

@@ -15,9 +15,10 @@ class LEDCreateViewController: UIViewController {
     private var textField = UITextField()
     
     // Tab切换
-    private let tabSegment = UISegmentedControl(items: ["font".localized, "background".localized, "animation".localized])
+    private let tabSegment = UISegmentedControl(items: ["font".localized, "background".localized, "border".localized, "animation".localized])
     private var fontTabView: UIView!
     private var backgroundTabView: UIView!
+    private var borderTabView: UIView!
     private var animationTabView: UIView!
     
     // 字体Tab控件
@@ -51,10 +52,11 @@ class LEDCreateViewController: UIViewController {
     private var selectedBackgroundImage: String? = nil // 保存选中的背景图片名称
     private var previewBackgroundImageView: UIImageView! // 预览区域的背景图片视图
     
-    // 文字颜色：合并为1行，可滑动（14个颜色）
+    // 文字颜色：合并为1行，可滑动（15个颜色，第一个为自定义颜色选择器）
     private let textColors = [
-        "#FF00FF", "#00FFFF", "#FFD700", "#FF1493", "#00FF00", "#FF4500", "#FFFFFF",
-        "#FF69B4", "#8B00FF", "#00CED1", "#FFB6C1", "#32CD32", "#FF8C00", "#F0E68C"
+        "CUSTOM", // 自定义颜色选择器
+        "#FF00FF", "#00FFFF", "#FFD700", "#FF1493", "#00FF00", "#FF4500",
+        "#FF69B4", "#8B00FF", "#00CED1", "#FFB6C1", "#32CD32", "#FF8C00", "#F0E68C", "#FFFFFF"
     ]
     
     // 渐变颜色：合并为1行，可滑动（14个渐变）
@@ -281,9 +283,10 @@ class LEDCreateViewController: UIViewController {
         
         yOffset += 55
         
-        // 创建三个Tab视图
+        // 创建四个Tab视图
         setupFontTab(yOffset: yOffset)
         setupBackgroundTab(yOffset: yOffset)
+        setupBorderTab(yOffset: yOffset)
         setupAnimationTab(yOffset: yOffset)
         
         // 默认显示字体Tab
@@ -536,6 +539,126 @@ class LEDCreateViewController: UIViewController {
         tabYOffset += 60 // 统一间距，最后一个区域
     }
     
+    private func setupBorderTab(yOffset: CGFloat) {
+        borderTabView = UIView()
+        borderTabView.translatesAutoresizingMaskIntoConstraints = false
+        borderTabView.isHidden = true
+        contentView.addSubview(borderTabView)
+        
+        NSLayoutConstraint.activate([
+            borderTabView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
+            borderTabView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            borderTabView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            borderTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 600)
+        ])
+        
+        var tabYOffset: CGFloat = 0
+        
+        // 跑马灯边框（12个样式，3行4列）
+        addSectionLabelToView(borderTabView, text: "marqueeBorder".localized, yOffset: &tabYOffset)
+        
+        // 第1行（样式0-3）
+        let marqueeRow1 = createMarqueeBorderStack(startIndex: 0, count: 4, tag: 600)
+        borderTabView.addSubview(marqueeRow1)
+        NSLayoutConstraint.activate([
+            marqueeRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            marqueeRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 30),
+            marqueeRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -30),
+            marqueeRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 70
+        
+        // 第2行（样式4-7）
+        let marqueeRow2 = createMarqueeBorderStack(startIndex: 4, count: 4, tag: 604)
+        borderTabView.addSubview(marqueeRow2)
+        NSLayoutConstraint.activate([
+            marqueeRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            marqueeRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 30),
+            marqueeRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -30),
+            marqueeRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 70
+        
+        // 第3行（样式8-11）
+        let marqueeRow3 = createMarqueeBorderStack(startIndex: 8, count: 4, tag: 608)
+        borderTabView.addSubview(marqueeRow3)
+        NSLayoutConstraint.activate([
+            marqueeRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            marqueeRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 30),
+            marqueeRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -30),
+            marqueeRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 80
+    }
+    
+    // 创建跑马灯边框选择器（一行4个按钮）
+    private func createMarqueeBorderStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let buttons = (0..<count).map { index -> UIButton in
+            let btn = UIButton(type: .system)
+            let styleIndex = startIndex + index
+            
+            // 创建跑马灯边框预览视图（静态显示）
+            let borderView = MarqueeBorderView(isPreviewMode: false)
+            borderView.setStyle(MarqueeBorderStyle(rawValue: styleIndex) ?? .style1)
+            borderView.setAnimated(false) // 选择面板中静态显示
+            borderView.isUserInteractionEnabled = false
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            btn.addSubview(borderView)
+            
+            // 设置深色背景
+            btn.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+            btn.layer.cornerRadius = 8
+            btn.layer.borderWidth = 2
+            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.clipsToBounds = true
+            btn.tag = tag + index
+            btn.addTarget(self, action: #selector(marqueeBorderButtonTapped(_:)), for: .touchUpInside)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            
+            // 边框视图填充按钮
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: btn.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
+            ])
+            
+            return btn
+        }
+        
+        let stack = UIStackView(arrangedSubviews: buttons)
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 为每个按钮设置16:9比例
+        buttons.forEach { btn in
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+        }
+        
+        return stack
+    }
+    
+    @objc private func marqueeBorderButtonTapped(_ sender: UIButton) {
+        let styleIndex = sender.tag - 600
+        
+        // 更新选中状态
+        for i in 0..<12 {
+            if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                button.layer.borderWidth = (i == styleIndex) ? 3 : 2
+                button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+            }
+        }
+        
+        // 更新当前项的边框样式
+        currentItem.borderStyle = styleIndex
+        currentItem.lightBoardStyle = nil // 清除灯牌边框
+        
+        // 更新预览
+        updatePreview()
+    }
+    
     private func setupAnimationTab(yOffset: CGFloat) {
         animationTabView = UIView()
         animationTabView.translatesAutoresizingMaskIntoConstraints = false
@@ -752,7 +875,8 @@ class LEDCreateViewController: UIViewController {
     private func showTab(index: Int) {
         fontTabView.isHidden = (index != 0)
         backgroundTabView.isHidden = (index != 1)
-        animationTabView.isHidden = (index != 2)
+        borderTabView.isHidden = (index != 2)
+        animationTabView.isHidden = (index != 3)
     }
     
     // 创建简单的文字输入框
@@ -814,10 +938,49 @@ class LEDCreateViewController: UIViewController {
     private func createColorStack(colors: [String], tag: Int) -> UIStackView {
         let buttons = colors.enumerated().map { index, color -> UIButton in
             let btn = UIButton(type: .system)
-            btn.backgroundColor = UIColor(hex: color)
+            
+            // 检查是否为自定义颜色按钮
+            if color == "CUSTOM" {
+                // 创建彩虹渐变背景
+                let gradientLayer = CAGradientLayer()
+                gradientLayer.colors = [
+                    UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0).cgColor,
+                    UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0).cgColor,
+                    UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0).cgColor,
+                    UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0).cgColor,
+                    UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0).cgColor,
+                    UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0).cgColor
+                ]
+                gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+                gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+                gradientLayer.frame = CGRect(x: 0, y: 0, width: 28, height: 28)
+                gradientLayer.cornerRadius = 14
+                btn.layer.insertSublayer(gradientLayer, at: 0)
+                
+                // 添加"+"符号
+                let plusLabel = UILabel()
+                plusLabel.text = "+"
+                plusLabel.textColor = .white
+                plusLabel.font = .boldSystemFont(ofSize: 20)
+                plusLabel.textAlignment = .center
+                plusLabel.translatesAutoresizingMaskIntoConstraints = false
+                plusLabel.layer.shadowColor = UIColor.black.cgColor
+                plusLabel.layer.shadowOffset = CGSize(width: 0, height: 0)
+                plusLabel.layer.shadowRadius = 2
+                plusLabel.layer.shadowOpacity = 0.8
+                btn.addSubview(plusLabel)
+                NSLayoutConstraint.activate([
+                    plusLabel.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                    plusLabel.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                ])
+            } else {
+                btn.backgroundColor = UIColor(hex: color)
+            }
+            
             btn.layer.cornerRadius = 14 // 圆形：28/2
             btn.layer.borderWidth = 2
             btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.layer.masksToBounds = true
             btn.tag = tag + index
             btn.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
@@ -976,7 +1139,10 @@ class LEDCreateViewController: UIViewController {
     
     // 创建模版背景选择器（霓虹灯看板、偶像应援、LED横幅）
     private func createTemplateStack(category: String, count: Int, tag: Int) -> UIStackView {
-        let buttons = (1...count).map { index -> UIButton in
+        // 自动检测可用的图片数量（忽略传入的count参数）
+        let availableCount = getAvailableImageCount(category: category)
+        
+        let buttons = (1...availableCount).map { index -> UIButton in
             let btn = UIButton(type: .system)
             
             // 尝试加载图片，如果没有则使用占位符
@@ -1025,6 +1191,20 @@ class LEDCreateViewController: UIViewController {
         }
         
         return stack
+    }
+    
+    // 自动检测可用的图片数量（最多检测20张）
+    private func getAvailableImageCount(category: String) -> Int {
+        var count = 0
+        for i in 1...20 {
+            let imageName = "\(category)_\(i)"
+            if UIImage(named: imageName) != nil {
+                count = i
+            } else {
+                break
+            }
+        }
+        return max(count, 4) // 至少返回4个按钮（使用占位符）
     }
     
     // 获取占位符颜色
@@ -1150,6 +1330,9 @@ class LEDCreateViewController: UIViewController {
         // 更新速度控件显示状态
         updateSpeedVisibility()
         
+        // 更新边框按钮选中状态
+        updateBorderButtonSelection()
+        
         // 更新预览
         updatePreview()
         
@@ -1176,6 +1359,28 @@ class LEDCreateViewController: UIViewController {
             if let button = contentView.viewWithTag(tag + i) as? UIButton {
                 button.layer.borderWidth = i == selectedIndex ? 3 : 2
                 button.layer.borderColor = i == selectedIndex ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+            }
+        }
+    }
+    
+    private func updateBorderButtonSelection() {
+        // 更新跑马灯边框按钮选中状态
+        if let borderStyle = currentItem.borderStyle {
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                    button.layer.borderWidth = (i == borderStyle) ? 3 : 2
+                    button.layer.borderColor = (i == borderStyle) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+        }
+        
+        // 更新灯牌边框按钮选中状态（待实现）
+        if let lightBoardStyle = currentItem.lightBoardStyle {
+            for i in 0..<8 {
+                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = (i == lightBoardStyle) ? 3 : 2
+                    button.layer.borderColor = (i == lightBoardStyle) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
             }
         }
     }
@@ -1467,7 +1672,15 @@ class LEDCreateViewController: UIViewController {
             updateColorButtonSelection(tag: 520, selectedIndex: -1)
         } else {
             // 文字颜色
-            selectedTextColorIndex = sender.tag - 100
+            let index = sender.tag - 100
+            
+            // 检查是否点击了自定义颜色按钮（第一个按钮，index = 0）
+            if index == 0 {
+                showCustomColorPicker()
+                return
+            }
+            
+            selectedTextColorIndex = index
             currentItem.textColor = textColors[selectedTextColorIndex]
             updateColorButtonSelection(tag: 100, selectedIndex: selectedTextColorIndex)
             // 清除渐变选择
@@ -1533,6 +1746,17 @@ class LEDCreateViewController: UIViewController {
             self.previewLabel.layer.shadowRadius = 2.5 * self.currentItem.glowIntensity
             self.previewLabel.layer.shadowOpacity = Float(min(self.currentItem.glowIntensity / 20.0, 1.0))
             self.previewLabel.layer.shadowOffset = .zero
+        }
+    }
+    
+    // 显示自定义颜色选择器
+    private func showCustomColorPicker() {
+        if #available(iOS 14.0, *) {
+            let colorPicker = UIColorPickerViewController()
+            colorPicker.delegate = self
+            colorPicker.selectedColor = UIColor(hex: currentItem.textColor)
+            colorPicker.supportsAlpha = false
+            present(colorPicker, animated: true)
         }
     }
     
@@ -1701,6 +1925,49 @@ class LEDCreateViewController: UIViewController {
                 self.previewLabel.transform = .identity
             }
         }
+        
+        // 更新边框显示
+        updatePreviewBorder()
+    }
+    
+    private func updatePreviewBorder() {
+        // 移除旧的边框视图
+        previewContainer.subviews.forEach { subview in
+            if subview is MarqueeBorderView || subview is LightBoardBorderView {
+                subview.removeFromSuperview()
+            }
+        }
+        
+        // 添加跑马灯边框
+        if let borderStyle = currentItem.borderStyle {
+            let borderView = MarqueeBorderView(isPreviewMode: true)
+            borderView.setStyle(MarqueeBorderStyle(rawValue: borderStyle) ?? .style1)
+            borderView.setAnimated(true)
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            previewContainer.addSubview(borderView)
+            
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor)
+            ])
+        }
+        
+        // 添加灯牌边框
+        if let lightBoardStyle = currentItem.lightBoardStyle {
+            let borderView = LightBoardBorderView(isPreviewMode: true)
+            borderView.setStyle(LightBoardBorderStyle(rawValue: lightBoardStyle) ?? .style1)
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            previewContainer.addSubview(borderView)
+            
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor)
+            ])
+        }
     }
     
     @objc private func textFieldDidChange() {
@@ -1781,6 +2048,10 @@ class LEDCreateViewController: UIViewController {
         let alertView = CustomAlertView(message: message)
         alertView.show(in: self)
     }
+    
+    // MARK: - 边框按钮创建方法（待后续实现）
+    
+    // 边框相关方法将在后续添加
 }
 
 
@@ -1931,5 +2202,24 @@ class CustomAlertView: UIView {
 extension CustomAlertView: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         return touch.view == self
+    }
+}
+
+// MARK: - UIColorPickerViewControllerDelegate
+@available(iOS 14.0, *)
+extension LEDCreateViewController: UIColorPickerViewControllerDelegate {
+    func colorPickerViewControllerDidFinish(_ viewController: UIColorPickerViewController) {
+        let selectedColor = viewController.selectedColor
+        currentItem.textColor = selectedColor.toHex() ?? "#FFFFFF"
+        
+        // 清除渐变选择
+        selectedGradientIndex = -1
+        updateColorButtonSelection(tag: 400, selectedIndex: -1)
+        
+        // 清除预设颜色选择
+        updateColorButtonSelection(tag: 100, selectedIndex: -1)
+        
+        // 更新预览
+        updatePreview()
     }
 }

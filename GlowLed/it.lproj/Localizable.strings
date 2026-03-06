@@ -81,6 +81,11 @@
 "animation" = "Animazione";
 "font" = "Font";
 "background" = "Sfondo";
+"border" = "Bordo";
+"gradientBackground" = "Sfondo Sfumato";
+"marqueeBorder" = "Bordo Scorrevole";
+"marqueeBorderDesc" = "Bordo scorrevole di punti LED rettangolari arrotondati, un cerchio di punti che scorrono e brillano";
+"lightBoardBorder" = "Bordo Insegna Luminosa";
 
 /* Presets */
 "happyBirthday" = "BUON COMPLEANNO";

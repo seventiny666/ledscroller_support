@@ -81,6 +81,11 @@
 "animation" = "애니메이션";
 "font" = "글꼴";
 "background" = "배경";
+"border" = "테두리";
+"gradientBackground" = "그라데이션 배경";
+"marqueeBorder" = "마키 테두리";
+"marqueeBorderDesc" = "둥근 직사각형 LED 점 테두리 마키, 흐르고 빛나는 점들의 원";
+"lightBoardBorder" = "라이트 보드 테두리";
 
 /* Presets */
 "happyBirthday" = "생일 축하합니다";

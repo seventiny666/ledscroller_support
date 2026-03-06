@@ -407,6 +407,8 @@ class CreationTableCell: UITableViewCell {
     private let containerView = UIView()
     private let previewView = UIView()
     private let backgroundImageView = UIImageView()
+    private let borderView = MarqueeBorderView() // 跑马灯边框视图
+    private let lightBoardView = LightBoardBorderView() // 灯牌边框视图
     private let ledTextLabel = UILabel() // 改名避免与UITableViewCell的textLabel冲突
     private let timeLabel = UILabel() // 时间标签（放在卡片下面）
     
@@ -448,6 +450,17 @@ class CreationTableCell: UITableViewCell {
         backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
         previewView.addSubview(backgroundImageView)
         
+        // 边框视图
+        borderView.setAnimated(false) // 卡片中的边框静态显示
+        borderView.translatesAutoresizingMaskIntoConstraints = false
+        borderView.isHidden = true // 默认隐藏
+        previewView.addSubview(borderView)
+        
+        // 灯牌边框视图
+        lightBoardView.translatesAutoresizingMaskIntoConstraints = false
+        lightBoardView.isHidden = true // 默认隐藏
+        previewView.addSubview(lightBoardView)
+        
         // 预览文字
         ledTextLabel.textAlignment = .center
         ledTextLabel.numberOfLines = 2
@@ -485,6 +498,16 @@ class CreationTableCell: UITableViewCell {
             backgroundImageView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
             backgroundImageView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
             
+            borderView.topAnchor.constraint(equalTo: previewView.topAnchor),
+            borderView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
+            borderView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
+            borderView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
+            
+            lightBoardView.topAnchor.constraint(equalTo: previewView.topAnchor),
+            lightBoardView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
+            lightBoardView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
+            lightBoardView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
+            
             ledTextLabel.centerXAnchor.constraint(equalTo: previewView.centerXAnchor),
             ledTextLabel.centerYAnchor.constraint(equalTo: previewView.centerYAnchor),
             ledTextLabel.leadingAnchor.constraint(equalTo: previewView.leadingAnchor, constant: 16),
@@ -511,14 +534,35 @@ class CreationTableCell: UITableViewCell {
             previewView.backgroundColor = UIColor(hex: item.backgroundColor)
         }
         
+        // 更新边框
+        if let borderStyleIndex = item.borderStyle,
+           borderStyleIndex >= 0 && borderStyleIndex < MarqueeBorderStyle.allCases.count {
+            let style = MarqueeBorderStyle.allCases[borderStyleIndex]
+            borderView.setStyle(style)
+            borderView.isHidden = false
+            lightBoardView.isHidden = true
+        } else if let lightBoardStyleIndex = item.lightBoardStyle,
+                  lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
+            let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
+            lightBoardView.setStyle(style)
+            lightBoardView.isHidden = false
+            borderView.isHidden = true
+        } else {
+            borderView.isHidden = true
+            lightBoardView.isHidden = true
+        }
+        
         ledTextLabel.text = item.text
         
-        // 使用与编辑预览区相同的字体大小计算逻辑
-        // 预览容器高度按19.5:9比例计算，最大可用95%
-        let containerHeight = previewView.bounds.height > 0 ? previewView.bounds.height : 120
-        let maxTextHeight = containerHeight * 0.95
-        let fontSizeRatio = item.fontSize / 100.0 // 归一化
-        let calculatedFontSize = maxTextHeight * fontSizeRatio
+        // 统一字体大小计算：基于全屏横屏尺寸等比缩放
+        // 全屏横屏基准：852px宽度（iPhone 14 Pro横屏）
+        // fontSize值对应全屏横屏时的实际pt大小
+        let containerWidth = previewView.bounds.width > 0 ? previewView.bounds.width : 285
+        let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+        
+        // 按容器宽度比例缩放字体
+        let scaleFactor = containerWidth / landscapeWidth
+        let calculatedFontSize = item.fontSize * scaleFactor
         
         ledTextLabel.font = UIFont(name: item.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
         ledTextLabel.textColor = UIColor(hex: item.textColor)
