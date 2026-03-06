@@ -58,7 +58,7 @@ class MyCreationsViewController: UIViewController {
         setupEmptyStateView()
         
         NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.topAnchor.constraint(equalTo: view.topAnchor, constant: 20), // 整个卡片区往下移动20px
             tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
@@ -207,13 +207,13 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
-        // 16:9 宽高比计算 + 时间标签高度 + 新的边距
+        // 19.5:9 宽高比计算 + 时间标签高度 + 优化后的边距
         let screenWidth = UIScreen.main.bounds.width
-        // backgroundCard左右边距40px，containerView在backgroundCard内左右边距16px
-        let cardWidth = screenWidth - 80 - 32 // 40*2 + 16*2
-        let cardHeight = cardWidth * 9 / 16
-        // cell上边距29（从38减少9） + 下边距0（从8减少8） + backgroundCard内上边距10 + 下边距20 + 时间标签高度20 + 时间标签上边距16
-        return cardHeight + 29 + 0 + 10 + 20 + 20 + 16
+        // backgroundCard左右边距40px，containerView在backgroundCard内左右边距14px
+        let cardWidth = screenWidth - 80 - 28 // 40*2 + 14*2
+        let cardHeight = cardWidth * 9 / 19.5 // 19.5:9比例
+        // backgroundCard顶部边距0 + containerView内上边距14 + 封面到时间间距8 + 时间标签高度20 + 时间到底部间距8 + backgroundCard底部间距20px
+        return cardHeight + 0 + 14 + 8 + 20 + 8 + 20 // 减少时间区域上下间距，总共减少20px
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
@@ -240,30 +240,61 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
             self?.editCreation(at: indexPath.row)
             completionHandler(true)
         }
-        editAction.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFD/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        // 设置为黑色背景（与页面背景一致）
+        editAction.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
         
-        // 创建白色图标（无背景圆圈）
-        let editIconConfig = UIImage.SymbolConfiguration(pointSize: 28, weight: .medium)
-        let editIcon = UIImage(systemName: "pencil.circle.fill", withConfiguration: editIconConfig)?
-            .withTintColor(.white, renderingMode: .alwaysOriginal)
-        editAction.image = editIcon
+        // 创建编辑图标：白色图标 + 绿色圆形背景 (#26C363)
+        editAction.image = createCustomIcon(
+            symbolName: "pencil",
+            iconColor: .white,
+            backgroundColor: UIColor(red: 0x26/255.0, green: 0xC3/255.0, blue: 0x63/255.0, alpha: 1.0),
+            size: 44
+        )
         
         // 删除操作
         let deleteAction = UIContextualAction(style: .destructive, title: "") { [weak self] _, _, completionHandler in
             self?.confirmDelete(at: indexPath.row)
             completionHandler(true)
         }
-        deleteAction.backgroundColor = .systemRed
+        // 设置为黑色背景（与页面背景一致）
+        deleteAction.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
         
-        // 创建白色图标（无背景圆圈）
-        let deleteIconConfig = UIImage.SymbolConfiguration(pointSize: 28, weight: .medium)
-        let deleteIcon = UIImage(systemName: "trash.circle.fill", withConfiguration: deleteIconConfig)?
-            .withTintColor(.white, renderingMode: .alwaysOriginal)
-        deleteAction.image = deleteIcon
+        // 创建删除图标：白色图标 + 红色圆形背景
+        deleteAction.image = createCustomIcon(
+            symbolName: "trash",
+            iconColor: .white,
+            backgroundColor: .systemRed,
+            size: 44
+        )
         
         let configuration = UISwipeActionsConfiguration(actions: [deleteAction, editAction])
         configuration.performsFirstActionWithFullSwipe = false
         return configuration
+    }
+    
+    // 创建自定义圆形图标
+    private func createCustomIcon(symbolName: String, iconColor: UIColor, backgroundColor: UIColor, size: CGFloat) -> UIImage? {
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: size, height: size))
+        
+        return renderer.image { context in
+            // 绘制圆形背景
+            let circle = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: size, height: size))
+            backgroundColor.setFill()
+            circle.fill()
+            
+            // 绘制图标
+            let iconConfig = UIImage.SymbolConfiguration(pointSize: size * 0.5, weight: .medium)
+            if let icon = UIImage(systemName: symbolName, withConfiguration: iconConfig) {
+                let iconSize = icon.size
+                let iconRect = CGRect(
+                    x: (size - iconSize.width) / 2,
+                    y: (size - iconSize.height) / 2,
+                    width: iconSize.width,
+                    height: iconSize.height
+                )
+                icon.withTintColor(iconColor, renderingMode: .alwaysOriginal).draw(in: iconRect)
+            }
+        }
     }
     
     private func editCreation(at index: Int) {
@@ -279,14 +310,11 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
     }
     
     private func confirmDelete(at index: Int) {
-        let alert = UIAlertController(title: "confirmDelete".localized, message: "confirmDeleteMessage".localized, preferredStyle: .alert)
-        
-        alert.addAction(UIAlertAction(title: "cancel".localized, style: .cancel))
-        alert.addAction(UIAlertAction(title: "delete".localized, style: .destructive) { [weak self] _ in
+        let deleteConfirmView = DeleteConfirmView()
+        deleteConfirmView.onDelete = { [weak self] in
             self?.deleteCreation(at: index)
-        })
-        
-        present(alert, animated: true)
+        }
+        deleteConfirmView.show(in: self)
     }
     
     private func deleteCreation(at index: Int) {
@@ -396,7 +424,7 @@ class CreationTableCell: UITableViewCell {
         selectionStyle = .none
         
         // 深色圆角背景卡片（类似设置页面的卡片样式）
-        backgroundCard.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1)
+        backgroundCard.backgroundColor = UIColor(red: 0x20/255.0, green: 0x1F/255.0, blue: 0x1F/255.0, alpha: 1) // #201F1F
         backgroundCard.layer.cornerRadius = 16
         backgroundCard.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(backgroundCard)
@@ -430,27 +458,27 @@ class CreationTableCell: UITableViewCell {
         
         // 时间标签（放在卡片下面，在backgroundCard内）
         timeLabel.textColor = .systemGray
-        timeLabel.font = .systemFont(ofSize: 15, weight: .regular) // 从13改为15（增大2px）
-        timeLabel.textAlignment = .left
+        timeLabel.font = .systemFont(ofSize: 13, weight: .regular) // 从15减少到13，适配紧凑布局
+        timeLabel.textAlignment = .center // 改为居中对齐
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         backgroundCard.addSubview(timeLabel)
         
         NSLayoutConstraint.activate([
-            // backgroundCard: 距离屏幕左右边距40px，顶部距离29px（从38减少9），底部距离0px（从-8增加8，总共减少17px，接近18px）
-            backgroundCard.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 29),
+            // backgroundCard: 顶部边距0px，紧贴内容区域
+            backgroundCard.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0), // 设为0px
             backgroundCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
             backgroundCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
-            backgroundCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: 0),
+            backgroundCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20), // 卡片间距20px
             
-            // containerView: 在backgroundCard内，上边距10px，下边距20px，左右边距16px
-            containerView.topAnchor.constraint(equalTo: backgroundCard.topAnchor, constant: 10),
-            containerView.leadingAnchor.constraint(equalTo: backgroundCard.leadingAnchor, constant: 16),
-            containerView.trailingAnchor.constraint(equalTo: backgroundCard.trailingAnchor, constant: -16),
+            // containerView: 在backgroundCard内，统一使用14px边距
+            containerView.topAnchor.constraint(equalTo: backgroundCard.topAnchor, constant: 14), // 设为14px
+            containerView.leadingAnchor.constraint(equalTo: backgroundCard.leadingAnchor, constant: 14), // 设为14px
+            containerView.trailingAnchor.constraint(equalTo: backgroundCard.trailingAnchor, constant: -14), // 设为14px
             
             previewView.topAnchor.constraint(equalTo: containerView.topAnchor),
             previewView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             previewView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            previewView.heightAnchor.constraint(equalTo: previewView.widthAnchor, multiplier: 9.0/16.0), // 16:9比例
+            previewView.heightAnchor.constraint(equalTo: previewView.widthAnchor, multiplier: 9.0/19.5), // 19.5:9比例
             
             backgroundImageView.topAnchor.constraint(equalTo: previewView.topAnchor),
             backgroundImageView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
@@ -462,14 +490,12 @@ class CreationTableCell: UITableViewCell {
             ledTextLabel.leadingAnchor.constraint(equalTo: previewView.leadingAnchor, constant: 16),
             ledTextLabel.trailingAnchor.constraint(equalTo: previewView.trailingAnchor, constant: -16),
             
-            // 时间标签：放在卡片下面，在backgroundCard内，下边距20px（从30减少10），上边距16px
-            timeLabel.topAnchor.constraint(equalTo: previewView.bottomAnchor, constant: 16),
-            timeLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            timeLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            timeLabel.bottomAnchor.constraint(equalTo: backgroundCard.bottomAnchor, constant: -20),
+            // 时间标签：减少上下间距，水平居中显示
+            timeLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor), // 水平居中
+            timeLabel.topAnchor.constraint(equalTo: previewView.bottomAnchor, constant: 8), // 距离封面底部8px
+            timeLabel.bottomAnchor.constraint(equalTo: backgroundCard.bottomAnchor, constant: -8), // 距离卡片底部8px
             
-            // containerView底部约束（确保布局正确）
-            containerView.bottomAnchor.constraint(lessThanOrEqualTo: timeLabel.topAnchor, constant: -16)
+            // containerView不需要底部约束，由previewView的高度和时间标签的位置决定布局
         ])
     }
     
@@ -486,7 +512,15 @@ class CreationTableCell: UITableViewCell {
         }
         
         ledTextLabel.text = item.text
-        ledTextLabel.font = UIFont(name: item.fontName, size: 20) ?? .boldSystemFont(ofSize: 20)
+        
+        // 使用与编辑预览区相同的字体大小计算逻辑
+        // 预览容器高度按19.5:9比例计算，最大可用95%
+        let containerHeight = previewView.bounds.height > 0 ? previewView.bounds.height : 120
+        let maxTextHeight = containerHeight * 0.95
+        let fontSizeRatio = item.fontSize / 100.0 // 归一化
+        let calculatedFontSize = maxTextHeight * fontSizeRatio
+        
+        ledTextLabel.font = UIFont(name: item.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
         ledTextLabel.textColor = UIColor(hex: item.textColor)
         
         // 霓虹效果
@@ -503,3 +537,167 @@ class CreationTableCell: UITableViewCell {
 }
 
 // 移除旧的CollectionView Cell类
+
+// MARK: - 删除确认弹窗视图
+class DeleteConfirmView: UIView {
+    
+    var onDelete: (() -> Void)?
+    var onCancel: (() -> Void)?
+    
+    private let containerView = UIView()
+    private let titleLabel = UILabel()
+    private let messageLabel = UILabel()
+    private let deleteButton = UIButton(type: .system)
+    private let cancelButton = UIButton(type: .system)
+    private weak var presentingVC: UIViewController?
+    
+    init() {
+        super.init(frame: .zero)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        // 半透明背景
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+        // 容器视图
+        containerView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
+        containerView.layer.cornerRadius = 20
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(containerView)
+        
+        // 标题
+        titleLabel.text = "confirmDelete".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(titleLabel)
+        
+        // 消息
+        messageLabel.text = "confirmDeleteMessage".localized
+        messageLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        messageLabel.font = .systemFont(ofSize: 16)
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(messageLabel)
+        
+        // 取消按钮（左侧，胶囊形状）
+        cancelButton.setTitle("cancel".localized, for: .normal)
+        cancelButton.setTitleColor(.white, for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        cancelButton.backgroundColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1)
+        cancelButton.layer.cornerRadius = 25 // 胶囊形状（高度50的一半）
+        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(cancelButton)
+        
+        // 删除按钮（右侧，红色，胶囊形状）
+        deleteButton.setTitle("delete".localized, for: .normal)
+        deleteButton.setTitleColor(.white, for: .normal)
+        deleteButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        deleteButton.backgroundColor = UIColor.systemRed
+        deleteButton.layer.cornerRadius = 25 // 胶囊形状（高度50的一半）
+        deleteButton.addTarget(self, action: #selector(deleteTapped), for: .touchUpInside)
+        deleteButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(deleteButton)
+        
+        NSLayoutConstraint.activate([
+            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            containerView.widthAnchor.constraint(equalToConstant: 300),
+            containerView.heightAnchor.constraint(equalToConstant: 210),
+            
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            messageLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            messageLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            
+            // 取消按钮在左侧
+            cancelButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 24),
+            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34),
+            cancelButton.heightAnchor.constraint(equalToConstant: 50),
+            cancelButton.widthAnchor.constraint(equalToConstant: 120),
+            
+            // 删除按钮在右侧
+            deleteButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 24),
+            deleteButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            deleteButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34),
+            deleteButton.heightAnchor.constraint(equalToConstant: 50),
+            deleteButton.widthAnchor.constraint(equalToConstant: 120)
+        ])
+        
+        // 添加点击背景关闭手势
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(backgroundTapped))
+        tapGesture.delegate = self
+        addGestureRecognizer(tapGesture)
+    }
+    
+    @objc private func deleteTapped() {
+        hide {
+            self.onDelete?()
+        }
+    }
+    
+    @objc private func cancelTapped() {
+        hide {
+            self.onCancel?()
+        }
+    }
+    
+    @objc private func backgroundTapped(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: self)
+        if !containerView.frame.contains(location) {
+            cancelTapped()
+        }
+    }
+    
+    func show(in viewController: UIViewController) {
+        self.presentingVC = viewController
+        
+        translatesAutoresizingMaskIntoConstraints = false
+        viewController.view.addSubview(self)
+        
+        NSLayoutConstraint.activate([
+            topAnchor.constraint(equalTo: viewController.view.topAnchor),
+            leadingAnchor.constraint(equalTo: viewController.view.leadingAnchor),
+            trailingAnchor.constraint(equalTo: viewController.view.trailingAnchor),
+            bottomAnchor.constraint(equalTo: viewController.view.bottomAnchor)
+        ])
+        
+        // 动画显示
+        alpha = 0
+        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [], animations: {
+            self.alpha = 1
+            self.containerView.transform = .identity
+        })
+    }
+    
+    private func hide(completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: 0.25, animations: {
+            self.alpha = 0
+            self.containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in
+            self.removeFromSuperview()
+            completion?()
+        }
+    }
+}
+
+// MARK: - UIGestureRecognizerDelegate
+extension DeleteConfirmView: UIGestureRecognizerDelegate {
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        return touch.view == self
+    }
+}

@@ -18,6 +18,8 @@
 "save" = "Salva";
 "cancel" = "Annulla";
 "delete" = "Elimina";
+"tip" = "Suggerimento";
+"confirm" = "OK";
 "create" = "Crea";
 "done" = "Fatto";
 
@@ -49,6 +51,7 @@
 "editTitle" = "Modifica LED";
 "textContent" = "Contenuto Testo";
 "textPlaceholder" = "Inserisci testo LED";
+"pleaseEnterText" = "Si prega di inserire il contenuto del testo";
 "previewText" = "Anteprima";
 "fontSize" = "Dimensione Font";
 "fontSelection" = "Selezione Font";
@@ -103,3 +106,13 @@
 "selectLanguage" = "Seleziona lingua";
 "confirmLanguageTitle" = "Vuoi impostare %@ come lingua principale?";
 "useLanguage" = "Usa %@";
+
+/* Blink Speeds */
+"blinkSpeed" = "Velocità di Lampeggio";
+"blinkToggle" = "Lampeggio";
+"verySlow" = "Molto Lento";
+"slow" = "Lento";
+"fast" = "Veloce";
+"veryFast" = "Molto Veloce";
+"superFast" = "Super Veloce";
+"ultraFast" = "Ultra Veloce";

@@ -18,6 +18,8 @@
 "save" = "保存";
 "cancel" = "キャンセル";
 "delete" = "削除";
+"tip" = "ヒント";
+"confirm" = "OK";
 "create" = "作成";
 "done" = "完了";
 
@@ -49,6 +51,7 @@
 "editTitle" = "LED編集";
 "textContent" = "テキスト内容";
 "textPlaceholder" = "LEDテキストを入力";
+"pleaseEnterText" = "テキスト内容を入力してください";
 "previewText" = "プレビュー";
 "fontSize" = "フォントサイズ";
 "fontSelection" = "フォント選択";
@@ -103,3 +106,13 @@
 "selectLanguage" = "言語を選択";
 "confirmLanguageTitle" = "%@を主要言語として設定しますか？";
 "useLanguage" = "%@を使用";
+
+/* Blink Speeds */
+"blinkSpeed" = "点滅速度";
+"blinkToggle" = "点滅";
+"verySlow" = "とても遅い";
+"slow" = "遅い";
+"fast" = "速い";
+"veryFast" = "とても速い";
+"superFast" = "超高速";
+"ultraFast" = "極速";

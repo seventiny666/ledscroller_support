@@ -107,9 +107,9 @@ class LEDFullScreenViewController: UIViewController {
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
         
-        // 霓虹发光效果 (支持0-10范围)
-        let glowRadius = 10 * ledItem.glowIntensity // 0-100的范围
-        let glowOpacity = min(ledItem.glowIntensity / 10.0, 1.0) // 归一化到0-1
+        // 霓虹发光效果 (支持0-20范围)
+        let glowRadius = 10 * ledItem.glowIntensity // 0-200的范围
+        let glowOpacity = min(ledItem.glowIntensity / 20.0, 1.0) // 归一化到0-1
         
         textLabel.layer.shadowColor = UIColor(hex: ledItem.textColor).cgColor
         textLabel.layer.shadowRadius = glowRadius
@@ -135,11 +135,11 @@ class LEDFullScreenViewController: UIViewController {
     private func startAnimation() {
         switch ledItem.scrollType {
         case .none:
-            // 无滚动时添加闪动效果
-            animateBlink()
+            // 静止状态：不添加任何动画
+            break
         case .blink:
-            // 快速闪烁效果（用于霓虹灯和偶像屏幕）
-            animateFastBlink()
+            // 闪烁效果
+            animateBlink()
         case .scrollLeft:
             animateScrollLeft()
         case .scrollRight:
@@ -151,25 +151,15 @@ class LEDFullScreenViewController: UIViewController {
         }
     }
     
-    // 闪动动画（慢速）
+    // 闪烁动画
     private func animateBlink() {
         let animation = CABasicAnimation(keyPath: "opacity")
         animation.fromValue = 1.0
-        animation.toValue = 0.3
-        animation.duration = 0.8
+        animation.toValue = 0.0
+        animation.duration = ledItem.speed // 使用用户设置的闪烁速度
         animation.autoreverses = true
         animation.repeatCount = .infinity
-        textLabel.layer.add(animation, forKey: "blinkAnimation")
-    }
-    
-    // 快速闪烁动画（用于霓虹灯和偶像屏幕）
-    private func animateFastBlink() {
-        let animation = CABasicAnimation(keyPath: "opacity")
-        animation.fromValue = 1.0
-        animation.toValue = 0.4
-        animation.duration = 0.3 // 更快的闪烁频率
-        animation.autoreverses = true
-        animation.repeatCount = .infinity
+        animation.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
         textLabel.layer.add(animation, forKey: "blinkAnimation")
     }
     

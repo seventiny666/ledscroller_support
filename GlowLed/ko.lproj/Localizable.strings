@@ -18,6 +18,8 @@
 "save" = "저장";
 "cancel" = "취소";
 "delete" = "삭제";
+"tip" = "팁";
+"confirm" = "확인";
 "create" = "만들기";
 "done" = "완료";
 
@@ -49,6 +51,7 @@
 "editTitle" = "LED 편집";
 "textContent" = "텍스트 내용";
 "textPlaceholder" = "LED 텍스트 입력";
+"pleaseEnterText" = "텍스트 내용을 입력해주세요";
 "previewText" = "미리보기";
 "fontSize" = "글꼴 크기";
 "fontSelection" = "글꼴 선택";
@@ -103,3 +106,13 @@
 "selectLanguage" = "언어 선택";
 "confirmLanguageTitle" = "%@을(를) 기본 언어로 설정하시겠습니까?";
 "useLanguage" = "%@ 사용";
+
+/* Blink Speeds */
+"blinkSpeed" = "깜박임 속도";
+"blinkToggle" = "깜박임";
+"verySlow" = "매우 느림";
+"slow" = "느림";
+"fast" = "빠름";
+"veryFast" = "매우 빠름";
+"superFast" = "초고속";
+"ultraFast" = "극속";

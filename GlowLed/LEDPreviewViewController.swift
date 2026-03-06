@@ -28,14 +28,32 @@ class LEDPreviewViewController: UIViewController {
         AppDelegate.orientationLock = .landscape
     }
     
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        
+        // 停止所有动画
+        textLabel.layer.removeAllAnimations()
+        view.layer.removeAllAnimations()
+    }
+    
     private func setupUI() {
         view.backgroundColor = .black
+        
+        // 创建19.5:9比例的预览容器
+        let previewContainer = UIView()
+        previewContainer.backgroundColor = .clear
+        previewContainer.layer.cornerRadius = 15
+        previewContainer.layer.borderWidth = 3
+        previewContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        previewContainer.clipsToBounds = true
+        previewContainer.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(previewContainer)
         
         // 背景图片
         backgroundImageView.contentMode = .scaleAspectFill
         backgroundImageView.clipsToBounds = true
         backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(backgroundImageView)
+        previewContainer.addSubview(backgroundImageView)
         
         // 设置背景（图片或颜色）
         if let imageName = ledItem.imageName, !imageName.isEmpty, let image = UIImage(named: imageName) {
@@ -44,29 +62,33 @@ class LEDPreviewViewController: UIViewController {
             backgroundImageView.backgroundColor = UIColor(hex: ledItem.backgroundColor)
         }
         
-        // LED文字 - 动态计算字体大小（屏幕高度的70%）
-        let screenHeight = UIScreen.main.bounds.height
-        let fontSize = screenHeight * 0.7 / 1.2 // 除以1.2是因为字体实际高度约为fontSize的1.2倍
+        // LED文字 - 使用与创作页面相同的动态字体大小计算
+        let containerWidth = UIScreen.main.bounds.width - 120 // 左右各60px边距
+        let containerHeight = containerWidth * (9.0/19.5) // 19.5:9比例
+        let maxTextHeight = containerHeight * 0.95
+        let calculatedFontSize = maxTextHeight * (ledItem.fontSize / 100.0)
         
         textLabel.text = ledItem.text
-        textLabel.font = .boldSystemFont(ofSize: fontSize)
-        textLabel.textColor = .white
+        textLabel.font = UIFont(name: ledItem.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
+        textLabel.textColor = UIColor(hex: ledItem.textColor)
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0
         textLabel.adjustsFontSizeToFitWidth = true
         textLabel.minimumScaleFactor = 0.3
         textLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(textLabel)
+        previewContainer.addSubview(textLabel)
 
-        // 粉色霓虹效果
-        textLabel.layer.shadowColor = UIColor(red: 255/255.0, green: 31/255.0, blue: 157/255.0, alpha: 0.75).cgColor
-        textLabel.layer.shadowRadius = 27
-        textLabel.layer.shadowOpacity = 1.0
-        textLabel.layer.shadowOffset = .zero
-        textLabel.layer.masksToBounds = false
+        // 霓虹发光效果 (支持0-20范围)
+        let glowRadius = 10 * ledItem.glowIntensity // 0-200的范围
+        let glowOpacity = min(ledItem.glowIntensity / 20.0, 1.0) // 归一化到0-1
         
-        // 添加闪动动画
-        startBlinkAnimation()
+        textLabel.layer.shadowColor = UIColor(hex: ledItem.textColor).cgColor
+        textLabel.layer.shadowRadius = glowRadius
+        textLabel.layer.shadowOpacity = Float(glowOpacity)
+        textLabel.layer.shadowOffset = .zero
+        
+        // 添加动画效果
+        startAnimation()
         
         // 按钮容器
         let buttonStack = UIStackView()
@@ -107,15 +129,25 @@ class LEDPreviewViewController: UIViewController {
         view.addSubview(closeButton)
 
         NSLayoutConstraint.activate([
-            backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
-            backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // 预览容器约束 - 19.5:9比例，居中显示
+            previewContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            previewContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor, constant: -30),
+            previewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
+            previewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
+            previewContainer.heightAnchor.constraint(equalTo: previewContainer.widthAnchor, multiplier: 9.0/19.5),
             
-            textLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            textLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            textLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
-            textLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
+            // 背景图片填满预览容器
+            backgroundImageView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
+            
+            // 文字居中显示
+            textLabel.centerXAnchor.constraint(equalTo: previewContainer.centerXAnchor),
+            textLabel.centerYAnchor.constraint(equalTo: previewContainer.centerYAnchor),
+            textLabel.leadingAnchor.constraint(greaterThanOrEqualTo: previewContainer.leadingAnchor, constant: 15),
+            textLabel.trailingAnchor.constraint(lessThanOrEqualTo: previewContainer.trailingAnchor, constant: -15),
+            textLabel.heightAnchor.constraint(lessThanOrEqualTo: previewContainer.heightAnchor, multiplier: 0.9),
             
             buttonStack.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             buttonStack.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -40),
@@ -152,15 +184,67 @@ class LEDPreviewViewController: UIViewController {
         dismiss(animated: true)
     }
     
+    // 动画处理
+    private func startAnimation() {
+        switch ledItem.scrollType {
+        case .none:
+            // 静止状态：不添加任何动画
+            break
+        case .blink:
+            // 闪烁效果
+            startBlinkAnimation()
+        case .scrollLeft:
+            animateScrollLeft()
+        case .scrollRight:
+            animateScrollRight()
+        case .scrollUp:
+            animateScrollUp()
+        case .scrollDown:
+            animateScrollDown()
+        }
+    }
+    
     // 闪动动画
     private func startBlinkAnimation() {
         let animation = CABasicAnimation(keyPath: "opacity")
         animation.fromValue = 1.0
         animation.toValue = 0.3
-        animation.duration = 0.8
+        animation.duration = ledItem.speed // 使用用户设置的闪烁速度
         animation.autoreverses = true
         animation.repeatCount = .infinity
         textLabel.layer.add(animation, forKey: "blinkAnimation")
+    }
+    
+    private func animateScrollLeft() {
+        guard let previewContainer = textLabel.superview else { return }
+        textLabel.transform = CGAffineTransform(translationX: previewContainer.bounds.width, y: 0)
+        UIView.animate(withDuration: 5.0 / Double(ledItem.speed), delay: 0, options: [.repeat, .curveLinear]) {
+            self.textLabel.transform = CGAffineTransform(translationX: -previewContainer.bounds.width, y: 0)
+        }
+    }
+    
+    private func animateScrollRight() {
+        guard let previewContainer = textLabel.superview else { return }
+        textLabel.transform = CGAffineTransform(translationX: -previewContainer.bounds.width, y: 0)
+        UIView.animate(withDuration: 5.0 / Double(ledItem.speed), delay: 0, options: [.repeat, .curveLinear]) {
+            self.textLabel.transform = CGAffineTransform(translationX: previewContainer.bounds.width, y: 0)
+        }
+    }
+    
+    private func animateScrollUp() {
+        guard let previewContainer = textLabel.superview else { return }
+        textLabel.transform = CGAffineTransform(translationX: 0, y: previewContainer.bounds.height)
+        UIView.animate(withDuration: 5.0 / Double(ledItem.speed), delay: 0, options: [.repeat, .curveLinear]) {
+            self.textLabel.transform = CGAffineTransform(translationX: 0, y: -previewContainer.bounds.height)
+        }
+    }
+    
+    private func animateScrollDown() {
+        guard let previewContainer = textLabel.superview else { return }
+        textLabel.transform = CGAffineTransform(translationX: 0, y: -previewContainer.bounds.height)
+        UIView.animate(withDuration: 5.0 / Double(ledItem.speed), delay: 0, options: [.repeat, .curveLinear]) {
+            self.textLabel.transform = CGAffineTransform(translationX: 0, y: previewContainer.bounds.height)
+        }
     }
 
     private func showToast(message: String) {

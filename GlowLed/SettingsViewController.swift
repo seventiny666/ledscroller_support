@@ -335,7 +335,7 @@ class LanguageSelectorView: UIView {
             
             cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
             cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -24),
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34),
             cancelButton.heightAnchor.constraint(equalToConstant: 50)
         ])
         
@@ -351,7 +351,17 @@ class LanguageSelectorView: UIView {
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: isSelected ? .semibold : .regular)
         button.contentHorizontalAlignment = .left
-        button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        
+        // 使用iOS 15+的新方式设置内边距
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
+            config.title = language.displayName
+            config.baseForegroundColor = .white
+            button.configuration = config
+        } else {
+            button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
+        }
         button.backgroundColor = isSelected ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.2) : .clear
         button.layer.cornerRadius = 8
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -504,7 +514,7 @@ class LanguageConfirmView: UIView {
         NSLayoutConstraint.activate([
             containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 280),
+            containerView.widthAnchor.constraint(equalToConstant: 300),
             
             titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
@@ -519,7 +529,7 @@ class LanguageConfirmView: UIView {
             cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
             cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
             cancelButton.heightAnchor.constraint(equalToConstant: 50),
-            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -24)
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34)
         ])
         
         // 添加点击背景关闭手势

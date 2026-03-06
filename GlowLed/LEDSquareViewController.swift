@@ -36,6 +36,10 @@ class LEDSquareViewController: UIViewController {
         title = "LED广场"
         view.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.1, alpha: 1)
         
+        // 确保导航栏样式正确
+        navigationController?.navigationBar.prefersLargeTitles = false
+        navigationItem.largeTitleDisplayMode = .never
+        
         // 右侧创建按钮
         let createButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(createLED))
         createButton.tintColor = .systemPink
@@ -47,7 +51,7 @@ class LEDSquareViewController: UIViewController {
         layout.minimumLineSpacing = 17 // 纵向间距17px
         layout.sectionInset = UIEdgeInsets(top: 20, left: 26, bottom: 20, right: 26) // 左右边距26px
         
-        let width = (view.bounds.width - 40) / 2 // 新的宽度计算
+        let width = (view.bounds.width - 30) / 2 // 宽度计算：(屏幕宽度 - 30) / 2
         layout.itemSize = CGSize(width: width, height: width * 0.6)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)

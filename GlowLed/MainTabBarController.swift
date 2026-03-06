@@ -10,7 +10,7 @@ class MainTabBarController: UITabBarController {
     }
     
     private func setupTabBar() {
-        // 暗色TabBar样式
+        // 暗色TabBar样式 - 兼容新版本iOS
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
@@ -22,11 +22,17 @@ class MainTabBarController: UITabBarController {
         appearance.stackedLayoutAppearance.normal.iconColor = UIColor.systemGray
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor.systemGray]
         
+        // 应用到所有状态的TabBar
         tabBar.standardAppearance = appearance
+        tabBar.scrollEdgeAppearance = appearance
         if #available(iOS 15.0, *) {
             tabBar.scrollEdgeAppearance = appearance
         }
+        
+        // 确保TabBar不透明
         tabBar.isTranslucent = false
+        tabBar.barTintColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
+        tabBar.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
     }
     
     private func setupViewControllers() {

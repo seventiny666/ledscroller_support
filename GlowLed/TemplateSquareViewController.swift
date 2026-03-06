@@ -635,10 +635,10 @@ class TemplateItemCell: UICollectionViewCell {
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
             
-            buttonStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 14),
-            buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 30),
-            buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -30),
-            buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -16),
+            buttonStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 18),
+            buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
+            buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -40),
+            buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -18),
             buttonStack.heightAnchor.constraint(equalToConstant: 14) // 高度14px
         ])
     }

@@ -18,6 +18,8 @@
 "save" = "保存";
 "cancel" = "取消";
 "delete" = "刪除";
+"tip" = "提示";
+"confirm" = "確定";
 "create" = "創建";
 "done" = "完成";
 
@@ -49,6 +51,7 @@
 "editTitle" = "編輯LED屏幕";
 "textContent" = "文字內容";
 "textPlaceholder" = "輸入LED文字";
+"pleaseEnterText" = "請輸入文字內容";
 "previewText" = "預覽";
 "fontSize" = "字體大小";
 "fontSelection" = "字體選擇";
@@ -68,14 +71,25 @@
 
 /* Scroll Types */
 "static" = "靜止";
+"scrollToggle" = "滾動";
 "scrollLeft" = "左滾";
 "scrollRight" = "右滾";
 "scrollUp" = "上滾";
 "scrollDown" = "下滾";
 
+/* Blink Speeds */
+"blinkSpeed" = "閃爍速度";
+"blinkToggle" = "閃爍";
+"verySlow" = "很慢";
+"slow" = "慢";
+"fast" = "快";
+"veryFast" = "很快";
+"superFast" = "非常快";
+"ultraFast" = "極快";
+
 /* Tab Segments */
 "popular" = "熱門模版";
-"animation" = "動畫模版";
+"animation" = "動畫";
 "font" = "字體";
 "background" = "背景";
 
