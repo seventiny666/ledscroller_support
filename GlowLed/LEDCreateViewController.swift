@@ -73,7 +73,8 @@ class LEDCreateViewController: UIViewController {
     
     private let bgColors = [
         "#000000", "#1a1a2e", "#0f3460", "#16213e", "#1f1f1f", "#2d2d2d",
-        "#0a0a0a", "#1a1a1a", "#2a2a2a", "#0d1117", "#161b22", "#21262d"
+        "#0a0a0a", "#1a1a1a", "#2a2a2a", "#0d1117", "#161b22", "#21262d",
+        "#FF0000", "#00FF00", "#0000FF", "#FFFF00" // 添加明显的测试颜色
     ]
     private let bgTextures = ["stars", "gradient", "dots", "waves", "grid", "noise"] // 纹理名称
     
@@ -175,7 +176,7 @@ class LEDCreateViewController: UIViewController {
         
         // 预览背景图片视图
         previewBackgroundImageView = UIImageView()
-        previewBackgroundImageView.contentMode = .scaleAspectFit // 改为完整显示图片，避免裁剪
+        previewBackgroundImageView.contentMode = .scaleAspectFill // 改为全区域填充，完美适配手机比例素材
         previewBackgroundImageView.clipsToBounds = true
         previewBackgroundImageView.translatesAutoresizingMaskIntoConstraints = false
         previewContainer.addSubview(previewBackgroundImageView)
@@ -459,10 +460,12 @@ class LEDCreateViewController: UIViewController {
         
         let bgColorScrollView = UIScrollView()
         bgColorScrollView.showsHorizontalScrollIndicator = false
+        bgColorScrollView.isUserInteractionEnabled = true // 确保可以接收触摸事件
         bgColorScrollView.translatesAutoresizingMaskIntoConstraints = false
         backgroundTabView.addSubview(bgColorScrollView)
         
         let bgColorStack = createBgColorStack(colors: bgColors, tag: 200)
+        bgColorStack.isUserInteractionEnabled = true // 确保StackView可以接收触摸事件
         bgColorScrollView.addSubview(bgColorStack)
         
         NSLayoutConstraint.activate([
@@ -504,39 +507,45 @@ class LEDCreateViewController: UIViewController {
         
         // 霓虹灯看板
         addSectionLabelToView(backgroundTabView, text: "neon".localized, yOffset: &tabYOffset)
-        let neonStack = createTemplateStack(category: "neon", count: 4, tag: 500)
-        backgroundTabView.addSubview(neonStack)
+        let neonScrollView = createTemplateScrollView(category: "neon", tag: 500)
+        backgroundTabView.addSubview(neonScrollView)
+        
+        // 计算滑动区域高度：按钮宽度 * 9/16 = 正确的16:9比例高度
+        let screenWidth = UIScreen.main.bounds.width
+        let buttonWidth = (screenWidth - 40 - 30) / 4
+        let scrollViewHeight = buttonWidth * 9.0 / 16.0
+        
         NSLayoutConstraint.activate([
-            neonStack.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            neonStack.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 30),
-            neonStack.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -30),
-            neonStack.heightAnchor.constraint(greaterThanOrEqualToConstant: 50) // 改为最小高度约束，让16:9比例自然显示
+            neonScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            neonScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            neonScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            neonScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
         ])
-        tabYOffset += 60 // 统一间距
+        tabYOffset += scrollViewHeight + 20 // 动态间距
         
         // 偶像应援
         addSectionLabelToView(backgroundTabView, text: "idol".localized, yOffset: &tabYOffset)
-        let idolStack = createTemplateStack(category: "idol", count: 4, tag: 510)
-        backgroundTabView.addSubview(idolStack)
+        let idolScrollView = createTemplateScrollView(category: "idol", tag: 510)
+        backgroundTabView.addSubview(idolScrollView)
         NSLayoutConstraint.activate([
-            idolStack.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            idolStack.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 30),
-            idolStack.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -30),
-            idolStack.heightAnchor.constraint(greaterThanOrEqualToConstant: 50) // 改为最小高度约束，让16:9比例自然显示
+            idolScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            idolScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            idolScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
         ])
-        tabYOffset += 60 // 统一间距
+        tabYOffset += scrollViewHeight + 20 // 动态间距
         
         // LED横幅
         addSectionLabelToView(backgroundTabView, text: "led".localized, yOffset: &tabYOffset)
-        let ledStack = createTemplateStack(category: "led", count: 4, tag: 520)
-        backgroundTabView.addSubview(ledStack)
+        let ledScrollView = createTemplateScrollView(category: "led", tag: 520)
+        backgroundTabView.addSubview(ledScrollView)
         NSLayoutConstraint.activate([
-            ledStack.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            ledStack.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 30),
-            ledStack.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -30),
-            ledStack.heightAnchor.constraint(greaterThanOrEqualToConstant: 50) // 改为最小高度约束，让16:9比例自然显示
+            ledScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            ledScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            ledScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            ledScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
         ])
-        tabYOffset += 60 // 统一间距，最后一个区域
+        tabYOffset += scrollViewHeight + 20 // 动态间距，最后一个区域
     }
     
     private func setupBorderTab(yOffset: CGFloat) {
@@ -1152,6 +1161,7 @@ class LEDCreateViewController: UIViewController {
     }
     
     private func createBgColorStack(colors: [String], tag: Int) -> UIStackView {
+        print("创建背景颜色按钮，数量: \(colors.count), 起始tag: \(tag)")
         let buttons = colors.enumerated().map { index, color -> UIButton in
             let btn = UIButton(type: .system)
             btn.backgroundColor = UIColor(hex: color)
@@ -1159,11 +1169,13 @@ class LEDCreateViewController: UIViewController {
             btn.layer.borderWidth = 2
             btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
             btn.tag = tag + index
+            btn.isUserInteractionEnabled = true // 确保按钮可以接收触摸事件
             btn.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
             // 4:3 比例，宽度48，高度36
             btn.widthAnchor.constraint(equalToConstant: 48).isActive = true
             btn.heightAnchor.constraint(equalToConstant: 36).isActive = true
+            print("创建背景颜色按钮: tag=\(btn.tag), color=\(color)")
             return btn
         }
         
@@ -1240,7 +1252,82 @@ class LEDCreateViewController: UIViewController {
         return stack
     }
     
-    // 创建模版背景选择器（霓虹灯看板、偶像应援、LED横幅）
+    // 创建模版背景选择器（霓虹灯看板、偶像应援、LED横幅）- 滑动版本
+    private func createTemplateScrollView(category: String, tag: Int) -> UIScrollView {
+        // 自动检测可用的图片数量
+        let availableCount = getAvailableImageCount(category: category)
+        
+        let scrollView = UIScrollView()
+        scrollView.showsHorizontalScrollIndicator = false
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let buttons = (1...availableCount).map { index -> UIButton in
+            let btn = UIButton(type: .system)
+            
+            // 尝试加载图片，如果没有则使用占位符
+            let imageName = "\(category)_\(index)"
+            if let image = UIImage(named: imageName) {
+                btn.setBackgroundImage(image, for: .normal)
+                btn.imageView?.contentMode = .scaleAspectFill
+            } else {
+                // 占位符：使用渐变色
+                let placeholderColor = getPlaceholderColor(category: category, index: index)
+                btn.backgroundColor = placeholderColor
+                
+                // 添加文字标签
+                let label = UILabel()
+                label.text = "\(index)"
+                label.textColor = .white
+                label.font = .boldSystemFont(ofSize: 16)
+                label.textAlignment = .center
+                label.translatesAutoresizingMaskIntoConstraints = false
+                btn.addSubview(label)
+                NSLayoutConstraint.activate([
+                    label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                    label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                ])
+            }
+            
+            btn.layer.cornerRadius = 8
+            btn.layer.borderWidth = 2
+            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.clipsToBounds = true
+            btn.tag = tag + index - 1
+            btn.addTarget(self, action: #selector(templateButtonTapped(_:)), for: .touchUpInside)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            return btn
+        }
+        
+        let stack = UIStackView(arrangedSubviews: buttons)
+        stack.axis = .horizontal
+        stack.distribution = .fill
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        scrollView.addSubview(stack)
+        
+        // 计算按钮宽度：(屏幕宽度 - 左右边距40 - 3个间距30) / 4
+        let screenWidth = UIScreen.main.bounds.width
+        let buttonWidth = (screenWidth - 40 - 30) / 4
+        
+        // 为每个按钮设置固定宽度和16:9比例
+        buttons.forEach { btn in
+            btn.widthAnchor.constraint(equalToConstant: buttonWidth).isActive = true
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+        }
+        
+        NSLayoutConstraint.activate([
+            stack.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            stack.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            stack.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            stack.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            stack.heightAnchor.constraint(equalTo: scrollView.heightAnchor)
+        ])
+        
+        return scrollView
+    }
+    
+    // 创建模版背景选择器（霓虹灯看板、偶像应援、LED横幅）- 原版本（保留备用）
     private func createTemplateStack(category: String, count: Int, tag: Int) -> UIStackView {
         // 自动检测可用的图片数量（忽略传入的count参数）
         let availableCount = getAvailableImageCount(category: category)
@@ -1764,15 +1851,23 @@ class LEDCreateViewController: UIViewController {
         if sender.tag >= 200 {
             // 背景颜色
             selectedBgColorIndex = sender.tag - 200
-            currentItem.backgroundColor = bgColors[selectedBgColorIndex]
-            selectedBackgroundImage = nil // 清除背景图片
-            updateColorButtonSelection(tag: 200, selectedIndex: selectedBgColorIndex)
-            // 清除渐变选择
-            updateColorButtonSelection(tag: 400, selectedIndex: -1)
-            // 清除模版选择
-            updateColorButtonSelection(tag: 500, selectedIndex: -1)
-            updateColorButtonSelection(tag: 510, selectedIndex: -1)
-            updateColorButtonSelection(tag: 520, selectedIndex: -1)
+            print("背景颜色按钮被点击: tag=\(sender.tag), index=\(selectedBgColorIndex)")
+            
+            // 检查数组越界
+            if selectedBgColorIndex < bgColors.count {
+                currentItem.backgroundColor = bgColors[selectedBgColorIndex]
+                print("设置背景颜色: \(bgColors[selectedBgColorIndex])")
+                selectedBackgroundImage = nil // 清除背景图片
+                updateColorButtonSelection(tag: 200, selectedIndex: selectedBgColorIndex)
+                // 清除渐变选择
+                updateColorButtonSelection(tag: 400, selectedIndex: -1)
+                // 清除模版选择
+                updateColorButtonSelection(tag: 500, selectedIndex: -1)
+                updateColorButtonSelection(tag: 510, selectedIndex: -1)
+                updateColorButtonSelection(tag: 520, selectedIndex: -1)
+            } else {
+                print("错误: 背景颜色数组越界, index=\(selectedBgColorIndex), count=\(bgColors.count)")
+            }
         } else {
             // 文字颜色
             let index = sender.tag - 100
@@ -1987,11 +2082,13 @@ class LEDCreateViewController: UIViewController {
         // 更新背景（图片或颜色）
         if let imageName = selectedBackgroundImage, let image = UIImage(named: imageName) {
             // 显示背景图片
+            print("显示背景图片: \(imageName)")
             previewBackgroundImageView.image = image
             previewBackgroundImageView.isHidden = false
             previewContainer.backgroundColor = .clear
         } else {
             // 显示背景颜色
+            print("显示背景颜色: \(currentItem.backgroundColor)")
             previewBackgroundImageView.image = nil
             previewBackgroundImageView.isHidden = true
             previewContainer.backgroundColor = UIColor(hex: currentItem.backgroundColor)

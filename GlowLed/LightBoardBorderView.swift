@@ -92,7 +92,7 @@ class LightBoardBorderView: UIView {
             safeInset = 20
             cornerRadius = 40
         case .cardCover:
-            dotSize = 12
+            dotSize = 10
             borderWidth = 16  // 边框宽度
             safeInset = 12
             cornerRadius = 12
