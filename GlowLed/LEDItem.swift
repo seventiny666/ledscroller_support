@@ -19,6 +19,7 @@ struct LEDItem: Codable {
     var isFlipClock: Bool // 标识是否为翻页时钟效果
     var isLoveRain: Bool // 标识是否为爱心流星雨效果
     var isHeartGrid: Bool // 标识是否为爱心格子动画效果
+    var isILoveU: Bool // 标识是否为I LOVE U动画效果
     var isDefaultPreset: Bool // 标识是否为预设卡片（HAPPY BIRTHDAY等）
     var createdAt: Date
     
@@ -48,6 +49,7 @@ struct LEDItem: Codable {
          isFlipClock: Bool = false,
          isLoveRain: Bool = false,
          isHeartGrid: Bool = false,
+         isILoveU: Bool = false,
          isDefaultPreset: Bool = false,
          createdAt: Date = Date()) {
         self.id = id
@@ -67,6 +69,7 @@ struct LEDItem: Codable {
         self.isFlipClock = isFlipClock
         self.isLoveRain = isLoveRain
         self.isHeartGrid = isHeartGrid
+        self.isILoveU = isILoveU
         self.isDefaultPreset = isDefaultPreset
         self.createdAt = createdAt
     }

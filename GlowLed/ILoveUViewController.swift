@@ -1,9 +1,9 @@
 import UIKit
 
-// 爱心格子全屏预览控制器
-class HeartGridViewController: UIViewController {
+// I LOVE U 全屏预览控制器
+class ILoveUViewController: UIViewController {
     
-    private var heartGridView: HeartGridFullScreenView!
+    private var iLoveUView: ILoveUFullScreenView!
     private var closeButton: UIButton!
     
     override func viewDidLoad() {
@@ -26,10 +26,10 @@ class HeartGridViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = UIColor.black // 黑色背景突出格子闪烁效果
         
-        // 创建爱心格子视图
-        heartGridView = HeartGridFullScreenView()
-        heartGridView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(heartGridView)
+        // 创建I LOVE U视图
+        iLoveUView = ILoveUFullScreenView()
+        iLoveUView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(iLoveUView)
         
         // 关闭按钮
         closeButton = UIButton(type: .system)
@@ -43,11 +43,11 @@ class HeartGridViewController: UIViewController {
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
-            // 爱心格子视图填满整个屏幕
-            heartGridView.topAnchor.constraint(equalTo: view.topAnchor),
-            heartGridView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            heartGridView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            heartGridView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            // I LOVE U视图填满整个屏幕
+            iLoveUView.topAnchor.constraint(equalTo: view.topAnchor),
+            iLoveUView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            iLoveUView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            iLoveUView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
             // 关闭按钮在右上角
             closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
@@ -62,8 +62,8 @@ class HeartGridViewController: UIViewController {
     }
 }
 
-// 全屏爱心格子视图
-class HeartGridFullScreenView: UIView {
+// 全屏I LOVE U视图
+class ILoveUFullScreenView: UIView {
     
     private var gridSize: CGFloat = 18  // 固定格子大小
     private var spacing: CGFloat = 2.5
@@ -119,16 +119,16 @@ class HeartGridFullScreenView: UIView {
         cols = Int((rect.width + spacing) / (gridSize + spacing))
         rows = Int((rect.height + spacing) / (gridSize + spacing))
         
-        // 确保至少有足够的空间显示爱心
+        // 确保至少有足够的空间显示内容
         let heartPattern = getHeartPattern()
         let heartRows = heartPattern.count
         let heartCols = heartPattern[0].count
         
-        // 如果计算出的网格太小，无法容纳爱心，则调整格子大小
-        if rows < heartRows + 4 || cols < heartCols + 4 {
-            // 重新计算格子大小以确保爱心能完整显示
+        // 如果计算出的网格太小，无法容纳内容，则调整格子大小
+        if rows < heartRows + 4 || cols < heartCols + 10 { // 需要额外空间放置I和U
+            // 重新计算格子大小以确保内容能完整显示
             let maxGridSizeForHeight = (rect.height - CGFloat(heartRows + 4) * spacing) / CGFloat(heartRows + 4)
-            let maxGridSizeForWidth = (rect.width - CGFloat(heartCols + 4) * spacing) / CGFloat(heartCols + 4)
+            let maxGridSizeForWidth = (rect.width - CGFloat(heartCols + 10) * spacing) / CGFloat(heartCols + 10)
             gridSize = min(maxGridSizeForHeight, maxGridSizeForWidth, 18) // 最大不超过18px
             
             // 重新计算行列数
@@ -149,13 +149,24 @@ class HeartGridFullScreenView: UIView {
         let startX = (rect.width - totalGridWidth) / 2
         let startY = (rect.height - totalGridHeight) / 2
         
-        // 计算爱心在网格中的真正居中位置
-        // 使用浮点数计算，然后四舍五入确保居中
+        // 计算爱心在网格中的居中位置
         let exactHeartStartRow = (Double(rows) - Double(heartRows)) / 2.0
         let exactHeartStartCol = (Double(cols) - Double(heartCols)) / 2.0
         
         let centeredHeartStartRow = Int(exactHeartStartRow.rounded())
         let centeredHeartStartCol = Int(exactHeartStartCol.rounded())
+        
+        // 获取字母I和U的图案
+        let letterI = getLetterIPattern()
+        let letterU = getLetterUPattern()
+        
+        // 计算字母I的位置（爱心左边，再增加2格距离）
+        let iStartRow = centeredHeartStartRow + (heartRows - letterI.count) / 2
+        let iStartCol = centeredHeartStartCol - 10 // 从8改为10，再增加2格距离
+        
+        // 计算字母U的位置（爱心右边，调整为5格距离）
+        let uStartRow = centeredHeartStartRow + (heartRows - letterU.count) / 2
+        let uStartCol = centeredHeartStartCol + heartCols + 5 // 从7改为5，调整距离
         
         // 绘制所有格子
         for row in 0..<rows {
@@ -166,16 +177,30 @@ class HeartGridFullScreenView: UIView {
                 let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
                 let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
                 
-                // 判断当前格子是否在爱心图案内
+                var isRedGrid = false
+                
+                // 判断是否在爱心图案内
                 let heartRow = row - centeredHeartStartRow
                 let heartCol = col - centeredHeartStartCol
-                
-                var isHeartGrid = false
                 if heartRow >= 0 && heartRow < heartRows && heartCol >= 0 && heartCol < heartCols {
-                    isHeartGrid = heartPattern[heartRow][heartCol]
+                    isRedGrid = heartPattern[heartRow][heartCol]
                 }
                 
-                if isHeartGrid {
+                // 判断是否在字母I内
+                let iRow = row - iStartRow
+                let iCol = col - iStartCol
+                if iRow >= 0 && iRow < letterI.count && iCol >= 0 && iCol < letterI[0].count {
+                    isRedGrid = isRedGrid || letterI[iRow][iCol]
+                }
+                
+                // 判断是否在字母U内
+                let uRow = row - uStartRow
+                let uCol = col - uStartCol
+                if uRow >= 0 && uRow < letterU.count && uCol >= 0 && uCol < letterU[0].count {
+                    isRedGrid = isRedGrid || letterU[uRow][uCol]
+                }
+                
+                if isRedGrid {
                     // 点亮的格子：亮红色带静态发光效果
                     let baseColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0)
                     baseColor.setFill()
@@ -197,7 +222,7 @@ class HeartGridFullScreenView: UIView {
         }
     }
     
-    // 返回20x20的爱心图案（更大更详细）
+    // 返回20x20的爱心图案（与HeartGridView相同）
     private func getHeartPattern() -> [[Bool]] {
         return [
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
@@ -220,6 +245,48 @@ class HeartGridFullScreenView: UIView {
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+        ]
+    }
+    
+    // 字母I的图案
+    private func getLetterIPattern() -> [[Bool]] {
+        return [
+            [true,  true,  true],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [false, true,  false],
+            [true,  true,  true]
+        ]
+    }
+    
+    // 字母U的图案（大写效果）
+    private func getLetterUPattern() -> [[Bool]] {
+        return [
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [false, true,  false, true,  false],
+            [false, true,  true,  true,  false],
+            [false, false, true,  false, false]
         ]
     }
 }

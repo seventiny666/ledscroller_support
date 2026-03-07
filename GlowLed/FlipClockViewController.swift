@@ -10,6 +10,7 @@ class FlipClockViewController: UIViewController {
     
     private var timer: Timer?
     private var currentTime: (hour: Int, minute: Int) = (0, 0)
+    private var clockView: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -35,7 +36,7 @@ class FlipClockViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
         
-        // 创建时钟容器 - 占据整个屏幕
+        // 创建时钟容器
         let clockContainer = UIView()
         clockContainer.backgroundColor = .clear
         clockContainer.translatesAutoresizingMaskIntoConstraints = false
@@ -95,17 +96,6 @@ class FlipClockViewController: UIViewController {
         colonLabel.translatesAutoresizingMaskIntoConstraints = false
         clockContainer.addSubview(colonLabel)
         
-        // 添加关闭按钮
-        let closeButton = UIButton(type: .system)
-        closeButton.setTitle("完成", for: .normal)
-        closeButton.setTitleColor(.white, for: .normal)
-        closeButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
-        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        closeButton.layer.cornerRadius = 28
-        closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(closeButton)
-        
         NSLayoutConstraint.activate([
             clockContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             clockContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor),
@@ -139,14 +129,30 @@ class FlipClockViewController: UIViewController {
             minuteOnes.leadingAnchor.constraint(equalTo: minuteTens.trailingAnchor, constant: spacing),
             minuteOnes.centerYAnchor.constraint(equalTo: clockContainer.centerYAnchor),
             minuteOnes.widthAnchor.constraint(equalToConstant: digitWidth),
-            minuteOnes.heightAnchor.constraint(equalToConstant: digitHeight),
-            
-            // 关闭按钮
+            minuteOnes.heightAnchor.constraint(equalToConstant: digitHeight)
+        ])
+        
+        // 添加关闭按钮
+        let closeButton = UIButton(type: .system)
+        closeButton.setTitle("完成", for: .normal)
+        closeButton.setTitleColor(.white, for: .normal)
+        closeButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
+        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
+        closeButton.layer.cornerRadius = 28
+        closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(closeButton)
+        
+        NSLayoutConstraint.activate([
             closeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -30),
             closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
             closeButton.widthAnchor.constraint(equalToConstant: 120),
             closeButton.heightAnchor.constraint(equalToConstant: 56)
         ])
+    }
+    
+    @objc private func closeTapped() {
+        dismiss(animated: true)
     }
     
     private func startTimer() {
@@ -188,10 +194,6 @@ class FlipClockViewController: UIViewController {
         }
         
         currentTime = newTime
-    }
-    
-    @objc private func closeTapped() {
-        dismiss(animated: true)
     }
 }
 

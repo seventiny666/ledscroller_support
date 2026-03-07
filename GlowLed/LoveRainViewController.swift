@@ -52,6 +52,10 @@ class LoveRainViewController: UIViewController {
         ])
     }
     
+    @objc private func closeTapped() {
+        dismiss(animated: true)
+    }
+    
     private func startAnimation() {
         // 移除代码雨，改为从中心向四周扩散的爱心
         createHeartExplosion()
@@ -341,9 +345,5 @@ class LoveRainViewController: UIViewController {
             context.cgContext.setShadow(offset: .zero, blur: 5, color: pinkColor.cgColor)
             path.fill()
         }
-    }
-    
-    @objc private func closeTapped() {
-        dismiss(animated: true)
     }
 }

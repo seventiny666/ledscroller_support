@@ -8,14 +8,46 @@ class HeartGridView: UIView {
     private var rows: Int = 0
     private var cols: Int = 0
     
+    // 动画相关属性
+    private var animationTimer: Timer?
+    private var backgroundGridAlphas: [[CGFloat]] = []  // 背景格子的透明度
+    
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
+        setupAnimation()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    private func setupAnimation() {
+        // 启动动画定时器（封面版本更慢）
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func updateAnimation() {
+        // 随机更新背景格子透明度（封面版本更温和）
+        for row in 0..<backgroundGridAlphas.count {
+            for col in 0..<backgroundGridAlphas[row].count {
+                // 8% 的概率改变透明度
+                if Float.random(in: 0...1) < 0.08 {
+                    backgroundGridAlphas[row][col] = CGFloat.random(in: 0.4...1.0)
+                }
+            }
+        }
+        
+        // 触发重绘
+        setNeedsDisplay()
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
     }
     
     override func draw(_ rect: CGRect) {
@@ -29,15 +61,15 @@ class HeartGridView: UIView {
         rows = Int((rect.height + spacing) / (gridSize + spacing))
         
         // 确保至少有最小的网格数量
-        cols = max(cols, 5)
-        rows = max(rows, 5)
+        cols = max(cols, 10)
+        rows = max(rows, 8)
         
         // 定义爱心形状（15x15网格）
         let heartPattern = getHeartPattern()
         let heartRows = heartPattern.count
         let heartCols = heartPattern[0].count
         
-        // 如果网格太小无法容纳爱心，调整格子大小
+        // 如果网格太小无法容纳内容，调整格子大小
         if rows < heartRows || cols < heartCols {
             let maxGridSizeForHeight = rect.height / CGFloat(heartRows + 2)
             let maxGridSizeForWidth = rect.width / CGFloat(heartCols + 2)
@@ -47,8 +79,13 @@ class HeartGridView: UIView {
             // 重新计算行列数
             cols = Int((rect.width + spacing) / (gridSize + spacing))
             rows = Int((rect.height + spacing) / (gridSize + spacing))
-            cols = max(cols, heartCols)
-            rows = max(rows, heartRows)
+            cols = max(cols, heartCols + 2)
+            rows = max(rows, heartRows + 2)
+        }
+        
+        // 初始化背景格子透明度数组（如果需要）
+        if backgroundGridAlphas.count != rows || (backgroundGridAlphas.first?.count ?? 0) != cols {
+            backgroundGridAlphas = Array(repeating: Array(repeating: CGFloat.random(in: 0.4...1.0), count: cols), count: rows)
         }
         
         // 计算实际的网格总尺寸
@@ -60,7 +97,6 @@ class HeartGridView: UIView {
         let startY = (rect.height - totalGridHeight) / 2
         
         // 计算爱心在网格中的真正居中位置
-        // 使用浮点数计算，然后四舍五入确保居中
         let exactHeartStartRow = (Double(rows) - Double(heartRows)) / 2.0
         let exactHeartStartCol = (Double(cols) - Double(heartCols)) / 2.0
         
@@ -76,29 +112,38 @@ class HeartGridView: UIView {
                 let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
                 let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
                 
-                // 判断当前格子是否在爱心图案内
+                var isRedGrid = false
+                
+                // 判断是否在爱心图案内
                 let heartRow = row - centeredHeartStartRow
                 let heartCol = col - centeredHeartStartCol
-                
-                var isHeartGrid = false
                 if heartRow >= 0 && heartRow < heartRows && heartCol >= 0 && heartCol < heartCols {
-                    isHeartGrid = heartPattern[heartRow][heartCol]
+                    isRedGrid = heartPattern[heartRow][heartCol]
                 }
                 
-                if isHeartGrid {
-                    // 点亮的格子：亮红色
-                    UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0).setFill()
+                if isRedGrid {
+                    // 点亮的格子：亮红色带静态发光效果
+                    let baseColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0)
+                    baseColor.setFill()
+                    path.fill()
+                    
+                    // 静态发光效果（封面版本较温和）
+                    let glowRadius = gridSize * 0.4
+                    let glowPath = UIBezierPath(roundedRect: rect.insetBy(dx: -glowRadius, dy: -glowRadius), 
+                                               cornerRadius: gridSize * 0.25 + glowRadius)
+                    UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 0.3).setFill()
+                    glowPath.fill()
                 } else {
-                    // 未点亮的格子：暗蓝色（填充满整个背景）
-                    UIColor(red: 0.1, green: 0.15, blue: 0.25, alpha: 1.0).setFill()
+                    // 未点亮的格子：暗蓝色带随机闪烁效果
+                    let alpha = backgroundGridAlphas[row][col]
+                    UIColor(red: 0.15, green: 0.22, blue: 0.35, alpha: alpha).setFill()
+                    path.fill()
                 }
-                
-                path.fill()
             }
         }
     }
     
-    // 返回15x15的爱心图案
+    // 返回15x15的爱心图案（与HeartGridViewController相同）
     private func getHeartPattern() -> [[Bool]] {
         return [
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
@@ -116,6 +161,231 @@ class HeartGridView: UIView {
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
             [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+        ]
+    }
+}
+
+// I LOVE U 格子视图 - 用于热门动画封面
+class ILoveUView: UIView {
+    
+    private var gridSize: CGFloat = 12  // 封面用格子大小与红心封面保持一致
+    private var spacing: CGFloat = 2.5
+    private var rows: Int = 0
+    private var cols: Int = 0
+    
+    // 动画相关属性
+    private var animationTimer: Timer?
+    private var backgroundGridAlphas: [[CGFloat]] = []  // 背景格子的透明度
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    private func setupAnimation() {
+        // 启动动画定时器（封面版本更慢）
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func updateAnimation() {
+        // 随机更新背景格子透明度（封面版本更温和）
+        for row in 0..<backgroundGridAlphas.count {
+            for col in 0..<backgroundGridAlphas[row].count {
+                // 8% 的概率改变透明度
+                if Float.random(in: 0...1) < 0.08 {
+                    backgroundGridAlphas[row][col] = CGFloat.random(in: 0.4...1.0)
+                }
+            }
+        }
+        
+        // 触发重绘
+        setNeedsDisplay()
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        
+        // 确保rect有有效的尺寸
+        guard rect.width > 0 && rect.height > 0 else { return }
+        
+        // 计算能容纳多少行列的格子（填充满整个封面）
+        cols = Int((rect.width + spacing) / (gridSize + spacing))
+        rows = Int((rect.height + spacing) / (gridSize + spacing))
+        
+        // 确保至少有最小的网格数量
+        cols = max(cols, 10)
+        rows = max(rows, 8)
+        
+        // 定义爱心形状（15x15网格，与HeartGridView一致）
+        let heartPattern = getHeartPattern()
+        let heartRows = heartPattern.count
+        let heartCols = heartPattern[0].count
+        
+        // 如果网格太小无法容纳内容，调整格子大小（与HeartGridView逻辑一致）
+        if rows < heartRows || cols < heartCols + 4 { // 需要额外空间放置I和U
+            let maxGridSizeForHeight = rect.height / CGFloat(heartRows + 2)
+            let maxGridSizeForWidth = rect.width / CGFloat(heartCols + 6) // 为I和U留出空间
+            gridSize = min(maxGridSizeForHeight, maxGridSizeForWidth, 12) // 最大不超过12px，与红心封面保持一致
+            gridSize = max(gridSize, 4) // 最小4px，与红心封面保持一致
+            
+            // 重新计算行列数
+            cols = Int((rect.width + spacing) / (gridSize + spacing))
+            rows = Int((rect.height + spacing) / (gridSize + spacing))
+            cols = max(cols, heartCols + 4)
+            rows = max(rows, heartRows)
+        }
+        
+        // 初始化背景格子透明度数组（如果需要）
+        if backgroundGridAlphas.count != rows || (backgroundGridAlphas.first?.count ?? 0) != cols {
+            backgroundGridAlphas = Array(repeating: Array(repeating: CGFloat.random(in: 0.4...1.0), count: cols), count: rows)
+        }
+        
+        // 计算实际的网格总尺寸
+        let totalGridWidth = CGFloat(cols) * gridSize + CGFloat(cols - 1) * spacing
+        let totalGridHeight = CGFloat(rows) * gridSize + CGFloat(rows - 1) * spacing
+        
+        // 计算起始位置以居中显示
+        let startX = (rect.width - totalGridWidth) / 2
+        let startY = (rect.height - totalGridHeight) / 2
+        
+        // 计算爱心在网格中的真正居中位置
+        let exactHeartStartRow = (Double(rows) - Double(heartRows)) / 2.0
+        let exactHeartStartCol = (Double(cols) - Double(heartCols)) / 2.0
+        
+        let centeredHeartStartRow = Int(exactHeartStartRow.rounded())
+        let centeredHeartStartCol = Int(exactHeartStartCol.rounded())
+        
+        // 获取字母I和U的图案（封面版本较小）
+        let letterI = getLetterIPattern()
+        let letterU = getLetterUPattern()
+        
+        // 计算字母I的位置（爱心左边，调整距离适应15x15爱心）
+        let iStartRow = centeredHeartStartRow + (heartRows - letterI.count) / 2
+        let iStartCol = max(0, centeredHeartStartCol - 2) // 调整为2格距离
+        
+        // 计算字母U的位置（爱心右边，调整距离适应15x15爱心）
+        let uStartRow = centeredHeartStartRow + (heartRows - letterU.count) / 2
+        let uStartCol = min(cols - letterU[0].count, centeredHeartStartCol + heartCols + 1) // 调整为1格距离
+        
+        // 绘制所有格子
+        for row in 0..<rows {
+            for col in 0..<cols {
+                let x = startX + CGFloat(col) * (gridSize + spacing)
+                let y = startY + CGFloat(row) * (gridSize + spacing)
+                
+                let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
+                let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
+                
+                var isRedGrid = false
+                
+                // 判断是否在爱心图案内
+                let heartRow = row - centeredHeartStartRow
+                let heartCol = col - centeredHeartStartCol
+                if heartRow >= 0 && heartRow < heartRows && heartCol >= 0 && heartCol < heartCols {
+                    isRedGrid = heartPattern[heartRow][heartCol]
+                }
+                
+                // 判断是否在字母I内
+                let iRow = row - iStartRow
+                let iCol = col - iStartCol
+                if iRow >= 0 && iRow < letterI.count && iCol >= 0 && iCol < letterI[0].count {
+                    isRedGrid = isRedGrid || letterI[iRow][iCol]
+                }
+                
+                // 判断是否在字母U内
+                let uRow = row - uStartRow
+                let uCol = col - uStartCol
+                if uRow >= 0 && uRow < letterU.count && uCol >= 0 && uCol < letterU[0].count {
+                    isRedGrid = isRedGrid || letterU[uRow][uCol]
+                }
+                
+                if isRedGrid {
+                    // 点亮的格子：亮红色带静态发光效果
+                    let baseColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0)
+                    baseColor.setFill()
+                    path.fill()
+                    
+                    // 静态发光效果（封面版本较温和）
+                    let glowRadius = gridSize * 0.4
+                    let glowPath = UIBezierPath(roundedRect: rect.insetBy(dx: -glowRadius, dy: -glowRadius), 
+                                               cornerRadius: gridSize * 0.25 + glowRadius)
+                    UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 0.3).setFill()
+                    glowPath.fill()
+                } else {
+                    // 未点亮的格子：暗蓝色带随机闪烁效果
+                    let alpha = backgroundGridAlphas[row][col]
+                    UIColor(red: 0.15, green: 0.22, blue: 0.35, alpha: alpha).setFill()
+                    path.fill()
+                }
+            }
+        }
+    }
+    
+    // 返回15x15的爱心图案（与HeartGridView保持一致）
+    private func getHeartPattern() -> [[Bool]] {
+        return [
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, true,  true,  false, false, false, true,  true,  false, false, false, false, false],
+            [false, false, true,  true,  true,  true,  false, true,  true,  true,  true,  false, false, false, false],
+            [false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false],
+            [false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false],
+            [false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false],
+            [false, false, false, true,  true,  true,  true,  true,  true,  true,  false, false, false, false, false],
+            [false, false, false, false, true,  true,  true,  true,  true,  false, false, false, false, false, false],
+            [false, false, false, false, false, true,  true,  true,  false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, true,  false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+        ]
+    }
+    
+    // 字母I的图案（高度与爱心协调）
+    private func getLetterIPattern() -> [[Bool]] {
+        return [
+            [true],
+            [true],
+            [true],
+            [true],
+            [true],
+            [true],
+            [true],
+            [true],
+            [true],
+            [true],
+            [true]
+        ]
+    }
+    
+    // 字母U的图案（圆角矩形样式，无上边）
+    private func getLetterUPattern() -> [[Bool]] {
+        return [
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [true,  false, false, false, true],
+            [false, true,  false, true,  false],
+            [false, true,  true,  true,  false]
         ]
     }
 }
@@ -370,9 +640,18 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let category = categories[indexPath.section]
-        // 时钟分类只有1个，其他分类有4个（2行×2列）
-        // 增加高度确保底部卡片完全显示，增加额外的20px底部空间
-        return category == .clock ? 220 : 380
+        // 根据不同分类的卡片数量计算高度
+        switch category {
+        case .clock:
+            // 时钟分类只有1个卡片
+            return 220
+        case .popularAnimation:
+            // 热门动画分类有5个卡片，需要3行（2+2+1），增加高度
+            return 580 // 增加到580px以容纳3行卡片
+        default:
+            // 其他分类有4个卡片（2行×2列）
+            return 380
+        }
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -449,6 +728,12 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let heartGridVC = HeartGridViewController()
             heartGridVC.modalPresentationStyle = .fullScreen
             present(heartGridVC, animated: true)
+        } else if item.isILoveU {
+            // I LOVE U：跳转到I LOVE U全屏预览
+            AppDelegate.orientationLock = .landscape
+            let iLoveUVC = ILoveUViewController()
+            iLoveUVC.modalPresentationStyle = .fullScreen
+            present(iLoveUVC, animated: true)
         } else if item.isLoveRain {
             // 爱心流星雨：跳转到爱心雨动画
             AppDelegate.orientationLock = .landscape
@@ -561,6 +846,19 @@ class TemplateCategoryCell: UITableViewCell {
             // 标记为特殊的爱心格子动画
             heartGridItem.isHeartGrid = true
             items.append(heartGridItem)
+            
+            // I LOVE U（新增的第二个卡片）
+            var iLoveUItem = LEDItem(
+                id: "i-love-u-animation",
+                text: "I LOVE U",
+                fontSize: 80,
+                textColor: "#FF3366",
+                backgroundColor: "#1a1a2e",
+                glowIntensity: 5.0
+            )
+            // 标记为特殊的I LOVE U动画
+            iLoveUItem.isILoveU = true
+            items.append(iLoveUItem)
             
             // 爱心雨
             if let loveRainItem = allItems.first(where: { $0.isLoveRain }) {
@@ -873,9 +1171,9 @@ class TemplateItemCell: UICollectionViewCell {
     func configure(with item: LEDItem, tab: TemplateTab) {
         currentItem = item
         
-        // 移除之前可能添加的HeartGridView
+        // 移除之前可能添加的HeartGridView和ILoveUView
         imageView.subviews.forEach { subview in
-            if subview is HeartGridView {
+            if subview is HeartGridView || subview is ILoveUView {
                 subview.removeFromSuperview()
             }
         }
@@ -883,7 +1181,7 @@ class TemplateItemCell: UICollectionViewCell {
         // 如果是爱心格子动画，添加自定义视图
         if item.isHeartGrid {
             imageView.image = nil
-            imageView.backgroundColor = UIColor(red: 0.08, green: 0.12, blue: 0.2, alpha: 1.0) // 深蓝色背景
+            imageView.backgroundColor = UIColor.black // 黑色背景突出格子闪烁效果
             
             let heartGridView = HeartGridView()
             heartGridView.translatesAutoresizingMaskIntoConstraints = false
@@ -903,6 +1201,35 @@ class TemplateItemCell: UICollectionViewCell {
             // 延迟绘制，确保布局完成
             DispatchQueue.main.async {
                 heartGridView.setNeedsDisplay()
+            }
+            
+            // 隐藏文字标签
+            overlayTextLabel.isHidden = true
+        }
+        
+        // 如果是I LOVE U动画，添加自定义视图
+        if item.isILoveU {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black // 黑色背景突出格子闪烁效果
+            
+            let iLoveUView = ILoveUView()
+            iLoveUView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(iLoveUView)
+            
+            NSLayoutConstraint.activate([
+                iLoveUView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                iLoveUView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                iLoveUView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                iLoveUView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+            
+            // 强制立即布局，确保尺寸正确
+            iLoveUView.setNeedsLayout()
+            iLoveUView.layoutIfNeeded()
+            
+            // 延迟绘制，确保布局完成
+            DispatchQueue.main.async {
+                iLoveUView.setNeedsDisplay()
             }
             
             // 隐藏文字标签

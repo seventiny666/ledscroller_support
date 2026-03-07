@@ -5,6 +5,7 @@ class FireworksBloomViewController: UIViewController {
     
     private var emitterLayers: [CAEmitterLayer] = []
     private var tapCount = 0
+    private var fireworksView: UIView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
