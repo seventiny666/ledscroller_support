@@ -6,7 +6,7 @@ class LEDFullScreenViewController: UIViewController {
     private let ledItem: LEDItem
     private let backgroundImageView = UIImageView() // 背景图片视图
     private let borderView = MarqueeBorderView(displayMode: .fullScreen) // 跑马灯边框视图
-    private let lightBoardView = LightBoardBorderView() // 灯牌边框视图
+    private let lightBoardView = LightBoardBorderView(displayMode: .fullScreen) // 灯牌边框视图
     private let textLabel = UILabel()
     private var displayLink: CADisplayLink?
     
@@ -134,7 +134,7 @@ class LEDFullScreenViewController: UIViewController {
         // fontSize值对应全屏横屏时的实际pt大小
         let screenWidth = UIScreen.main.bounds.width
         let screenHeight = UIScreen.main.bounds.height
-        let landscapeWidth = max(screenWidth, screenHeight) // 横屏宽度
+        let _ = max(screenWidth, screenHeight) // 横屏宽度（未使用，保留注释说明）
         
         // 直接使用fontSize值，这就是全屏横屏时的实际大小
         let adjustedFontSize = ledItem.fontSize

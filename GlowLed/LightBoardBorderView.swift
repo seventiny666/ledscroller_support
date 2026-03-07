@@ -10,6 +10,10 @@ enum LightBoardBorderStyle: Int, CaseIterable {
     case style6
     case style7
     case style8
+    case style9
+    case style10
+    case style11
+    case style12
 }
 
 // 灯牌边框视图（带呼吸灯效果的圆点边框）
@@ -17,16 +21,30 @@ class LightBoardBorderView: UIView {
     
     private var currentStyle: LightBoardBorderStyle = .style1
     private var dotLayers: [CAShapeLayer] = []
-    private let isPreviewMode: Bool
+    private let displayMode: DisplayMode
     
+    enum DisplayMode {
+        case selection      // 选择按钮模式
+        case preview       // 预览模式
+        case fullScreen    // 全屏模式
+        case cardCover     // 创作模块卡片封面模式
+    }
+    
+    init(displayMode: DisplayMode = .preview) {
+        self.displayMode = displayMode
+        super.init(frame: .zero)
+        setupView()
+    }
+    
+    // 保持向后兼容
     init(isPreviewMode: Bool = true) {
-        self.isPreviewMode = isPreviewMode
+        self.displayMode = isPreviewMode ? .preview : .selection
         super.init(frame: .zero)
         setupView()
     }
     
     required init?(coder: NSCoder) {
-        self.isPreviewMode = true
+        self.displayMode = .preview
         super.init(coder: coder)
         setupView()
     }
@@ -51,14 +69,37 @@ class LightBoardBorderView: UIView {
         dotLayers.forEach { $0.removeFromSuperlayer() }
         dotLayers.removeAll()
         
-        // 根据预览模式设置参数
-        let dotSize: CGFloat = isPreviewMode ? 12 : 6
-        let borderWidth: CGFloat = isPreviewMode ? 4 : 2
-        let safeInset: CGFloat = isPreviewMode ? 20 : 8
+        // 根据显示模式设置参数
+        let dotSize: CGFloat
+        let borderWidth: CGFloat
+        let safeInset: CGFloat
+        let cornerRadius: CGFloat
+        
+        switch displayMode {
+        case .selection:
+            dotSize = 6
+            borderWidth = 10  // 边框宽度
+            safeInset = 12
+            cornerRadius = 8
+        case .preview:
+            dotSize = 8
+            borderWidth = 12  // 边框宽度
+            safeInset = 12
+            cornerRadius = 16
+        case .fullScreen:
+            dotSize = 16
+            borderWidth = 20  // 边框宽度
+            safeInset = 20
+            cornerRadius = 40
+        case .cardCover:
+            dotSize = 12
+            borderWidth = 16  // 边框宽度
+            safeInset = 12
+            cornerRadius = 12
+        }
         
         // 计算边框路径
         let borderRect = bounds.insetBy(dx: safeInset, dy: safeInset)
-        let cornerRadius: CGFloat = isPreviewMode ? 15 : 8
         
         // 根据样式获取边框颜色和圆点数量
         let (borderColor, dotCount) = getStyleProperties(currentStyle)
@@ -72,7 +113,7 @@ class LightBoardBorderView: UIView {
         layer.addSublayer(borderLayer)
         
         // 计算圆点位置
-        let perimeter = 2 * (borderRect.width + borderRect.height - 4 * cornerRadius) + 2 * .pi * cornerRadius
+        let _ = 2 * (borderRect.width + borderRect.height - 4 * cornerRadius) + 2 * .pi * cornerRadius
         
         // 创建圆点
         for i in 0..<dotCount {
@@ -80,18 +121,20 @@ class LightBoardBorderView: UIView {
             let position = calculatePositionOnRoundedRect(progress: progress, rect: borderRect, cornerRadius: cornerRadius)
             
             let dotLayer = CAShapeLayer()
-            dotLayer.path = UIBezierPath(ovalIn: CGRect(x: 0, y: 0, width: dotSize, height: dotSize)).cgPath
+            // 创建以原点为中心的圆形路径
+            let dotRect = CGRect(x: -dotSize/2, y: -dotSize/2, width: dotSize, height: dotSize)
+            dotLayer.path = UIBezierPath(ovalIn: dotRect).cgPath
             dotLayer.fillColor = UIColor.white.cgColor
             dotLayer.position = position
             
             // 添加发光效果
             dotLayer.shadowColor = UIColor.white.cgColor
-            dotLayer.shadowRadius = dotSize * 0.4
-            dotLayer.shadowOpacity = 0.8
+            dotLayer.shadowRadius = dotSize * 0.6
+            dotLayer.shadowOpacity = 0.9
             dotLayer.shadowOffset = .zero
             
-            // 只在预览模式下添加呼吸灯动画
-            if isPreviewMode {
+            // 只在预览模式和全屏模式下添加呼吸灯动画
+            if displayMode == .preview || displayMode == .fullScreen {
                 addBreathingAnimation(to: dotLayer, index: i)
             }
             
@@ -101,26 +144,48 @@ class LightBoardBorderView: UIView {
     }
     
     private func getStyleProperties(_ style: LightBoardBorderStyle) -> (UIColor, Int) {
-        let dotCount = isPreviewMode ? 24 : 12
+        // 根据显示模式调整圆点数量
+        let baseDotCount: Int
+        switch displayMode {
+        case .selection:
+            baseDotCount = 16
+        case .preview:
+            baseDotCount = 24
+        case .fullScreen:
+            baseDotCount = 48
+        case .cardCover:
+            baseDotCount = 20
+        }
         
+        let borderColor: UIColor
         switch style {
         case .style1:
-            return (UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0), dotCount) // 红色
+            borderColor = UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0) // 红色
         case .style2:
-            return (UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0), dotCount) // 绿色
+            borderColor = UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0) // 绿色
         case .style3:
-            return (UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0), dotCount) // 蓝色
+            borderColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0) // 蓝色
         case .style4:
-            return (UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0), dotCount) // 黄色
+            borderColor = UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0) // 黄色
         case .style5:
-            return (UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0), dotCount) // 洋红色
+            borderColor = UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0) // 洋红色
         case .style6:
-            return (UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0), dotCount) // 青色
+            borderColor = UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0) // 青色
         case .style7:
-            return (UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0), dotCount) // 橙色
+            borderColor = UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0) // 橙色
         case .style8:
-            return (UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0), dotCount) // 紫色
+            borderColor = UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0) // 紫色
+        case .style9:
+            borderColor = UIColor(red: 1.0, green: 0.75, blue: 0.8, alpha: 1.0) // 粉色
+        case .style10:
+            borderColor = UIColor(red: 0.0, green: 0.8, blue: 0.4, alpha: 1.0) // 翠绿色
+        case .style11:
+            borderColor = UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0) // 金色
+        case .style12:
+            borderColor = UIColor(red: 0.8, green: 0.8, blue: 0.8, alpha: 1.0) // 银色
         }
+        
+        return (borderColor, baseDotCount)
     }
     
     private func calculatePositionOnRoundedRect(progress: CGFloat, rect: CGRect, cornerRadius: CGFloat) -> CGPoint {

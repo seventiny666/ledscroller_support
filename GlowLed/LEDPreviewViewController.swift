@@ -5,8 +5,8 @@ class LEDPreviewViewController: UIViewController {
     
     private let ledItem: LEDItem
     private let backgroundImageView = UIImageView()
-    private let borderView = MarqueeBorderView() // 跑马灯边框视图
-    private let lightBoardView = LightBoardBorderView() // 灯牌边框视图
+    private let borderView = MarqueeBorderView(displayMode: .preview) // 跑马灯边框视图
+    private let lightBoardView = LightBoardBorderView(displayMode: .preview) // 灯牌边框视图
     private let textLabel = UILabel()
     private let editButton = UIButton(type: .system)
     private let previewButton = UIButton(type: .system)

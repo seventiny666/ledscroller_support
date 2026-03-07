@@ -407,8 +407,8 @@ class CreationTableCell: UITableViewCell {
     private let containerView = UIView()
     private let previewView = UIView()
     private let backgroundImageView = UIImageView()
-    private let borderView = MarqueeBorderView() // 跑马灯边框视图
-    private let lightBoardView = LightBoardBorderView() // 灯牌边框视图
+    private let borderView = MarqueeBorderView(displayMode: .cardCover) // 跑马灯边框视图
+    private let lightBoardView = LightBoardBorderView(displayMode: .cardCover) // 灯牌边框视图
     private let ledTextLabel = UILabel() // 改名避免与UITableViewCell的textLabel冲突
     private let timeLabel = UILabel() // 时间标签（放在卡片下面）
     

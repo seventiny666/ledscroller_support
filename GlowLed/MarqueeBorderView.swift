@@ -28,6 +28,7 @@ class MarqueeBorderView: UIView {
         case selection      // 选择按钮模式
         case preview       // 预览模式
         case fullScreen    // 全屏模式
+        case cardCover     // 创作模块卡片封面模式
     }
     
     init(displayMode: DisplayMode = .preview) {
@@ -91,16 +92,20 @@ class MarqueeBorderView: UIView {
         
         switch displayMode {
         case .selection:
-            dotSize = 5
-            safeInset = 8
-            cornerRadius = 4
+            dotSize = 6
+            safeInset = 12
+            cornerRadius = 8
         case .preview:
             dotSize = 8
             safeInset = 12
             cornerRadius = 8
         case .fullScreen:
-            dotSize = 16  // 全屏模式圆点直径增加8px (从8px增加到16px)
+            dotSize = 16
             safeInset = 20
+            cornerRadius = 40
+        case .cardCover:
+            dotSize = 10
+            safeInset = 12
             cornerRadius = 12
         }
         
@@ -113,7 +118,7 @@ class MarqueeBorderView: UIView {
         // 创建圆角矩形路径上的圆点
         let points = calculateRoundedRectPoints(rect: borderRect, cornerRadius: cornerRadius, dotCount: dotCount)
         
-        for (index, point) in points.enumerated() {
+        for (_, point) in points.enumerated() {
             let dotLayer = CAShapeLayer()
             // 创建以原点为中心的圆形路径
             let dotRect = CGRect(x: -dotSize/2, y: -dotSize/2, width: dotSize, height: dotSize)
@@ -190,6 +195,8 @@ class MarqueeBorderView: UIView {
             dotCount = baseCount
         case .fullScreen:
             dotCount = baseCount * 2  // 全屏模式使用更多圆点
+        case .cardCover:
+            dotCount = max(baseCount * 3 / 4, 20)  // 创作模块卡片封面模式
         }
         
         return (dotCount, color)

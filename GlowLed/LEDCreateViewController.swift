@@ -562,33 +562,69 @@ class LEDCreateViewController: UIViewController {
         borderTabView.addSubview(marqueeRow1)
         NSLayoutConstraint.activate([
             marqueeRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            marqueeRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 30),
-            marqueeRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -30),
+            marqueeRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            marqueeRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
             marqueeRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
-        tabYOffset += 70
+        tabYOffset += 60
         
         // 第2行（样式4-7）
         let marqueeRow2 = createMarqueeBorderStack(startIndex: 4, count: 4, tag: 604)
         borderTabView.addSubview(marqueeRow2)
         NSLayoutConstraint.activate([
             marqueeRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            marqueeRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 30),
-            marqueeRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -30),
+            marqueeRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            marqueeRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
             marqueeRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
-        tabYOffset += 70
+        tabYOffset += 60
         
         // 第3行（样式8-11）
         let marqueeRow3 = createMarqueeBorderStack(startIndex: 8, count: 4, tag: 608)
         borderTabView.addSubview(marqueeRow3)
         NSLayoutConstraint.activate([
             marqueeRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            marqueeRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 30),
-            marqueeRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -30),
+            marqueeRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            marqueeRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
             marqueeRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
-        tabYOffset += 80
+        tabYOffset += 70
+        
+        // 灯牌边框（12个样式，3行4列）
+        addSectionLabelToView(borderTabView, text: "lightBoardBorder".localized, yOffset: &tabYOffset)
+        
+        // 第1行（样式0-3）
+        let lightBoardRow1 = createLightBoardBorderStack(startIndex: 0, count: 4, tag: 700)
+        borderTabView.addSubview(lightBoardRow1)
+        NSLayoutConstraint.activate([
+            lightBoardRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            lightBoardRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            lightBoardRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
+            lightBoardRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 60
+        
+        // 第2行（样式4-7）
+        let lightBoardRow2 = createLightBoardBorderStack(startIndex: 4, count: 4, tag: 704)
+        borderTabView.addSubview(lightBoardRow2)
+        NSLayoutConstraint.activate([
+            lightBoardRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            lightBoardRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            lightBoardRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
+            lightBoardRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 60
+        
+        // 第3行（样式8-11）
+        let lightBoardRow3 = createLightBoardBorderStack(startIndex: 8, count: 4, tag: 708)
+        borderTabView.addSubview(lightBoardRow3)
+        NSLayoutConstraint.activate([
+            lightBoardRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            lightBoardRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            lightBoardRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
+            lightBoardRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 70
     }
     
     // 创建跑马灯边框选择器（一行4个按钮）
@@ -638,6 +674,73 @@ class LEDCreateViewController: UIViewController {
         }
         
         return stack
+    }
+    
+    // 创建灯牌边框选择器（一行4个按钮）
+    private func createLightBoardBorderStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let buttons = (0..<count).map { index -> UIButton in
+            let btn = UIButton(type: .system)
+            let styleIndex = startIndex + index
+            
+            // 创建灯牌边框预览视图（静态显示）
+            let borderView = LightBoardBorderView(displayMode: .selection)
+            borderView.setStyle(LightBoardBorderStyle(rawValue: styleIndex) ?? .style1)
+            borderView.isUserInteractionEnabled = false
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            btn.addSubview(borderView)
+            
+            // 设置深色背景
+            btn.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+            btn.layer.cornerRadius = 8
+            btn.layer.borderWidth = 2
+            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.clipsToBounds = true
+            btn.tag = tag + index
+            btn.addTarget(self, action: #selector(lightBoardBorderButtonTapped(_:)), for: .touchUpInside)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            
+            // 边框视图填充按钮
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: btn.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
+            ])
+            
+            return btn
+        }
+        
+        let stack = UIStackView(arrangedSubviews: buttons)
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 为每个按钮设置16:9比例
+        buttons.forEach { btn in
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+        }
+        
+        return stack
+    }
+    
+    @objc private func lightBoardBorderButtonTapped(_ sender: UIButton) {
+        let styleIndex = sender.tag - 700
+        
+        // 更新选中状态
+        for i in 0..<12 {
+            if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                button.layer.borderWidth = (i == styleIndex) ? 3 : 2
+                button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+            }
+        }
+        
+        // 更新当前项的边框样式
+        currentItem.lightBoardStyle = styleIndex
+        currentItem.borderStyle = nil // 清除跑马灯边框
+        
+        // 更新预览
+        updatePreview()
     }
     
     @objc private func marqueeBorderButtonTapped(_ sender: UIButton) {
@@ -1374,9 +1477,9 @@ class LEDCreateViewController: UIViewController {
             }
         }
         
-        // 更新灯牌边框按钮选中状态（待实现）
+        // 更新灯牌边框按钮选中状态
         if let lightBoardStyle = currentItem.lightBoardStyle {
-            for i in 0..<8 {
+            for i in 0..<12 {
                 if let button = contentView.viewWithTag(700 + i) as? UIButton {
                     button.layer.borderWidth = (i == lightBoardStyle) ? 3 : 2
                     button.layer.borderColor = (i == lightBoardStyle) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
