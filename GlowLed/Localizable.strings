@@ -8,6 +8,7 @@
 "neon" = "Neon Screen";
 "idol" = "Idol Screen";
 "led" = "LED Screen";
+"popularAnimation" = "Popular Animation";
 "clock" = "Clock Screen";
 "other" = "Other Screen";
 

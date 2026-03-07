@@ -8,6 +8,7 @@
 "neon" = "霓虹燈屏幕";
 "idol" = "偶像屏幕";
 "led" = "LED屏幕";
+"popularAnimation" = "熱門動畫";
 "clock" = "時鐘屏幕";
 "other" = "其他屏幕";
 

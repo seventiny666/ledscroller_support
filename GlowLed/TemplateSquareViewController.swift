@@ -1,10 +1,131 @@
 import UIKit
 
+// 爱心格子视图 - 用于热门动画封面
+class HeartGridView: UIView {
+    
+    private var gridSize: CGFloat = 12  // 封面用较小的格子
+    private var spacing: CGFloat = 2.5
+    private var rows: Int = 0
+    private var cols: Int = 0
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        
+        // 确保rect有有效的尺寸
+        guard rect.width > 0 && rect.height > 0 else { return }
+        
+        // 计算能容纳多少行列的格子（填充满整个封面）
+        cols = Int((rect.width + spacing) / (gridSize + spacing))
+        rows = Int((rect.height + spacing) / (gridSize + spacing))
+        
+        // 确保至少有最小的网格数量
+        cols = max(cols, 5)
+        rows = max(rows, 5)
+        
+        // 定义爱心形状（15x15网格）
+        let heartPattern = getHeartPattern()
+        let heartRows = heartPattern.count
+        let heartCols = heartPattern[0].count
+        
+        // 如果网格太小无法容纳爱心，调整格子大小
+        if rows < heartRows || cols < heartCols {
+            let maxGridSizeForHeight = rect.height / CGFloat(heartRows + 2)
+            let maxGridSizeForWidth = rect.width / CGFloat(heartCols + 2)
+            gridSize = min(maxGridSizeForHeight, maxGridSizeForWidth, 12) // 最大不超过12px
+            gridSize = max(gridSize, 4) // 最小4px
+            
+            // 重新计算行列数
+            cols = Int((rect.width + spacing) / (gridSize + spacing))
+            rows = Int((rect.height + spacing) / (gridSize + spacing))
+            cols = max(cols, heartCols)
+            rows = max(rows, heartRows)
+        }
+        
+        // 计算实际的网格总尺寸
+        let totalGridWidth = CGFloat(cols) * gridSize + CGFloat(cols - 1) * spacing
+        let totalGridHeight = CGFloat(rows) * gridSize + CGFloat(rows - 1) * spacing
+        
+        // 计算起始位置以居中显示
+        let startX = (rect.width - totalGridWidth) / 2
+        let startY = (rect.height - totalGridHeight) / 2
+        
+        // 计算爱心在网格中的真正居中位置
+        // 使用浮点数计算，然后四舍五入确保居中
+        let exactHeartStartRow = (Double(rows) - Double(heartRows)) / 2.0
+        let exactHeartStartCol = (Double(cols) - Double(heartCols)) / 2.0
+        
+        let centeredHeartStartRow = Int(exactHeartStartRow.rounded())
+        let centeredHeartStartCol = Int(exactHeartStartCol.rounded())
+        
+        // 绘制所有格子
+        for row in 0..<rows {
+            for col in 0..<cols {
+                let x = startX + CGFloat(col) * (gridSize + spacing)
+                let y = startY + CGFloat(row) * (gridSize + spacing)
+                
+                let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
+                let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
+                
+                // 判断当前格子是否在爱心图案内
+                let heartRow = row - centeredHeartStartRow
+                let heartCol = col - centeredHeartStartCol
+                
+                var isHeartGrid = false
+                if heartRow >= 0 && heartRow < heartRows && heartCol >= 0 && heartCol < heartCols {
+                    isHeartGrid = heartPattern[heartRow][heartCol]
+                }
+                
+                if isHeartGrid {
+                    // 点亮的格子：亮红色
+                    UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0).setFill()
+                } else {
+                    // 未点亮的格子：暗蓝色（填充满整个背景）
+                    UIColor(red: 0.1, green: 0.15, blue: 0.25, alpha: 1.0).setFill()
+                }
+                
+                path.fill()
+            }
+        }
+    }
+    
+    // 返回15x15的爱心图案
+    private func getHeartPattern() -> [[Bool]] {
+        return [
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, true,  true,  true,  false, false, false, true,  true,  true,  false, false, false, false],
+            [false, true,  true,  true,  true,  true,  false, true,  true,  true,  true,  true,  false, false, false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
+            [false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false],
+            [false, false, false, true,  true,  true,  true,  true,  true,  true,  false, false, false, false, false],
+            [false, false, false, false, true,  true,  true,  true,  true,  false, false, false, false, false, false],
+            [false, false, false, false, false, true,  true,  true,  false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, true,  false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+        ]
+    }
+}
+
 // 模版分类
 enum TemplateCategory: String, CaseIterable {
     case neon = "霓虹灯看板"
     case idol = "偶像应援"
     case ledScreen = "LED横幅"
+    case popularAnimation = "热门动画"
     case clock = "数字时钟"
     case other = "其他分类"
     
@@ -13,6 +134,7 @@ enum TemplateCategory: String, CaseIterable {
         case .neon: return "neon".localized
         case .idol: return "idol".localized
         case .ledScreen: return "led".localized
+        case .popularAnimation: return "popularAnimation".localized
         case .clock: return "clock".localized
         case .other: return "other".localized
         }
@@ -26,6 +148,8 @@ enum TemplateCategory: String, CaseIterable {
             return UIColor(red: 0xFF/255.0, green: 0x6B/255.0, blue: 0xD6/255.0, alpha: 1.0) // #FF6BD6
         case .ledScreen:
             return UIColor(red: 0x6B/255.0, green: 0xFF/255.0, blue: 0xB0/255.0, alpha: 1.0) // #6BFFB0
+        case .popularAnimation:
+            return UIColor(red: 0xFF/255.0, green: 0x69/255.0, blue: 0xB4/255.0, alpha: 1.0) // #FF69B4 粉红色
         case .clock, .other:
             return .white
         }
@@ -89,8 +213,8 @@ class TemplateSquareViewController: UIViewController {
             // 热门模版：霓虹灯看板、偶像应援、LED横幅
             categories = [.neon, .idol, .ledScreen]
         case .animation:
-            // 动画模版：数字时钟、其他分类
-            categories = [.clock, .other]
+            // 动画模版：热门动画、数字时钟、其他分类
+            categories = [.popularAnimation, .clock, .other]
         }
     }
     
@@ -257,24 +381,60 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         
         let category = categories[section]
         
-        // 标题文字（去掉图标）
-        let label = UILabel()
-        label.text = category.localizedName
-        label.textColor = UIColor.white.withAlphaComponent(0.9) // 白色 0.9透明度
-        label.font = .systemFont(ofSize: 18, weight: .bold)
-        label.translatesAutoresizingMaskIntoConstraints = false
-        headerView.addSubview(label)
-        
-        NSLayoutConstraint.activate([
-            label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
-            label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
-        ])
+        // 如果是热门动画分类，添加火焰图标
+        if category == .popularAnimation {
+            // 创建火焰图标视图（使用渐变色）
+            let fireIconView = UIView()
+            fireIconView.translatesAutoresizingMaskIntoConstraints = false
+            headerView.addSubview(fireIconView)
+            
+            // 创建火焰emoji标签
+            let fireLabel = UILabel()
+            fireLabel.text = "🔥"
+            fireLabel.font = .systemFont(ofSize: 20)
+            fireLabel.translatesAutoresizingMaskIntoConstraints = false
+            fireIconView.addSubview(fireLabel)
+            
+            // 标题文字
+            let label = UILabel()
+            label.text = category.localizedName
+            label.textColor = UIColor.white.withAlphaComponent(0.9)
+            label.font = .systemFont(ofSize: 18, weight: .bold)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            headerView.addSubview(label)
+            
+            NSLayoutConstraint.activate([
+                fireIconView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
+                fireIconView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+                fireIconView.widthAnchor.constraint(equalToConstant: 24),
+                fireIconView.heightAnchor.constraint(equalToConstant: 24),
+                
+                fireLabel.centerXAnchor.constraint(equalTo: fireIconView.centerXAnchor),
+                fireLabel.centerYAnchor.constraint(equalTo: fireIconView.centerYAnchor),
+                
+                label.leadingAnchor.constraint(equalTo: fireIconView.trailingAnchor, constant: 8),
+                label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+            ])
+        } else {
+            // 其他分类：标题文字（去掉图标）
+            let label = UILabel()
+            label.text = category.localizedName
+            label.textColor = UIColor.white.withAlphaComponent(0.9) // 白色 0.9透明度
+            label.font = .systemFont(ofSize: 18, weight: .bold)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            headerView.addSubview(label)
+            
+            NSLayoutConstraint.activate([
+                label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
+                label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+            ])
+        }
         
         return headerView
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return section == 0 ? 54 : 44 // 第一个section 54px，其他section 44px
+        return section == 0 ? 54 : 40 // 第一个section 54px，其他section 40px（模块间距）
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
@@ -283,7 +443,14 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     
     private func handleItemTap(_ item: LEDItem) {
         // 特殊效果直接跳转
-        if item.isLoveRain {
+        if item.isHeartGrid {
+            // 爱心格子：跳转到爱心格子全屏预览
+            AppDelegate.orientationLock = .landscape
+            let heartGridVC = HeartGridViewController()
+            heartGridVC.modalPresentationStyle = .fullScreen
+            present(heartGridVC, animated: true)
+        } else if item.isLoveRain {
+            // 爱心流星雨：跳转到爱心雨动画
             AppDelegate.orientationLock = .landscape
             let loveRainVC = LoveRainViewController()
             loveRainVC.modalPresentationStyle = .fullScreen
@@ -346,8 +513,8 @@ class TemplateCategoryCell: UITableViewCell {
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 14
-        layout.minimumLineSpacing = 14
+        layout.minimumInteritemSpacing = 16
+        layout.minimumLineSpacing = 16
         layout.sectionInset = UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -378,6 +545,39 @@ class TemplateCategoryCell: UITableViewCell {
         let allItems = LEDDataManager.shared.loadItems()
         
         switch category {
+        case .popularAnimation:
+            // 返回热门动画：爱心格子、爱心雨、烟花、烟花绽放
+            var items: [LEDItem] = []
+            
+            // 爱心格子（新增的第一个卡片）
+            var heartGridItem = LEDItem(
+                id: "heart-grid-animation",
+                text: "红心",
+                fontSize: 80,
+                textColor: "#FF3366",
+                backgroundColor: "#1a1a2e",
+                glowIntensity: 5.0
+            )
+            // 标记为特殊的爱心格子动画
+            heartGridItem.isHeartGrid = true
+            items.append(heartGridItem)
+            
+            // 爱心雨
+            if let loveRainItem = allItems.first(where: { $0.isLoveRain }) {
+                items.append(loveRainItem)
+            }
+            
+            // 烟花
+            if let fireworksItem = allItems.first(where: { $0.isFireworks }) {
+                items.append(fireworksItem)
+            }
+            
+            // 烟花绽放
+            if let fireworksBloomItem = allItems.first(where: { $0.isFireworksBloom }) {
+                items.append(fireworksBloomItem)
+            }
+            
+            return items
         case .clock:
             // 返回翻页时钟和占位符
             var items = allItems.filter { $0.isFlipClock }
@@ -512,7 +712,7 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 54) / 2 // 2列，左右各20，中间14
+        let width = (collectionView.bounds.width - 56) / 2 // 2列，左右各20，中间16
         return CGSize(width: width, height: width * 0.95) // 增加高度以容纳按钮
     }
     
@@ -673,6 +873,42 @@ class TemplateItemCell: UICollectionViewCell {
     func configure(with item: LEDItem, tab: TemplateTab) {
         currentItem = item
         
+        // 移除之前可能添加的HeartGridView
+        imageView.subviews.forEach { subview in
+            if subview is HeartGridView {
+                subview.removeFromSuperview()
+            }
+        }
+        
+        // 如果是爱心格子动画，添加自定义视图
+        if item.isHeartGrid {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor(red: 0.08, green: 0.12, blue: 0.2, alpha: 1.0) // 深蓝色背景
+            
+            let heartGridView = HeartGridView()
+            heartGridView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(heartGridView)
+            
+            NSLayoutConstraint.activate([
+                heartGridView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                heartGridView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                heartGridView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                heartGridView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+            
+            // 强制立即布局，确保尺寸正确
+            heartGridView.setNeedsLayout()
+            heartGridView.layoutIfNeeded()
+            
+            // 延迟绘制，确保布局完成
+            DispatchQueue.main.async {
+                heartGridView.setNeedsDisplay()
+            }
+            
+            // 隐藏文字标签
+            overlayTextLabel.isHidden = true
+        }
+        
         if tab == .popular {
             // 热门模版：只显示试用按钮，隐藏预览按钮和标题
             overlayTextLabel.text = item.text
@@ -706,13 +942,15 @@ class TemplateItemCell: UICollectionViewCell {
         overlayTextLabel.layer.shadowOffset = .zero
         overlayTextLabel.layer.masksToBounds = false
         
-        // 尝试加载图片，如果没有则使用占位颜色
-        if let imageName = item.imageName, !imageName.isEmpty {
-            imageView.image = UIImage(named: imageName)
-        } else {
-            // 使用占位颜色
-            imageView.image = nil
-            imageView.backgroundColor = UIColor(hex: item.backgroundColor)
+        // 尝试加载图片，如果没有则使用占位颜色（爱心格子除外）
+        if !item.isHeartGrid {
+            if let imageName = item.imageName, !imageName.isEmpty {
+                imageView.image = UIImage(named: imageName)
+            } else {
+                // 使用占位颜色
+                imageView.image = nil
+                imageView.backgroundColor = UIColor(hex: item.backgroundColor)
+            }
         }
     }
 }
