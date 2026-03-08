@@ -2113,6 +2113,7 @@ class LEDCreateViewController: UIViewController {
         // 清除其他背景选择
         updateColorButtonSelection(tag: 200, selectedIndex: -1)
         updateColorButtonSelection(tag: 300, selectedIndex: -1)
+        updateColorButtonSelection(tag: 400, selectedIndex: -1) // 清除背景渐变选择
         
         updatePreview()
     }
