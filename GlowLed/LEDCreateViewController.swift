@@ -736,17 +736,41 @@ class LEDCreateViewController: UIViewController {
     @objc private func lightBoardBorderButtonTapped(_ sender: UIButton) {
         let styleIndex = sender.tag - 700
         
-        // 更新选中状态
-        for i in 0..<12 {
-            if let button = contentView.viewWithTag(700 + i) as? UIButton {
-                button.layer.borderWidth = (i == styleIndex) ? 3 : 2
-                button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+        // 检查是否点击了当前已选中的边框
+        let isCurrentlySelected = (currentItem.lightBoardStyle == styleIndex)
+        
+        if isCurrentlySelected {
+            // 取消选择
+            currentItem.lightBoardStyle = nil
+            
+            // 清除所有按钮的选中状态
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+        } else {
+            // 选择新的边框
+            currentItem.lightBoardStyle = styleIndex
+            currentItem.borderStyle = nil // 清除跑马灯边框
+            
+            // 更新选中状态
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = (i == styleIndex) ? 3 : 2
+                    button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除跑马灯边框的选中状态
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
             }
         }
-        
-        // 更新当前项的边框样式
-        currentItem.lightBoardStyle = styleIndex
-        currentItem.borderStyle = nil // 清除跑马灯边框
         
         // 更新预览
         updatePreview()
@@ -755,17 +779,41 @@ class LEDCreateViewController: UIViewController {
     @objc private func marqueeBorderButtonTapped(_ sender: UIButton) {
         let styleIndex = sender.tag - 600
         
-        // 更新选中状态
-        for i in 0..<12 {
-            if let button = contentView.viewWithTag(600 + i) as? UIButton {
-                button.layer.borderWidth = (i == styleIndex) ? 3 : 2
-                button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+        // 检查是否点击了当前已选中的边框
+        let isCurrentlySelected = (currentItem.borderStyle == styleIndex)
+        
+        if isCurrentlySelected {
+            // 取消选择
+            currentItem.borderStyle = nil
+            
+            // 清除所有按钮的选中状态
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+        } else {
+            // 选择新的边框
+            currentItem.borderStyle = styleIndex
+            currentItem.lightBoardStyle = nil // 清除灯牌边框
+            
+            // 更新选中状态
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                    button.layer.borderWidth = (i == styleIndex) ? 3 : 2
+                    button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除灯牌边框的选中状态
+            for i in 0..<12 {
+                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
             }
         }
-        
-        // 更新当前项的边框样式
-        currentItem.borderStyle = styleIndex
-        currentItem.lightBoardStyle = nil // 清除灯牌边框
         
         // 更新预览
         updatePreview()
