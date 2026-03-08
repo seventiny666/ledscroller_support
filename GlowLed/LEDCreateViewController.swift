@@ -1858,6 +1858,8 @@ class LEDCreateViewController: UIViewController {
                 currentItem.backgroundColor = bgColors[selectedBgColorIndex]
                 print("设置背景颜色: \(bgColors[selectedBgColorIndex])")
                 selectedBackgroundImage = nil // 清除背景图片
+                // 清除背景渐变层
+                previewContainer.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer && $0 !== previewBackgroundImageView.layer })
                 updateColorButtonSelection(tag: 200, selectedIndex: selectedBgColorIndex)
                 // 清除渐变选择
                 updateColorButtonSelection(tag: 400, selectedIndex: -1)
@@ -2086,11 +2088,15 @@ class LEDCreateViewController: UIViewController {
             previewBackgroundImageView.image = image
             previewBackgroundImageView.isHidden = false
             previewContainer.backgroundColor = .clear
+            // 清除背景渐变层
+            previewContainer.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer && $0 !== previewBackgroundImageView.layer })
         } else {
             // 显示背景颜色
             print("显示背景颜色: \(currentItem.backgroundColor)")
             previewBackgroundImageView.image = nil
             previewBackgroundImageView.isHidden = true
+            // 清除背景渐变层
+            previewContainer.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer && $0 !== previewBackgroundImageView.layer })
             previewContainer.backgroundColor = UIColor(hex: currentItem.backgroundColor)
         }
         
