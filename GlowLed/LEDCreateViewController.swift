@@ -1,5 +1,148 @@
 import UIKit
 
+// LED屏幕卡片视图 - 用于创建页面的背景选择
+class LEDScreenCardView: UIView {
+    
+    enum LEDScreenStyle: Int, CaseIterable {
+        case red = 0, green, blue, yellow, purple, cyan, orange, white
+        
+        var color: UIColor {
+            switch self {
+            case .red: return UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
+            case .green: return UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
+            case .blue: return UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0)
+            case .yellow: return UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0)
+            case .purple: return UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0)
+            case .cyan: return UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0)
+            case .orange: return UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0)
+            case .white: return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+            }
+        }
+    }
+    
+    private var style: LEDScreenStyle = .red
+    private var dotLayers: [CAShapeLayer] = []
+    private var outerBorderLayer: CAShapeLayer?
+    private var innerBorderLayer: CAShapeLayer?
+    
+    init(style: LEDScreenStyle) {
+        self.style = style
+        super.init(frame: .zero)
+        setupView()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        setupView()
+    }
+    
+    private func setupView() {
+        backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1.0) // 深黑色背景
+        layer.cornerRadius = 8
+        clipsToBounds = true
+    }
+    
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        setupLEDDots()
+        setupBorders()
+    }
+    
+    private func setupLEDDots() {
+        // 清除旧的点
+        dotLayers.forEach { $0.removeFromSuperlayer() }
+        dotLayers.removeAll()
+        
+        let dotSize: CGFloat = 2.0
+        let spacing: CGFloat = 6.0
+        let totalSpacing = dotSize + spacing
+        
+        // 计算可以放置的点的数量
+        let cols = Int((bounds.width - spacing) / totalSpacing)
+        let rows = Int((bounds.height - spacing) / totalSpacing)
+        
+        // 计算起始位置，使点阵居中
+        let totalWidth = CGFloat(cols) * totalSpacing - spacing
+        let totalHeight = CGFloat(rows) * totalSpacing - spacing
+        let startX = (bounds.width - totalWidth) / 2
+        let startY = (bounds.height - totalHeight) / 2
+        
+        for row in 0..<rows {
+            for col in 0..<cols {
+                let x = startX + CGFloat(col) * totalSpacing
+                let y = startY + CGFloat(row) * totalSpacing
+                
+                let dotLayer = CAShapeLayer()
+                let dotPath = UIBezierPath(ovalIn: CGRect(x: x, y: y, width: dotSize, height: dotSize))
+                dotLayer.path = dotPath.cgPath
+                dotLayer.fillColor = style.color.cgColor
+                
+                // 添加发光效果
+                dotLayer.shadowColor = style.color.cgColor
+                dotLayer.shadowRadius = 1.5
+                dotLayer.shadowOpacity = 0.8
+                dotLayer.shadowOffset = .zero
+                
+                layer.addSublayer(dotLayer)
+                dotLayers.append(dotLayer)
+            }
+        }
+    }
+    
+    private func setupBorders() {
+        // 清除旧的边框
+        outerBorderLayer?.removeFromSuperlayer()
+        innerBorderLayer?.removeFromSuperlayer()
+        
+        let bounds = self.bounds
+        
+        // 外层虚线边框 - 距离边缘20px
+        let outerInset: CGFloat = 12
+        let outerRect = bounds.insetBy(dx: outerInset, dy: outerInset)
+        let outerPath = UIBezierPath(roundedRect: outerRect, cornerRadius: 20)
+        
+        outerBorderLayer = CAShapeLayer()
+        outerBorderLayer!.path = outerPath.cgPath
+        outerBorderLayer!.fillColor = UIColor.clear.cgColor
+        outerBorderLayer!.strokeColor = UIColor.white.cgColor
+        outerBorderLayer!.lineWidth = 4
+        outerBorderLayer!.lineDashPattern = [8, 3] // 虚线模式：8px实线，3px间隔
+        
+        // 外层边框发光效果
+        outerBorderLayer!.shadowColor = style.color.cgColor
+        outerBorderLayer!.shadowRadius = 3.0
+        outerBorderLayer!.shadowOpacity = 0.8
+        outerBorderLayer!.shadowOffset = .zero
+        
+        layer.addSublayer(outerBorderLayer!)
+        
+        // 内层实线边框 - 距离边缘25px
+        let innerInset: CGFloat = 20
+        let innerRect = bounds.insetBy(dx: innerInset, dy: innerInset)
+        let innerPath = UIBezierPath(roundedRect: innerRect, cornerRadius: 12) // 内层圆角稍小
+        
+        innerBorderLayer = CAShapeLayer()
+        innerBorderLayer!.path = innerPath.cgPath
+        innerBorderLayer!.fillColor = UIColor.clear.cgColor
+        innerBorderLayer!.strokeColor = UIColor.white.cgColor
+        innerBorderLayer!.lineWidth = 2
+        
+        // 内层边框发光效果
+        innerBorderLayer!.shadowColor = style.color.cgColor
+        innerBorderLayer!.shadowRadius = 2.0
+        innerBorderLayer!.shadowOpacity = 0.8
+        innerBorderLayer!.shadowOffset = .zero
+        
+        layer.addSublayer(innerBorderLayer!)
+    }
+    
+    func setStyle(_ newStyle: LEDScreenStyle) {
+        style = newStyle
+        setupLEDDots()
+        setupBorders()
+    }
+}
+
 // LED创建/编辑页面
 class LEDCreateViewController: UIViewController {
     
@@ -1303,48 +1446,79 @@ class LEDCreateViewController: UIViewController {
     
     // 创建模版背景选择器（霓虹灯看板、偶像应援、LED横幅）- 滑动版本
     private func createTemplateScrollView(category: String, tag: Int) -> UIScrollView {
-        // 自动检测可用的图片数量
-        let availableCount = getAvailableImageCount(category: category)
-        
         let scrollView = UIScrollView()
         scrollView.showsHorizontalScrollIndicator = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         
-        let buttons = (1...availableCount).map { index -> UIButton in
-            let btn = UIButton(type: .system)
-            
-            // 尝试加载图片，如果没有则使用占位符
-            let imageName = "\(category)_\(index)"
-            if let image = UIImage(named: imageName) {
-                btn.setBackgroundImage(image, for: .normal)
-                btn.imageView?.contentMode = .scaleAspectFill
-            } else {
-                // 占位符：使用渐变色
-                let placeholderColor = getPlaceholderColor(category: category, index: index)
-                btn.backgroundColor = placeholderColor
+        let buttons: [UIButton]
+        
+        if category == "led" {
+            // LED屏幕使用特殊的自定义卡片（8种颜色）
+            buttons = (0..<8).map { index -> UIButton in
+                let btn = UIButton(type: .system)
                 
-                // 添加文字标签
-                let label = UILabel()
-                label.text = "\(index)"
-                label.textColor = .white
-                label.font = .boldSystemFont(ofSize: 16)
-                label.textAlignment = .center
-                label.translatesAutoresizingMaskIntoConstraints = false
-                btn.addSubview(label)
+                // 创建LED屏幕卡片视图
+                let ledCardView = LEDScreenCardView(style: LEDScreenCardView.LEDScreenStyle(rawValue: index) ?? .red)
+                ledCardView.translatesAutoresizingMaskIntoConstraints = false
+                btn.addSubview(ledCardView)
+                
+                // LED卡片视图填充按钮
                 NSLayoutConstraint.activate([
-                    label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
-                    label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                    ledCardView.topAnchor.constraint(equalTo: btn.topAnchor),
+                    ledCardView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
+                    ledCardView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
+                    ledCardView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
                 ])
+                
+                btn.layer.cornerRadius = 8
+                btn.layer.borderWidth = 2
+                btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                btn.clipsToBounds = true
+                btn.tag = tag + index
+                btn.addTarget(self, action: #selector(templateButtonTapped(_:)), for: .touchUpInside)
+                btn.translatesAutoresizingMaskIntoConstraints = false
+                return btn
             }
+        } else {
+            // 其他类别使用原有的图片或占位符逻辑
+            let availableCount = getAvailableImageCount(category: category)
             
-            btn.layer.cornerRadius = 8
-            btn.layer.borderWidth = 2
-            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-            btn.clipsToBounds = true
-            btn.tag = tag + index - 1
-            btn.addTarget(self, action: #selector(templateButtonTapped(_:)), for: .touchUpInside)
-            btn.translatesAutoresizingMaskIntoConstraints = false
-            return btn
+            buttons = (1...availableCount).map { index -> UIButton in
+                let btn = UIButton(type: .system)
+                
+                // 尝试加载图片，如果没有则使用占位符
+                let imageName = "\(category)_\(index)"
+                if let image = UIImage(named: imageName) {
+                    btn.setBackgroundImage(image, for: .normal)
+                    btn.imageView?.contentMode = .scaleAspectFill
+                } else {
+                    // 占位符：使用渐变色
+                    let placeholderColor = getPlaceholderColor(category: category, index: index)
+                    btn.backgroundColor = placeholderColor
+                    
+                    // 添加文字标签
+                    let label = UILabel()
+                    label.text = "\(index)"
+                    label.textColor = .white
+                    label.font = .boldSystemFont(ofSize: 16)
+                    label.textAlignment = .center
+                    label.translatesAutoresizingMaskIntoConstraints = false
+                    btn.addSubview(label)
+                    NSLayoutConstraint.activate([
+                        label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                        label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                    ])
+                }
+                
+                btn.layer.cornerRadius = 8
+                btn.layer.borderWidth = 2
+                btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                btn.clipsToBounds = true
+                btn.tag = tag + index - 1
+                btn.addTarget(self, action: #selector(templateButtonTapped(_:)), for: .touchUpInside)
+                btn.translatesAutoresizingMaskIntoConstraints = false
+                return btn
+            }
         }
         
         let stack = UIStackView(arrangedSubviews: buttons)
