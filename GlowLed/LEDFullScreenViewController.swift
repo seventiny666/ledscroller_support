@@ -5,8 +5,10 @@ class LEDFullScreenViewController: UIViewController {
     
     private let ledItem: LEDItem
     private let backgroundImageView = UIImageView() // 背景图片视图
+    private var ledCardView: LEDScreenCardView? // LED卡片背景视图
     private let borderView = MarqueeBorderView(displayMode: .fullScreen) // 跑马灯边框视图
     private let lightBoardView = LightBoardBorderView(displayMode: .fullScreen) // 灯牌边框视图
+    private let linearBorderView = LinearBorderView() // 线性边框视图
     private let textLabel = UILabel()
     private var displayLink: CADisplayLink?
     
@@ -66,22 +68,50 @@ class LEDFullScreenViewController: UIViewController {
         // 设置背景（优先使用backgroundImageName，如果没有则使用imageName，最后才用颜色）
         let imageNameToUse = ledItem.backgroundImageName ?? ledItem.imageName
         
-        if let imageName = imageNameToUse, !imageName.isEmpty, let image = UIImage(named: imageName) {
-            // 显示背景图片
-            backgroundImageView.image = image
-            backgroundImageView.contentMode = .scaleAspectFill
-            backgroundImageView.clipsToBounds = true
-            backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
-            view.addSubview(backgroundImageView)
-            
-            NSLayoutConstraint.activate([
-                backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
-                backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            ])
-            
-            view.backgroundColor = .clear
+        if let imageName = imageNameToUse, !imageName.isEmpty {
+            // 检查是否是LED屏幕背景
+            if imageName.hasPrefix("led_") {
+                // 显示LED卡片背景
+                if let indexStr = imageName.split(separator: "_").last,
+                   let index = Int(indexStr),
+                   index >= 1 && index <= 8 {
+                    let styleIndex = index - 1
+                    if let style = LEDScreenCardView.LEDScreenStyle(rawValue: styleIndex) {
+                        let ledCard = LEDScreenCardView(style: style)
+                        ledCard.translatesAutoresizingMaskIntoConstraints = false
+                        view.addSubview(ledCard)
+                        
+                        NSLayoutConstraint.activate([
+                            ledCard.topAnchor.constraint(equalTo: view.topAnchor),
+                            ledCard.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                            ledCard.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                            ledCard.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                        ])
+                        
+                        ledCardView = ledCard
+                        view.backgroundColor = .clear
+                    }
+                }
+            } else if let image = UIImage(named: imageName) {
+                // 显示普通背景图片
+                backgroundImageView.image = image
+                backgroundImageView.contentMode = .scaleAspectFill
+                backgroundImageView.clipsToBounds = true
+                backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
+                view.addSubview(backgroundImageView)
+                
+                NSLayoutConstraint.activate([
+                    backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
+                    backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                    backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                    backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                ])
+                
+                view.backgroundColor = .clear
+            } else {
+                // 图片不存在，使用背景颜色
+                view.backgroundColor = UIColor(hex: ledItem.backgroundColor)
+            }
         } else {
             // 显示背景颜色
             view.backgroundColor = UIColor(hex: ledItem.backgroundColor)
@@ -98,21 +128,36 @@ class LEDFullScreenViewController: UIViewController {
         lightBoardView.isHidden = true // 默认隐藏
         view.addSubview(lightBoardView)
         
+        // 线性边框视图
+        linearBorderView.translatesAutoresizingMaskIntoConstraints = false
+        linearBorderView.isHidden = true // 默认隐藏
+        view.addSubview(linearBorderView)
+        
         if let borderStyleIndex = ledItem.borderStyle,
            borderStyleIndex >= 0 && borderStyleIndex < MarqueeBorderStyle.allCases.count {
             let style = MarqueeBorderStyle.allCases[borderStyleIndex]
             borderView.setStyle(style)
             borderView.isHidden = false
             lightBoardView.isHidden = true
+            linearBorderView.isHidden = true
         } else if let lightBoardStyleIndex = ledItem.lightBoardStyle,
                   lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
             let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
             lightBoardView.setStyle(style)
             lightBoardView.isHidden = false
             borderView.isHidden = true
+            linearBorderView.isHidden = true
+        } else if let linearBorderStyleIndex = ledItem.linearBorderStyle,
+                  linearBorderStyleIndex >= 0 && linearBorderStyleIndex < LinearBorderStyle.allCases.count {
+            let style = LinearBorderStyle.allCases[linearBorderStyleIndex]
+            linearBorderView.setStyle(style)
+            linearBorderView.isHidden = false
+            borderView.isHidden = true
+            lightBoardView.isHidden = true
         } else {
             borderView.isHidden = true
             lightBoardView.isHidden = true
+            linearBorderView.isHidden = true
         }
         
         NSLayoutConstraint.activate([
@@ -124,7 +169,12 @@ class LEDFullScreenViewController: UIViewController {
             lightBoardView.topAnchor.constraint(equalTo: view.topAnchor),
             lightBoardView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             lightBoardView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            lightBoardView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            lightBoardView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            linearBorderView.topAnchor.constraint(equalTo: view.topAnchor),
+            linearBorderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            linearBorderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            linearBorderView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
         textLabel.text = ledItem.text

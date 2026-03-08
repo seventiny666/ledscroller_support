@@ -34,6 +34,7 @@
 		A1000044000000000000001 /* MyCreationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000045000000000000001 /* MyCreationsViewController.swift */; };
 		A1000046000000000000001 /* MarqueeBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000047000000000000001 /* MarqueeBorderView.swift */; };
 		A1000048000000000000001 /* LightBoardBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000049000000000000001 /* LightBoardBorderView.swift */; };
+		A1000056000000000000001 /* LinearBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000057000000000000001 /* LinearBorderView.swift */; };
 		A1000050000000000000001 /* HeartGridViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000051000000000000001 /* HeartGridViewController.swift */; };
 		A1000052000000000000001 /* ILoveUViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000053000000000000001 /* ILoveUViewController.swift */; };
 		A1000054000000000000001 /* View520ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000055000000000000001 /* View520ViewController.swift */; };
@@ -104,6 +105,7 @@
 		A1000045000000000000001 /* MyCreationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCreationsViewController.swift; sourceTree = "<group>"; };
 		A1000047000000000000001 /* MarqueeBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeBorderView.swift; sourceTree = "<group>"; };
 		A1000049000000000000001 /* LightBoardBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightBoardBorderView.swift; sourceTree = "<group>"; };
+		A1000057000000000000001 /* LinearBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearBorderView.swift; sourceTree = "<group>"; };
 		A1000051000000000000001 /* HeartGridViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartGridViewController.swift; sourceTree = "<group>"; };
 		A1000053000000000000001 /* ILoveUViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILoveUViewController.swift; sourceTree = "<group>"; };
 		A1000055000000000000001 /* View520ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View520ViewController.swift; sourceTree = "<group>"; };
@@ -257,6 +259,7 @@
 				A1000029000000000000001 /* UIColor+Hex.swift */,
 				A1000047000000000000001 /* MarqueeBorderView.swift */,
 				A1000049000000000000001 /* LightBoardBorderView.swift */,
+				A1000057000000000000001 /* LinearBorderView.swift */,
 				A1000051000000000000001 /* HeartGridViewController.swift */,
 				A1000053000000000000001 /* ILoveUViewController.swift */,
 				A1000055000000000000001 /* View520ViewController.swift */,
@@ -374,6 +377,7 @@
 				A1000044000000000000001 /* MyCreationsViewController.swift in Sources */,
 				A1000046000000000000001 /* MarqueeBorderView.swift in Sources */,
 				A1000048000000000000001 /* LightBoardBorderView.swift in Sources */,
+				A1000056000000000000001 /* LinearBorderView.swift in Sources */,
 				A1000050000000000000001 /* HeartGridViewController.swift in Sources */,
 				A1000052000000000000001 /* ILoveUViewController.swift in Sources */,
 				A1000054000000000000001 /* View520ViewController.swift in Sources */,

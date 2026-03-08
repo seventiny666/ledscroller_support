@@ -407,8 +407,10 @@ class CreationTableCell: UITableViewCell {
     private let containerView = UIView()
     private let previewView = UIView()
     private let backgroundImageView = UIImageView()
+    private var ledCardView: LEDScreenCardView? // LED卡片背景视图
     private let borderView = MarqueeBorderView(displayMode: .cardCover) // 跑马灯边框视图
     private let lightBoardView = LightBoardBorderView(displayMode: .cardCover) // 灯牌边框视图
+    private let linearBorderView = LinearBorderView() // 线性边框视图
     private let ledTextLabel = UILabel() // 改名避免与UITableViewCell的textLabel冲突
     private let timeLabel = UILabel() // 时间标签（放在卡片下面）
     
@@ -461,6 +463,11 @@ class CreationTableCell: UITableViewCell {
         lightBoardView.isHidden = true // 默认隐藏
         previewView.addSubview(lightBoardView)
         
+        // 线性边框视图
+        linearBorderView.translatesAutoresizingMaskIntoConstraints = false
+        linearBorderView.isHidden = true // 默认隐藏
+        previewView.addSubview(linearBorderView)
+        
         // 预览文字
         ledTextLabel.textAlignment = .center
         ledTextLabel.numberOfLines = 2
@@ -508,6 +515,11 @@ class CreationTableCell: UITableViewCell {
             lightBoardView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
             lightBoardView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
             
+            linearBorderView.topAnchor.constraint(equalTo: previewView.topAnchor),
+            linearBorderView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
+            linearBorderView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
+            linearBorderView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
+            
             ledTextLabel.centerXAnchor.constraint(equalTo: previewView.centerXAnchor),
             ledTextLabel.centerYAnchor.constraint(equalTo: previewView.centerYAnchor),
             ledTextLabel.leadingAnchor.constraint(equalTo: previewView.leadingAnchor, constant: 16),
@@ -523,12 +535,49 @@ class CreationTableCell: UITableViewCell {
     }
     
     func configure(with item: LEDItem) {
-        // 更新背景（图片或颜色）
-        if let imageName = item.backgroundImageName, let image = UIImage(named: imageName) {
-            backgroundImageView.image = image
-            backgroundImageView.isHidden = false
-            previewView.backgroundColor = .clear
+        // 移除旧的LED卡片视图
+        ledCardView?.removeFromSuperview()
+        ledCardView = nil
+        
+        // 更新背景（LED卡片、图片或颜色）
+        if let imageName = item.backgroundImageName {
+            // 检查是否是LED屏幕背景
+            if imageName.hasPrefix("led_") {
+                // 显示LED卡片背景
+                if let indexStr = imageName.split(separator: "_").last,
+                   let index = Int(indexStr),
+                   index >= 1 && index <= 8 {
+                    let styleIndex = index - 1
+                    if let style = LEDScreenCardView.LEDScreenStyle(rawValue: styleIndex) {
+                        let ledCard = LEDScreenCardView(style: style)
+                        ledCard.translatesAutoresizingMaskIntoConstraints = false
+                        previewView.insertSubview(ledCard, at: 0) // 插入到最底层
+                        
+                        NSLayoutConstraint.activate([
+                            ledCard.topAnchor.constraint(equalTo: previewView.topAnchor),
+                            ledCard.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
+                            ledCard.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
+                            ledCard.bottomAnchor.constraint(equalTo: previewView.bottomAnchor)
+                        ])
+                        
+                        ledCardView = ledCard
+                        backgroundImageView.isHidden = true
+                        previewView.backgroundColor = .clear
+                    }
+                }
+            } else if let image = UIImage(named: imageName) {
+                // 显示普通背景图片
+                backgroundImageView.image = image
+                backgroundImageView.isHidden = false
+                previewView.backgroundColor = .clear
+            } else {
+                // 图片不存在，使用背景颜色
+                backgroundImageView.image = nil
+                backgroundImageView.isHidden = true
+                previewView.backgroundColor = UIColor(hex: item.backgroundColor)
+            }
         } else {
+            // 显示背景颜色
             backgroundImageView.image = nil
             backgroundImageView.isHidden = true
             previewView.backgroundColor = UIColor(hex: item.backgroundColor)
@@ -541,15 +590,25 @@ class CreationTableCell: UITableViewCell {
             borderView.setStyle(style)
             borderView.isHidden = false
             lightBoardView.isHidden = true
+            linearBorderView.isHidden = true
         } else if let lightBoardStyleIndex = item.lightBoardStyle,
                   lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
             let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
             lightBoardView.setStyle(style)
             lightBoardView.isHidden = false
             borderView.isHidden = true
+            linearBorderView.isHidden = true
+        } else if let linearBorderStyleIndex = item.linearBorderStyle,
+                  linearBorderStyleIndex >= 0 && linearBorderStyleIndex < LinearBorderStyle.allCases.count {
+            let style = LinearBorderStyle.allCases[linearBorderStyleIndex]
+            linearBorderView.setStyle(style)
+            linearBorderView.isHidden = false
+            borderView.isHidden = true
+            lightBoardView.isHidden = true
         } else {
             borderView.isHidden = true
             lightBoardView.isHidden = true
+            linearBorderView.isHidden = true
         }
         
         ledTextLabel.text = item.text
