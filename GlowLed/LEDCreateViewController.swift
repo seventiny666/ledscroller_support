@@ -505,15 +505,28 @@ class LEDCreateViewController: UIViewController {
         ])
         tabYOffset += 60 // 统一间距
         
-        // 霓虹灯看板
-        addSectionLabelToView(backgroundTabView, text: "neon".localized, yOffset: &tabYOffset)
-        let neonScrollView = createTemplateScrollView(category: "neon", tag: 500)
-        backgroundTabView.addSubview(neonScrollView)
+        // LED横幅
+        addSectionLabelToView(backgroundTabView, text: "led".localized, yOffset: &tabYOffset)
+        let ledScrollView = createTemplateScrollView(category: "led", tag: 520)
+        backgroundTabView.addSubview(ledScrollView)
         
         // 计算滑动区域高度：按钮宽度 * 9/16 = 正确的16:9比例高度
         let screenWidth = UIScreen.main.bounds.width
         let buttonWidth = (screenWidth - 40 - 30) / 4
         let scrollViewHeight = buttonWidth * 9.0 / 16.0
+        
+        NSLayoutConstraint.activate([
+            ledScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            ledScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            ledScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            ledScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
+        ])
+        tabYOffset += scrollViewHeight + 20 // 动态间距
+        
+        // 霓虹灯看板
+        addSectionLabelToView(backgroundTabView, text: "neon".localized, yOffset: &tabYOffset)
+        let neonScrollView = createTemplateScrollView(category: "neon", tag: 500)
+        backgroundTabView.addSubview(neonScrollView)
         
         NSLayoutConstraint.activate([
             neonScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
@@ -532,18 +545,6 @@ class LEDCreateViewController: UIViewController {
             idolScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
             idolScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
             idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
-        ])
-        tabYOffset += scrollViewHeight + 20 // 动态间距
-        
-        // LED横幅
-        addSectionLabelToView(backgroundTabView, text: "led".localized, yOffset: &tabYOffset)
-        let ledScrollView = createTemplateScrollView(category: "led", tag: 520)
-        backgroundTabView.addSubview(ledScrollView)
-        NSLayoutConstraint.activate([
-            ledScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            ledScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            ledScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            ledScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
         ])
         tabYOffset += scrollViewHeight + 20 // 动态间距，最后一个区域
     }
