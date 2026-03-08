@@ -4,31 +4,21 @@ import UIKit
 class FireworksViewController: UIViewController {
     
     private var emitterLayers: [CAEmitterLayer] = []
-    private var tapCount = 0
-    private var fireworksView: UIView!
+    private var autoPlayTimer: Timer?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupGestures()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 自动播放多个烟花
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.launchFirework(at: CGPoint(x: self.view.bounds.width * 0.3, y: self.view.bounds.height * 0.4))
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            self.launchFirework(at: CGPoint(x: self.view.bounds.width * 0.7, y: self.view.bounds.height * 0.3))
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.launchFirework(at: CGPoint(x: self.view.bounds.width * 0.5, y: self.view.bounds.height * 0.35))
-        }
+        startAutoPlay()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        stopAutoPlay()
         // 清理所有烟花效果
         emitterLayers.forEach { $0.removeFromSuperlayer() }
         emitterLayers.removeAll()
@@ -45,52 +35,48 @@ class FireworksViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = UIColor(red: 0.02, green: 0.02, blue: 0.08, alpha: 1)
         
-        // 添加提示标签
-        let hintLabel = UILabel()
-        hintLabel.text = "点击屏幕放烟花 🎆"
-        hintLabel.textColor = UIColor.white.withAlphaComponent(0.6)
-        hintLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        hintLabel.textAlignment = .center
-        hintLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(hintLabel)
-        
-        // 添加关闭按钮
+        // 添加关闭按钮（改为右上角的✕按钮）
         let closeButton = UIButton(type: .system)
-        closeButton.setTitle("完成", for: .normal)
+        closeButton.setTitle("✕", for: .normal)
         closeButton.setTitleColor(.white, for: .normal)
-        closeButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        closeButton.layer.cornerRadius = 25
+        closeButton.titleLabel?.font = .systemFont(ofSize: 24, weight: .medium)
+        closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        closeButton.layer.cornerRadius = 20
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
-            hintLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            hintLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 120),
-            closeButton.heightAnchor.constraint(equalToConstant: 50)
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
+            closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
     
-    private func setupGestures() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-        view.addGestureRecognizer(tapGesture)
+    // 开始自动播放
+    private func startAutoPlay() {
+        // 立即播放第一组烟花
+        launchRandomFirework()
+        
+        // 设置定时器，每1-2秒随机发射一个烟花
+        autoPlayTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            self?.launchRandomFirework()
+        }
     }
     
-    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        let location = gesture.location(in: view)
-        // 从底部发射到点击位置
-        launchFirework(at: location)
-        
-        // 播放触觉反馈
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-        
-        tapCount += 1
+    // 停止自动播放
+    private func stopAutoPlay() {
+        autoPlayTimer?.invalidate()
+        autoPlayTimer = nil
+    }
+    
+    // 发射随机位置的烟花
+    private func launchRandomFirework() {
+        let randomX = CGFloat.random(in: view.bounds.width * 0.2...view.bounds.width * 0.8)
+        let randomY = CGFloat.random(in: view.bounds.height * 0.2...view.bounds.height * 0.5)
+        let targetPosition = CGPoint(x: randomX, y: randomY)
+        launchFirework(at: targetPosition)
     }
     
     // 发射烟花（带上升轨迹）

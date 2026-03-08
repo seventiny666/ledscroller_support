@@ -20,6 +20,7 @@ struct LEDItem: Codable {
     var isLoveRain: Bool // 标识是否为爱心流星雨效果
     var isHeartGrid: Bool // 标识是否为爱心格子动画效果
     var isILoveU: Bool // 标识是否为I LOVE U动画效果
+    var is520: Bool // 标识是否为520动画效果
     var isDefaultPreset: Bool // 标识是否为预设卡片（HAPPY BIRTHDAY等）
     var createdAt: Date
     
@@ -50,6 +51,7 @@ struct LEDItem: Codable {
          isLoveRain: Bool = false,
          isHeartGrid: Bool = false,
          isILoveU: Bool = false,
+         is520: Bool = false,
          isDefaultPreset: Bool = false,
          createdAt: Date = Date()) {
         self.id = id
@@ -70,6 +72,7 @@ struct LEDItem: Codable {
         self.isLoveRain = isLoveRain
         self.isHeartGrid = isHeartGrid
         self.isILoveU = isILoveU
+        self.is520 = is520
         self.isDefaultPreset = isDefaultPreset
         self.createdAt = createdAt
     }
@@ -121,7 +124,7 @@ class LEDDataManager {
         return [
             LEDItem(
                 id: "love-rain-special",
-                text: "💖 爱心流星雨",
+                text: "I LOVE U",
                 fontSize: 42,
                 textColor: "#FF69B4",
                 backgroundColor: "#201F1F",

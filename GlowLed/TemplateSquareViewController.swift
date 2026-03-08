@@ -390,6 +390,563 @@ class ILoveUView: UIView {
     }
 }
 
+// 520封面视图 - 用于热门动画封面
+class View520: UIView {
+    
+    private var gridSize: CGFloat = 6  // 封面用更小的格子，让520数字看起来密集一些
+    private var spacing: CGFloat = 2.0
+    private var rows: Int = 0
+    private var cols: Int = 0
+    
+    // 动画相关属性
+    private var animationTimer: Timer?
+    private var backgroundGridAlphas: [[CGFloat]] = []  // 背景格子的透明度
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    private func setupAnimation() {
+        // 启动动画定时器（封面版本更慢）
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func updateAnimation() {
+        // 随机更新背景格子透明度（封面版本更温和）
+        for row in 0..<backgroundGridAlphas.count {
+            for col in 0..<backgroundGridAlphas[row].count {
+                // 8% 的概率改变透明度
+                if Float.random(in: 0...1) < 0.08 {
+                    backgroundGridAlphas[row][col] = CGFloat.random(in: 0.4...1.0)
+                }
+            }
+        }
+        
+        // 触发重绘
+        setNeedsDisplay()
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        
+        // 确保rect有有效的尺寸
+        guard rect.width > 0 && rect.height > 0 else { return }
+        
+        // 计算能容纳多少行列的格子（填充满整个封面）
+        cols = Int((rect.width + spacing) / (gridSize + spacing))
+        rows = Int((rect.height + spacing) / (gridSize + spacing))
+        
+        // 确保至少有最小的网格数量
+        cols = max(cols, 10)
+        rows = max(rows, 8)
+        
+        // 定义520数字图案
+        let digit5 = getDigit5Pattern()
+        let digit2 = getDigit2Pattern()
+        let digit0 = getDigit0Pattern()
+        
+        let digitRows = digit5.count
+        let digitCols = digit5[0].count
+        
+        // 强制使用固定的小格子尺寸，不进行自动放大（与红心封面保持一致）
+        // 不再根据内容大小调整格子尺寸，保持12px的固定尺寸
+        
+        // 初始化背景格子透明度数组（如果需要）
+        if backgroundGridAlphas.count != rows || (backgroundGridAlphas.first?.count ?? 0) != cols {
+            backgroundGridAlphas = Array(repeating: Array(repeating: CGFloat.random(in: 0.4...1.0), count: cols), count: rows)
+        }
+        
+        // 计算实际的网格总尺寸
+        let totalGridWidth = CGFloat(cols) * gridSize + CGFloat(cols - 1) * spacing
+        let totalGridHeight = CGFloat(rows) * gridSize + CGFloat(rows - 1) * spacing
+        
+        // 计算起始位置以居中显示
+        let startX = (rect.width - totalGridWidth) / 2
+        let startY = (rect.height - totalGridHeight) / 2
+        
+        // 计算520在网格中的居中位置
+        let totalDigitWidth = digitCols * 3 + 4 // 3个数字 + 间距(2+2格)
+        let exactDigitStartRow = (Double(rows) - Double(digitRows)) / 2.0
+        let exactDigitStartCol = (Double(cols) - Double(totalDigitWidth)) / 2.0
+        
+        let centeredDigitStartRow = Int(exactDigitStartRow.rounded())
+        let centeredDigitStartCol = Int(exactDigitStartCol.rounded())
+        
+        // 计算每个数字的起始列
+        let digit5StartCol = centeredDigitStartCol
+        let digit2StartCol = digit5StartCol + digitCols + 2 // 5后面加2格间距
+        let digit0StartCol = digit2StartCol + digitCols + 2 // 2后面加2格间距
+        
+        // 绘制所有格子
+        for row in 0..<rows {
+            for col in 0..<cols {
+                let x = startX + CGFloat(col) * (gridSize + spacing)
+                let y = startY + CGFloat(row) * (gridSize + spacing)
+                
+                let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
+                let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
+                
+                var isRedGrid = false
+                
+                // 判断是否在数字5内
+                let digitRow = row - centeredDigitStartRow
+                let digit5Col = col - digit5StartCol
+                if digitRow >= 0 && digitRow < digitRows && digit5Col >= 0 && digit5Col < digitCols {
+                    isRedGrid = digit5[digitRow][digit5Col]
+                }
+                
+                // 判断是否在数字2内
+                let digit2Col = col - digit2StartCol
+                if digitRow >= 0 && digitRow < digitRows && digit2Col >= 0 && digit2Col < digitCols {
+                    isRedGrid = isRedGrid || digit2[digitRow][digit2Col]
+                }
+                
+                // 判断是否在数字0内
+                let digit0Col = col - digit0StartCol
+                if digitRow >= 0 && digitRow < digitRows && digit0Col >= 0 && digit0Col < digitCols {
+                    isRedGrid = isRedGrid || digit0[digitRow][digit0Col]
+                }
+                
+                if isRedGrid {
+                    // 点亮的格子：亮红色带静态发光效果
+                    let baseColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0)
+                    baseColor.setFill()
+                    path.fill()
+                    
+                    // 静态发光效果（封面版本较温和）
+                    let glowRadius = gridSize * 0.4
+                    let glowPath = UIBezierPath(roundedRect: rect.insetBy(dx: -glowRadius, dy: -glowRadius), 
+                                               cornerRadius: gridSize * 0.25 + glowRadius)
+                    UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 0.3).setFill()
+                    glowPath.fill()
+                } else {
+                    // 未点亮的格子：暗蓝色带随机闪烁效果
+                    let alpha = backgroundGridAlphas[row][col]
+                    UIColor(red: 0.15, green: 0.22, blue: 0.35, alpha: alpha).setFill()
+                    path.fill()
+                }
+            }
+        }
+    }
+    
+    // 数字5的图案（7x4网格 - 封面优化版本）
+    private func getDigit5Pattern() -> [[Bool]] {
+        return [
+            [true,  true,  true,  true],
+            [true,  false, false, false],
+            [true,  false, false, false],
+            [true,  true,  true,  true],
+            [false, false, false, true],
+            [false, false, false, true],
+            [true,  true,  true,  true]
+        ]
+    }
+    
+    // 数字2的图案（7x4网格 - 封面优化版本）
+    private func getDigit2Pattern() -> [[Bool]] {
+        return [
+            [true,  true,  true,  true],
+            [false, false, false, true],
+            [false, false, false, true],
+            [true,  true,  true,  true],
+            [true,  false, false, false],
+            [true,  false, false, false],
+            [true,  true,  true,  true]
+        ]
+    }
+    
+    // 数字0的图案（7x4网格 - 封面优化版本）
+    private func getDigit0Pattern() -> [[Bool]] {
+        return [
+            [true,  true,  true,  true],
+            [true,  false, false, true],
+            [true,  false, false, true],
+            [true,  false, false, true],
+            [true,  false, false, true],
+            [true,  false, false, true],
+            [true,  true,  true,  true]
+        ]
+    }
+}
+
+// 爱心流星雨封面视图
+class LoveRainCoverView: UIView {
+    
+    private var animationTimer: Timer?
+    private var hearts: [HeartParticle] = []
+    
+    struct HeartParticle {
+        var x: CGFloat
+        var y: CGFloat
+        var size: CGFloat
+        var alpha: CGFloat
+        var speed: CGFloat
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    private func setupAnimation() {
+        // 创建初始爱心粒子
+        createHearts()
+        
+        // 启动动画定时器
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func createHearts() {
+        hearts.removeAll()
+        
+        // 创建多个爱心粒子
+        for _ in 0..<8 {
+            let heart = HeartParticle(
+                x: CGFloat.random(in: 0...bounds.width),
+                y: CGFloat.random(in: -50...bounds.height),
+                size: CGFloat.random(in: 8...16),
+                alpha: CGFloat.random(in: 0.3...0.8),
+                speed: CGFloat.random(in: 1...3)
+            )
+            hearts.append(heart)
+        }
+    }
+    
+    private func updateAnimation() {
+        // 更新爱心位置
+        for i in 0..<hearts.count {
+            hearts[i].y += hearts[i].speed
+            
+            // 如果爱心超出底部，重新从顶部开始
+            if hearts[i].y > bounds.height + 20 {
+                hearts[i].y = -20
+                hearts[i].x = CGFloat.random(in: 0...bounds.width)
+                hearts[i].size = CGFloat.random(in: 8...16)
+                hearts[i].alpha = CGFloat.random(in: 0.3...0.8)
+                hearts[i].speed = CGFloat.random(in: 1...3)
+            }
+        }
+        
+        setNeedsDisplay()
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        
+        // 如果bounds发生变化，重新创建爱心
+        if hearts.isEmpty || bounds.width != rect.width || bounds.height != rect.height {
+            createHearts()
+        }
+        
+        // 绘制爱心粒子
+        for heart in hearts {
+            drawHeart(at: CGPoint(x: heart.x, y: heart.y), size: heart.size, alpha: heart.alpha)
+        }
+        
+        // 在中心绘制"I LOVE U"文字
+        drawCenterText(in: rect)
+    }
+    
+    private func drawHeart(at center: CGPoint, size: CGFloat, alpha: CGFloat) {
+        let path = UIBezierPath()
+        let heartSize = size
+        
+        // 简化的爱心形状
+        path.move(to: CGPoint(x: center.x, y: center.y + heartSize * 0.3))
+        
+        path.addCurve(
+            to: CGPoint(x: center.x - heartSize * 0.4, y: center.y - heartSize * 0.2),
+            controlPoint1: CGPoint(x: center.x - heartSize * 0.4, y: center.y + heartSize * 0.1),
+            controlPoint2: CGPoint(x: center.x - heartSize * 0.4, y: center.y - heartSize * 0.1)
+        )
+        
+        path.addArc(
+            withCenter: CGPoint(x: center.x - heartSize * 0.2, y: center.y - heartSize * 0.2),
+            radius: heartSize * 0.2,
+            startAngle: .pi,
+            endAngle: 0,
+            clockwise: true
+        )
+        
+        path.addArc(
+            withCenter: CGPoint(x: center.x + heartSize * 0.2, y: center.y - heartSize * 0.2),
+            radius: heartSize * 0.2,
+            startAngle: .pi,
+            endAngle: 0,
+            clockwise: true
+        )
+        
+        path.addCurve(
+            to: CGPoint(x: center.x, y: center.y + heartSize * 0.3),
+            controlPoint1: CGPoint(x: center.x + heartSize * 0.4, y: center.y - heartSize * 0.1),
+            controlPoint2: CGPoint(x: center.x + heartSize * 0.4, y: center.y + heartSize * 0.1)
+        )
+        
+        path.close()
+        
+        // 设置粉色并绘制
+        UIColor(red: 1.0, green: 0.5, blue: 0.75, alpha: alpha).setFill()
+        path.fill()
+    }
+    
+    private func drawCenterText(in rect: CGRect) {
+        let text = "I   LOVE   U"  // 增加单词间距
+        let fontSize: CGFloat = min(rect.width, rect.height) * 0.3
+        let font = UIFont.systemFont(ofSize: fontSize, weight: .black)
+        
+        let attributes: [NSAttributedString.Key: Any] = [
+            .font: font,
+            .foregroundColor: UIColor(red: 1.0, green: 0.5, blue: 0.75, alpha: 0.8)
+        ]
+        
+        let attributedString = NSAttributedString(string: text, attributes: attributes)
+        let textSize = attributedString.size()
+        
+        let textRect = CGRect(
+            x: (rect.width - textSize.width) / 2,
+            y: (rect.height - textSize.height) / 2,
+            width: textSize.width,
+            height: textSize.height
+        )
+        
+        attributedString.draw(in: textRect)
+    }
+}
+
+// 烟花封面视图
+class FireworksCoverView: UIView {
+    
+    private var animationTimer: Timer?
+    private var particles: [FireworkParticle] = []
+    
+    struct FireworkParticle {
+        var x: CGFloat
+        var y: CGFloat
+        var size: CGFloat
+        var alpha: CGFloat
+        var color: UIColor
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    private func setupAnimation() {
+        // 创建初始烟花粒子
+        createParticles()
+        
+        // 启动动画定时器
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func createParticles() {
+        particles.removeAll()
+        
+        // 创建多个烟花粒子
+        let colors: [UIColor] = [
+            UIColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0),  // 红色
+            UIColor(red: 1.0, green: 0.8, blue: 0.2, alpha: 1.0),  // 金色
+            UIColor(red: 0.3, green: 0.8, blue: 1.0, alpha: 1.0),  // 蓝色
+            UIColor(red: 1.0, green: 0.5, blue: 0.8, alpha: 1.0)   // 粉色
+        ]
+        
+        for _ in 0..<12 {
+            let particle = FireworkParticle(
+                x: CGFloat.random(in: 0...bounds.width),
+                y: CGFloat.random(in: 0...bounds.height),
+                size: CGFloat.random(in: 4...8),
+                alpha: CGFloat.random(in: 0.5...1.0),
+                color: colors.randomElement() ?? .white
+            )
+            particles.append(particle)
+        }
+    }
+    
+    private func updateAnimation() {
+        // 随机改变粒子透明度（闪烁效果）
+        for i in 0..<particles.count {
+            if Float.random(in: 0...1) < 0.3 {
+                particles[i].alpha = CGFloat.random(in: 0.3...1.0)
+            }
+        }
+        
+        setNeedsDisplay()
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        
+        // 如果bounds发生变化，重新创建粒子
+        if particles.isEmpty || bounds.width != rect.width || bounds.height != rect.height {
+            createParticles()
+        }
+        
+        // 绘制烟花粒子
+        for particle in particles {
+            let particleRect = CGRect(
+                x: particle.x - particle.size / 2,
+                y: particle.y - particle.size / 2,
+                width: particle.size,
+                height: particle.size
+            )
+            
+            let path = UIBezierPath(ovalIn: particleRect)
+            particle.color.withAlphaComponent(particle.alpha).setFill()
+            path.fill()
+            
+            // 添加发光效果
+            let glowPath = UIBezierPath(ovalIn: particleRect.insetBy(dx: -particle.size * 0.5, dy: -particle.size * 0.5))
+            particle.color.withAlphaComponent(particle.alpha * 0.3).setFill()
+            glowPath.fill()
+        }
+    }
+}
+
+// 烟花绽放封面视图
+class FireworksBloomCoverView: UIView {
+    
+    private var animationTimer: Timer?
+    private var particles: [BloomParticle] = []
+    
+    struct BloomParticle {
+        var x: CGFloat
+        var y: CGFloat
+        var size: CGFloat
+        var alpha: CGFloat
+        var color: UIColor
+    }
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        backgroundColor = .clear
+        setupAnimation()
+    }
+    
+    private func setupAnimation() {
+        // 创建初始粒子
+        createParticles()
+        
+        // 启动动画定时器
+        animationTimer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
+            self?.updateAnimation()
+        }
+    }
+    
+    private func createParticles() {
+        particles.removeAll()
+        
+        // 创建多个烟花绽放粒子（更密集）
+        let colors: [UIColor] = [
+            UIColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0),  // 红色
+            UIColor(red: 1.0, green: 0.8, blue: 0.2, alpha: 1.0),  // 金色
+            UIColor(red: 0.3, green: 0.8, blue: 1.0, alpha: 1.0),  // 蓝色
+            UIColor(red: 1.0, green: 0.5, blue: 0.8, alpha: 1.0),  // 粉色
+            UIColor(red: 0.5, green: 1.0, blue: 0.5, alpha: 1.0)   // 绿色
+        ]
+        
+        for _ in 0..<20 {
+            let particle = BloomParticle(
+                x: CGFloat.random(in: 0...bounds.width),
+                y: CGFloat.random(in: 0...bounds.height),
+                size: CGFloat.random(in: 3...6),
+                alpha: CGFloat.random(in: 0.5...1.0),
+                color: colors.randomElement() ?? .white
+            )
+            particles.append(particle)
+        }
+    }
+    
+    private func updateAnimation() {
+        // 随机改变粒子透明度（闪烁效果）
+        for i in 0..<particles.count {
+            if Float.random(in: 0...1) < 0.4 {
+                particles[i].alpha = CGFloat.random(in: 0.3...1.0)
+            }
+        }
+        
+        setNeedsDisplay()
+    }
+    
+    deinit {
+        animationTimer?.invalidate()
+    }
+    
+    override func draw(_ rect: CGRect) {
+        super.draw(rect)
+        
+        // 如果bounds发生变化，重新创建粒子
+        if particles.isEmpty || bounds.width != rect.width || bounds.height != rect.height {
+            createParticles()
+        }
+        
+        // 绘制烟花粒子
+        for particle in particles {
+            let particleRect = CGRect(
+                x: particle.x - particle.size / 2,
+                y: particle.y - particle.size / 2,
+                width: particle.size,
+                height: particle.size
+            )
+            
+            let path = UIBezierPath(ovalIn: particleRect)
+            particle.color.withAlphaComponent(particle.alpha).setFill()
+            path.fill()
+            
+            // 添加发光效果
+            let glowPath = UIBezierPath(ovalIn: particleRect.insetBy(dx: -particle.size * 0.5, dy: -particle.size * 0.5))
+            particle.color.withAlphaComponent(particle.alpha * 0.3).setFill()
+            glowPath.fill()
+        }
+    }
+}
+
 // 模版分类
 enum TemplateCategory: String, CaseIterable {
     case neon = "霓虹灯看板"
@@ -496,8 +1053,7 @@ class TemplateSquareViewController: UIViewController {
         
         // 设置导航栏样式
         let appearance = UINavigationBarAppearance()
-        appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(red: 0.05, green: 0.05, blue: 0.05, alpha: 1)
+        appearance.configureWithTransparentBackground() // 改为透明背景
         
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
@@ -549,7 +1105,7 @@ class TemplateSquareViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(TemplateCategoryCell.self, forCellReuseIdentifier: "CategoryCell")
-        tableView.contentInset = UIEdgeInsets(top: 14, left: 0, bottom: 20, right: 0)
+        tableView.contentInset = UIEdgeInsets(top: 18, left: 0, bottom: 20, right: 0)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
@@ -646,11 +1202,11 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             // 时钟分类只有1个卡片
             return 220
         case .popularAnimation:
-            // 热门动画分类有5个卡片，需要3行（2+2+1），增加高度
-            return 580 // 增加到580px以容纳3行卡片
+            // 热门动画分类有6个卡片，需要3行（2+2+2）
+            return 574 // 减少高度，紧凑布局
         default:
             // 其他分类有4个卡片（2行×2列）
-            return 380
+            return 374 // 减少高度，紧凑布局
         }
     }
     
@@ -684,7 +1240,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             
             NSLayoutConstraint.activate([
                 fireIconView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
-                fireIconView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+                fireIconView.topAnchor.constraint(equalTo: headerView.topAnchor),
                 fireIconView.widthAnchor.constraint(equalToConstant: 24),
                 fireIconView.heightAnchor.constraint(equalToConstant: 24),
                 
@@ -692,7 +1248,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
                 fireLabel.centerYAnchor.constraint(equalTo: fireIconView.centerYAnchor),
                 
                 label.leadingAnchor.constraint(equalTo: fireIconView.trailingAnchor, constant: 8),
-                label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+                label.topAnchor.constraint(equalTo: headerView.topAnchor)
             ])
         } else {
             // 其他分类：标题文字（去掉图标）
@@ -705,7 +1261,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             
             NSLayoutConstraint.activate([
                 label.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
-                label.centerYAnchor.constraint(equalTo: headerView.centerYAnchor)
+                label.topAnchor.constraint(equalTo: headerView.topAnchor)
             ])
         }
         
@@ -713,11 +1269,11 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        return section == 0 ? 54 : 40 // 第一个section 54px，其他section 40px（模块间距）
+        return 36 // 所有模块统一36px（文字高度20px + 文字到卡片间距16px）
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
-        return 0.01 // 最小高度，移除footer间距
+        return 10 // 模块间距10px
     }
     
     private func handleItemTap(_ item: LEDItem) {
@@ -734,6 +1290,12 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let iLoveUVC = ILoveUViewController()
             iLoveUVC.modalPresentationStyle = .fullScreen
             present(iLoveUVC, animated: true)
+        } else if item.is520 {
+            // 520：跳转到520全屏预览
+            AppDelegate.orientationLock = .landscape
+            let view520VC = View520ViewController()
+            view520VC.modalPresentationStyle = .fullScreen
+            present(view520VC, animated: true)
         } else if item.isLoveRain {
             // 爱心流星雨：跳转到爱心雨动画
             AppDelegate.orientationLock = .landscape
@@ -800,7 +1362,7 @@ class TemplateCategoryCell: UITableViewCell {
         layout.scrollDirection = .vertical
         layout.minimumInteritemSpacing = 16
         layout.minimumLineSpacing = 16
-        layout.sectionInset = UIEdgeInsets(top: 8, left: 20, bottom: 8, right: 20)
+        layout.sectionInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -859,6 +1421,19 @@ class TemplateCategoryCell: UITableViewCell {
             // 标记为特殊的I LOVE U动画
             iLoveUItem.isILoveU = true
             items.append(iLoveUItem)
+            
+            // 520（新增的第三个卡片）
+            var item520 = LEDItem(
+                id: "520-animation",
+                text: "520",
+                fontSize: 80,
+                textColor: "#FF3366",
+                backgroundColor: "#1a1a2e",
+                glowIntensity: 5.0
+            )
+            // 标记为特殊的520动画
+            item520.is520 = true
+            items.append(item520)
             
             // 爱心雨
             if let loveRainItem = allItems.first(where: { $0.isLoveRain }) {
@@ -953,13 +1528,14 @@ class TemplateCategoryCell: UITableViewCell {
             let item = LEDItem(
                 id: "\(category)-\(i)",
                 text: text,
-                fontSize: 60, // iPhone 14样式
+                fontSize: 120, // 进一步增加字体大小到120pt，全屏预览更醒目
                 textColor: "#FFFFFF", // 白色
                 backgroundColor: "#1a1a2e",
                 backgroundImageName: imageName, // 添加背景图片
                 glowIntensity: 3.0,
                 scrollType: scrollType,
-                speed: speed
+                speed: speed,
+                fontName: "PingFangSC-Semibold" // 设置为粗体字体
             )
             items.append(item)
         }
@@ -1171,9 +1747,9 @@ class TemplateItemCell: UICollectionViewCell {
     func configure(with item: LEDItem, tab: TemplateTab) {
         currentItem = item
         
-        // 移除之前可能添加的HeartGridView和ILoveUView
+        // 移除之前可能添加的所有自定义视图
         imageView.subviews.forEach { subview in
-            if subview is HeartGridView || subview is ILoveUView {
+            if subview is HeartGridView || subview is ILoveUView || subview is View520 || subview is LoveRainCoverView || subview is FireworksCoverView || subview is FireworksBloomCoverView {
                 subview.removeFromSuperview()
             }
         }
@@ -1236,10 +1812,129 @@ class TemplateItemCell: UICollectionViewCell {
             overlayTextLabel.isHidden = true
         }
         
+        // 如果是爱心流星雨动画，添加自定义封面视图
+        if item.isLoveRain {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black // 黑色背景
+            
+            let loveRainCoverView = LoveRainCoverView()
+            loveRainCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(loveRainCoverView)
+            
+            NSLayoutConstraint.activate([
+                loveRainCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                loveRainCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                loveRainCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                loveRainCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+            
+            // 强制立即布局，确保尺寸正确
+            loveRainCoverView.setNeedsLayout()
+            loveRainCoverView.layoutIfNeeded()
+            
+            // 延迟绘制，确保布局完成
+            DispatchQueue.main.async {
+                loveRainCoverView.setNeedsDisplay()
+            }
+            
+            // 隐藏文字标签
+            overlayTextLabel.isHidden = true
+        }
+        
+        // 如果是520动画，添加自定义视图
+        if item.is520 {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black // 黑色背景突出格子闪烁效果
+            
+            let view520 = View520()
+            view520.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(view520)
+            
+            NSLayoutConstraint.activate([
+                view520.topAnchor.constraint(equalTo: imageView.topAnchor),
+                view520.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                view520.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                view520.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+            
+            // 强制立即布局，确保尺寸正确
+            view520.setNeedsLayout()
+            view520.layoutIfNeeded()
+            
+            // 延迟绘制，确保布局完成
+            DispatchQueue.main.async {
+                view520.setNeedsDisplay()
+            }
+            
+            // 隐藏文字标签
+            overlayTextLabel.isHidden = true
+        }
+        
+        // 如果是烟花动画，添加自定义封面视图
+        if item.isFireworks {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black // 黑色背景
+            
+            let fireworksCoverView = FireworksCoverView()
+            fireworksCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(fireworksCoverView)
+            
+            NSLayoutConstraint.activate([
+                fireworksCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                fireworksCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                fireworksCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                fireworksCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+            
+            // 强制立即布局，确保尺寸正确
+            fireworksCoverView.setNeedsLayout()
+            fireworksCoverView.layoutIfNeeded()
+            
+            // 延迟绘制，确保布局完成
+            DispatchQueue.main.async {
+                fireworksCoverView.setNeedsDisplay()
+            }
+            
+            // 隐藏文字标签
+            overlayTextLabel.isHidden = true
+        }
+        
+        // 如果是烟花绽放动画，添加自定义封面视图
+        if item.isFireworksBloom {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black // 黑色背景
+            
+            let fireworksBloomCoverView = FireworksBloomCoverView()
+            fireworksBloomCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(fireworksBloomCoverView)
+            
+            NSLayoutConstraint.activate([
+                fireworksBloomCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                fireworksBloomCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                fireworksBloomCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                fireworksBloomCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+            
+            // 强制立即布局，确保尺寸正确
+            fireworksBloomCoverView.setNeedsLayout()
+            fireworksBloomCoverView.layoutIfNeeded()
+            
+            // 延迟绘制，确保布局完成
+            DispatchQueue.main.async {
+                fireworksBloomCoverView.setNeedsDisplay()
+            }
+            
+            // 隐藏文字标签
+            overlayTextLabel.isHidden = true
+        }
+        
         if tab == .popular {
             // 热门模版：只显示试用按钮，隐藏预览按钮和标题
-            overlayTextLabel.text = item.text
-            overlayTextLabel.isHidden = false
+            // 特殊动画（爱心格子、I LOVE U、520、爱心流星雨、烟花、烟花绽放）不显示文字
+            if !item.isHeartGrid && !item.isILoveU && !item.is520 && !item.isLoveRain && !item.isFireworks && !item.isFireworksBloom {
+                overlayTextLabel.text = item.text
+                overlayTextLabel.isHidden = false
+            }
             titleLabel.isHidden = true
             buttonStack.isHidden = false
             tryButton.isHidden = false
@@ -1269,8 +1964,8 @@ class TemplateItemCell: UICollectionViewCell {
         overlayTextLabel.layer.shadowOffset = .zero
         overlayTextLabel.layer.masksToBounds = false
         
-        // 尝试加载图片，如果没有则使用占位颜色（爱心格子除外）
-        if !item.isHeartGrid {
+        // 尝试加载图片，如果没有则使用占位颜色（特殊动画除外）
+        if !item.isHeartGrid && !item.isILoveU && !item.is520 && !item.isLoveRain && !item.isFireworks && !item.isFireworksBloom {
             if let imageName = item.imageName, !imageName.isEmpty {
                 imageView.image = UIImage(named: imageName)
             } else {

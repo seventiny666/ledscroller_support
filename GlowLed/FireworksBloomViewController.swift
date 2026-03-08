@@ -4,31 +4,21 @@ import UIKit
 class FireworksBloomViewController: UIViewController {
     
     private var emitterLayers: [CAEmitterLayer] = []
-    private var tapCount = 0
-    private var fireworksView: UIView!
+    private var autoPlayTimer: Timer?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
-        setupGestures()
     }
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 自动播放多个烟花绽放
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-            self.createBloomFirework(at: CGPoint(x: self.view.bounds.width * 0.3, y: self.view.bounds.height * 0.4))
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.8) {
-            self.createBloomFirework(at: CGPoint(x: self.view.bounds.width * 0.7, y: self.view.bounds.height * 0.3))
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            self.createBloomFirework(at: CGPoint(x: self.view.bounds.width * 0.5, y: self.view.bounds.height * 0.35))
-        }
+        startAutoPlay()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
+        stopAutoPlay()
         // 清理所有烟花效果
         emitterLayers.forEach { $0.removeFromSuperlayer() }
         emitterLayers.removeAll()
@@ -45,51 +35,48 @@ class FireworksBloomViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = UIColor(red: 0.02, green: 0.02, blue: 0.08, alpha: 1)
         
-        // 添加提示标签
-        let hintLabel = UILabel()
-        hintLabel.text = "点击屏幕放烟花 🎆"
-        hintLabel.textColor = UIColor.white.withAlphaComponent(0.6)
-        hintLabel.font = .systemFont(ofSize: 16, weight: .medium)
-        hintLabel.textAlignment = .center
-        hintLabel.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(hintLabel)
-        
-        // 添加关闭按钮
+        // 添加关闭按钮（改为右上角的✕按钮）
         let closeButton = UIButton(type: .system)
-        closeButton.setTitle("完成", for: .normal)
+        closeButton.setTitle("✕", for: .normal)
         closeButton.setTitleColor(.white, for: .normal)
-        closeButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        closeButton.layer.cornerRadius = 25
+        closeButton.titleLabel?.font = .systemFont(ofSize: 24, weight: .medium)
+        closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        closeButton.layer.cornerRadius = 20
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
-            hintLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
-            hintLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            
-            closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 120),
-            closeButton.heightAnchor.constraint(equalToConstant: 50)
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
+            closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
     
-    private func setupGestures() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleTap(_:)))
-        view.addGestureRecognizer(tapGesture)
+    // 开始自动播放
+    private func startAutoPlay() {
+        // 立即播放第一组烟花
+        createRandomBloomFirework()
+        
+        // 设置定时器，每1-2秒随机发射一个烟花
+        autoPlayTimer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
+            self?.createRandomBloomFirework()
+        }
     }
     
-    @objc private func handleTap(_ gesture: UITapGestureRecognizer) {
-        let location = gesture.location(in: view)
-        createBloomFirework(at: location)
-        
-        // 播放触觉反馈
-        let generator = UIImpactFeedbackGenerator(style: .medium)
-        generator.impactOccurred()
-        
-        tapCount += 1
+    // 停止自动播放
+    private func stopAutoPlay() {
+        autoPlayTimer?.invalidate()
+        autoPlayTimer = nil
+    }
+    
+    // 创建随机位置的烟花绽放
+    private func createRandomBloomFirework() {
+        let randomX = CGFloat.random(in: view.bounds.width * 0.2...view.bounds.width * 0.8)
+        let randomY = CGFloat.random(in: view.bounds.height * 0.2...view.bounds.height * 0.5)
+        let position = CGPoint(x: randomX, y: randomY)
+        createBloomFirework(at: position)
     }
     
     @objc private func closeTapped() {
@@ -98,9 +85,8 @@ class FireworksBloomViewController: UIViewController {
     
     // 创建烟花绽放效果（直接在点击位置绽放）
     private func createBloomFirework(at position: CGPoint) {
-        // 随机选择烟花类型
-        let types: [FireworkType] = [.burst, .willow, .palm, .ring, .chrysanthemum]
-        let type = types.randomElement() ?? .burst
+        // 固定使用棕榈型烟花
+        let type: FireworkType = .palm
         
         let emitterLayer = CAEmitterLayer()
         emitterLayer.emitterPosition = position
@@ -197,15 +183,15 @@ class FireworksBloomViewController: UIViewController {
             cell.yAcceleration = 60
             
         case .chrysanthemum: // 菊花型 - 密集绽放
-            cell.birthRate = 150
-            cell.lifetime = 2.2
-            cell.velocity = 160
-            cell.velocityRange = 80
-            cell.emissionRange = .pi * 2
-            cell.scale = 0.5
-            cell.scaleSpeed = -0.28
-            cell.alphaSpeed = -0.45
-            cell.yAcceleration = 90
+            cell.birthRate = 300 // 增加粒子数量，更密集
+            cell.lifetime = 3.0 // 延长持续时间，更饱满
+            cell.velocity = 180 // 增加初始速度，扩散更大
+            cell.velocityRange = 60 // 适中的速度范围，保持均匀分布
+            cell.emissionRange = .pi * 2 // 360度全方向
+            cell.scale = 0.6 // 稍大的粒子，更华丽
+            cell.scaleSpeed = -0.2 // 缓慢缩小，保持饱满感
+            cell.alphaSpeed = -0.3 // 缓慢淡出，延长视觉效果
+            cell.yAcceleration = 50 // 轻微重力，保持花团形状
         }
         
         cell.spin = 3
@@ -215,19 +201,50 @@ class FireworksBloomViewController: UIViewController {
     }
     
     private func createParticleImage(color: UIColor) -> UIImage {
-        let size = CGSize(width: 10, height: 10)
+        let size = CGSize(width: 4, height: 20) // 柳树型用长条形状：宽4，高20
         let renderer = UIGraphicsImageRenderer(size: size)
         
         return renderer.image { context in
-            color.setFill()
+            // 创建带弧度的长条形状（下面尖尖的，像水滴或火焰拖尾）
+            let path = UIBezierPath()
             
-            // 绘制圆形粒子
-            let rect = CGRect(origin: .zero, size: size)
-            context.cgContext.fillEllipse(in: rect)
+            // 顶部圆弧
+            path.move(to: CGPoint(x: 0, y: 2))
+            path.addQuadCurve(to: CGPoint(x: size.width, y: 2), 
+                            controlPoint: CGPoint(x: size.width / 2, y: 0))
+            
+            // 右侧边缘（略微向内弯曲）
+            path.addQuadCurve(to: CGPoint(x: size.width / 2, y: size.height), 
+                            controlPoint: CGPoint(x: size.width * 0.8, y: size.height * 0.6))
+            
+            // 左侧边缘（略微向内弯曲）
+            path.addQuadCurve(to: CGPoint(x: 0, y: 2), 
+                            controlPoint: CGPoint(x: size.width * 0.2, y: size.height * 0.6))
+            
+            path.close()
+            
+            // 填充颜色
+            color.setFill()
+            path.fill()
             
             // 添加发光效果
-            context.cgContext.setShadow(offset: .zero, blur: 3, color: color.cgColor)
-            context.cgContext.fillEllipse(in: rect)
+            context.cgContext.setShadow(offset: .zero, blur: 4, color: color.cgColor)
+            path.fill()
+            
+            // 添加渐变效果（顶部亮，底部暗，增强拖尾感）
+            if let gradient = CGGradient(colorsSpace: CGColorSpaceCreateDeviceRGB(),
+                                        colors: [color.withAlphaComponent(1.0).cgColor,
+                                                color.withAlphaComponent(0.6).cgColor] as CFArray,
+                                        locations: [0.0, 1.0]) {
+                context.cgContext.saveGState()
+                context.cgContext.addPath(path.cgPath)
+                context.cgContext.clip()
+                context.cgContext.drawLinearGradient(gradient,
+                                                     start: CGPoint(x: size.width / 2, y: 0),
+                                                     end: CGPoint(x: size.width / 2, y: size.height),
+                                                     options: [])
+                context.cgContext.restoreGState()
+            }
         }
     }
 }

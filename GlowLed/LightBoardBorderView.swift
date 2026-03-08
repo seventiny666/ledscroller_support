@@ -105,12 +105,52 @@ class LightBoardBorderView: UIView {
         let (borderColor, dotCount) = getStyleProperties(currentStyle)
         
         // 绘制边框
-        let borderLayer = CAShapeLayer()
-        borderLayer.path = UIBezierPath(roundedRect: borderRect, cornerRadius: cornerRadius).cgPath
-        borderLayer.strokeColor = borderColor.cgColor
-        borderLayer.fillColor = UIColor.clear.cgColor
-        borderLayer.lineWidth = borderWidth
-        layer.addSublayer(borderLayer)
+        if currentStyle == .style12 {
+            // 为style12创建多段彩色边框，增加更多颜色段让渐变更自然
+            let borderPath = UIBezierPath(roundedRect: borderRect, cornerRadius: cornerRadius)
+            
+            // 创建更多颜色段来实现自然渐变
+            let colors = [
+                UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0), // 红
+                UIColor(red: 1.0, green: 0.2, blue: 0.0, alpha: 1.0), // 红橙
+                UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0), // 橙
+                UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0), // 橙黄
+                UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0), // 黄
+                UIColor(red: 0.5, green: 1.0, blue: 0.0, alpha: 1.0), // 黄绿
+                UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0), // 绿
+                UIColor(red: 0.0, green: 1.0, blue: 0.5, alpha: 1.0), // 绿青
+                UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0), // 青
+                UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0), // 青蓝
+                UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0), // 蓝
+                UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0), // 蓝紫
+                UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0), // 紫红
+                UIColor(red: 1.0, green: 0.0, blue: 0.5, alpha: 1.0)  // 回到红色
+            ]
+            
+            // 创建多个边框段来模拟彩色效果
+            for (index, color) in colors.enumerated() {
+                let borderLayer = CAShapeLayer()
+                borderLayer.path = borderPath.cgPath
+                borderLayer.strokeColor = color.cgColor
+                borderLayer.fillColor = UIColor.clear.cgColor
+                borderLayer.lineWidth = borderWidth
+                
+                // 设置每段的stroke范围
+                let segmentLength = 1.0 / CGFloat(colors.count)
+                borderLayer.strokeStart = CGFloat(index) * segmentLength
+                borderLayer.strokeEnd = CGFloat(index + 1) * segmentLength
+                
+                layer.addSublayer(borderLayer)
+            }
+        } else {
+            // 普通单色边框
+            let borderLayer = CAShapeLayer()
+            borderLayer.path = UIBezierPath(roundedRect: borderRect, cornerRadius: cornerRadius).cgPath
+            borderLayer.strokeColor = borderColor.cgColor
+            borderLayer.fillColor = UIColor.clear.cgColor
+            borderLayer.lineWidth = borderWidth
+            layer.addSublayer(borderLayer)
+        }
         
         // 计算圆点位置
         let _ = 2 * (borderRect.width + borderRect.height - 4 * cornerRadius) + 2 * .pi * cornerRadius
@@ -160,29 +200,30 @@ class LightBoardBorderView: UIView {
         let borderColor: UIColor
         switch style {
         case .style1:
-            borderColor = UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0) // 红色
+            borderColor = UIColor(red: 0.8, green: 0.0, blue: 0.0, alpha: 1.0) // 深红色（保持）
         case .style2:
-            borderColor = UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0) // 绿色
+            borderColor = UIColor(red: 0.0, green: 0.6, blue: 0.0, alpha: 1.0) // 深绿色（降低亮度）
         case .style3:
-            borderColor = UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0) // 蓝色
+            borderColor = UIColor(red: 0.0, green: 0.0, blue: 0.8, alpha: 1.0) // 深蓝色（保持）
         case .style4:
-            borderColor = UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0) // 黄色
+            borderColor = UIColor(red: 0.8, green: 0.7, blue: 0.0, alpha: 1.0) // 深黄色（降低亮度）
         case .style5:
-            borderColor = UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0) // 洋红色
+            borderColor = UIColor(red: 0.8, green: 0.0, blue: 0.6, alpha: 1.0) // 深洋红色（降低亮度）
         case .style6:
-            borderColor = UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0) // 青色
+            borderColor = UIColor(red: 0.0, green: 0.7, blue: 0.7, alpha: 1.0) // 深青色（降低亮度）
         case .style7:
-            borderColor = UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0) // 橙色
+            borderColor = UIColor(red: 0.9, green: 0.4, blue: 0.0, alpha: 1.0) // 深橙色（降低亮度）
         case .style8:
-            borderColor = UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0) // 紫色
+            borderColor = UIColor(red: 0.4, green: 0.0, blue: 0.8, alpha: 1.0) // 深紫色（保持）
         case .style9:
-            borderColor = UIColor(red: 1.0, green: 0.75, blue: 0.8, alpha: 1.0) // 粉色
+            borderColor = UIColor(red: 0.8, green: 0.3, blue: 0.5, alpha: 1.0) // 深粉色（降低亮度）
         case .style10:
-            borderColor = UIColor(red: 0.0, green: 0.8, blue: 0.4, alpha: 1.0) // 翠绿色
+            borderColor = UIColor(red: 0.0, green: 0.6, blue: 0.3, alpha: 1.0) // 深翠绿色（降低亮度）
         case .style11:
-            borderColor = UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0) // 金色
+            borderColor = UIColor(red: 0.8, green: 0.6, blue: 0.0, alpha: 1.0) // 深金色（降低亮度）
         case .style12:
-            borderColor = UIColor(red: 0.8, green: 0.8, blue: 0.8, alpha: 1.0) // 银色
+            // 彩色边框 - 这里先返回一个基础颜色，实际绘制时会用渐变
+            borderColor = UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0) // 临时颜色，实际会被渐变覆盖
         }
         
         return (borderColor, baseDotCount)

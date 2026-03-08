@@ -36,6 +36,7 @@
 		A1000048000000000000001 /* LightBoardBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000049000000000000001 /* LightBoardBorderView.swift */; };
 		A1000050000000000000001 /* HeartGridViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000051000000000000001 /* HeartGridViewController.swift */; };
 		A1000052000000000000001 /* ILoveUViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000053000000000000001 /* ILoveUViewController.swift */; };
+		A1000054000000000000001 /* View520ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000055000000000000001 /* View520ViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -105,6 +106,7 @@
 		A1000049000000000000001 /* LightBoardBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightBoardBorderView.swift; sourceTree = "<group>"; };
 		A1000051000000000000001 /* HeartGridViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartGridViewController.swift; sourceTree = "<group>"; };
 		A1000053000000000000001 /* ILoveUViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILoveUViewController.swift; sourceTree = "<group>"; };
+		A1000055000000000000001 /* View520ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View520ViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -257,6 +259,7 @@
 				A1000049000000000000001 /* LightBoardBorderView.swift */,
 				A1000051000000000000001 /* HeartGridViewController.swift */,
 				A1000053000000000000001 /* ILoveUViewController.swift */,
+				A1000055000000000000001 /* View520ViewController.swift */,
 				A1000006000000000000001 /* MainViewController.swift */,
 				A1000008000000000000001 /* LEDDisplayViewController.swift */,
 				A1000010000000000000001 /* ConfigModel.swift */,
@@ -373,6 +376,7 @@
 				A1000048000000000000001 /* LightBoardBorderView.swift in Sources */,
 				A1000050000000000000001 /* HeartGridViewController.swift in Sources */,
 				A1000052000000000000001 /* ILoveUViewController.swift in Sources */,
+				A1000054000000000000001 /* View520ViewController.swift in Sources */,
 				140966C92F55CD1B0095A3EA /* LEDPreviewViewController.swift in Sources */,
 				1413821A2F56769B00F73105 /* LanguageManager.swift in Sources */,
 			);

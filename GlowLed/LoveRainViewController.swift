@@ -35,20 +35,20 @@ class LoveRainViewController: UIViewController {
         
         // 添加关闭按钮
         let closeButton = UIButton(type: .system)
-        closeButton.setTitle("完成", for: .normal)
+        closeButton.setTitle("✕", for: .normal)
         closeButton.setTitleColor(.white, for: .normal)
-        closeButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
-        closeButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)
-        closeButton.layer.cornerRadius = 25
+        closeButton.titleLabel?.font = .systemFont(ofSize: 24, weight: .medium)
+        closeButton.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        closeButton.layer.cornerRadius = 20
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
-            closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            closeButton.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            closeButton.widthAnchor.constraint(equalToConstant: 120),
-            closeButton.heightAnchor.constraint(equalToConstant: 50)
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            closeButton.widthAnchor.constraint(equalToConstant: 40),
+            closeButton.heightAnchor.constraint(equalToConstant: 40)
         ])
     }
     
@@ -138,17 +138,17 @@ class LoveRainViewController: UIViewController {
         // 不再创建大的实心心形，改为用小爱心组成心形轮廓
         createHeartShapeWithSmallHearts(center: CGPoint(x: centerX, y: centerY), size: size)
         
-        // 添加"LOVE"文字
+        // 添加"I LOVE U"文字
         let loveLabel = UILabel()
-        loveLabel.text = "LOVE"
-        loveLabel.textColor = UIColor(red: 1.0, green: 0.5, blue: 0.75, alpha: 1.0) // 粉色
-        loveLabel.font = .systemFont(ofSize: 80, weight: .black) // 加粗
+        loveLabel.text = "I   LOVE   U"  // 增加单词间距
+        loveLabel.textColor = UIColor(red: 1.0, green: 0.5, blue: 0.75, alpha: 1.0) // 粉色文字
+        loveLabel.font = .systemFont(ofSize: 120, weight: .black) // 加粗
         loveLabel.textAlignment = .center
         
-        // 白色发光效果
-        loveLabel.layer.shadowColor = UIColor.white.cgColor
+        // 粉色发光效果
+        loveLabel.layer.shadowColor = UIColor(red: 1.0, green: 0.5, blue: 0.75, alpha: 1.0).cgColor
         loveLabel.layer.shadowRadius = 15
-        loveLabel.layer.shadowOpacity = 1.0
+        loveLabel.layer.shadowOpacity = 0.8
         loveLabel.layer.shadowOffset = .zero
         
         loveLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -159,7 +159,7 @@ class LoveRainViewController: UIViewController {
             loveLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
         
-        // "LOVE"文字脉动动画
+        // "I LOVE U"文字脉动动画
         UIView.animate(withDuration: 1.2, delay: 0, options: [.repeat, .autoreverse, .curveEaseInOut], animations: {
             loveLabel.transform = CGAffineTransform(scaleX: 1.1, y: 1.1)
         })

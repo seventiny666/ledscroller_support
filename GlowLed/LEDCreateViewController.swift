@@ -2203,7 +2203,9 @@ class LEDCreateViewController: UIViewController {
                 glowIntensity: currentItem.glowIntensity,
                 scrollType: currentItem.scrollType,
                 speed: currentItem.speed,
-                fontName: currentItem.fontName
+                fontName: currentItem.fontName,
+                borderStyle: currentItem.borderStyle, // 保存跑马灯边框
+                lightBoardStyle: currentItem.lightBoardStyle // 保存灯牌边框
             )
             items.insert(newItem, at: 0)
         } else if let editingItem = editingItem,
