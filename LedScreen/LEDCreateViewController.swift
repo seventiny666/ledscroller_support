@@ -275,6 +275,7 @@ class LEDCreateViewController: UIViewController {
     private var backgroundTabView: UIView!
     private var borderTabView: UIView!
     private var animationTabView: UIView!
+    private var currentTabConstraints: [NSLayoutConstraint] = [] // 存储当前Tab的约束
     
     // 字体Tab控件
     private let fontSizeSlider = UISlider()
@@ -1413,6 +1414,10 @@ class LEDCreateViewController: UIViewController {
     }
     
     private func showTab(index: Int) {
+        // 移除旧的约束
+        NSLayoutConstraint.deactivate(currentTabConstraints)
+        currentTabConstraints.removeAll()
+        
         // 移除所有Tab视图
         fontTabView.removeFromSuperview()
         backgroundTabView.removeFromSuperview()
@@ -1429,15 +1434,23 @@ class LEDCreateViewController: UIViewController {
         default: currentTab = fontTabView
         }
         
+        currentTab.translatesAutoresizingMaskIntoConstraints = false
+        currentTab.isUserInteractionEnabled = true // 确保可交互
+        currentTab.backgroundColor = .clear // 确保不阻挡内容
         tabContentView.addSubview(currentTab)
         
-        // 设置约束让Tab视图填充整个tabContentView
-        NSLayoutConstraint.activate([
+        // 创建并激活新的约束
+        currentTabConstraints = [
             currentTab.topAnchor.constraint(equalTo: tabContentView.topAnchor),
             currentTab.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
             currentTab.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             currentTab.bottomAnchor.constraint(equalTo: tabContentView.bottomAnchor)
-        ])
+        ]
+        NSLayoutConstraint.activate(currentTabConstraints)
+        
+        // 确保滚动视图可交互
+        tabContentScrollView.isUserInteractionEnabled = true
+        tabContentView.isUserInteractionEnabled = true
         
         // 切换Tab时滚动到顶部
         tabContentScrollView.setContentOffset(.zero, animated: false)
@@ -1445,6 +1458,8 @@ class LEDCreateViewController: UIViewController {
         // 强制布局更新，确保内容高度正确
         tabContentView.setNeedsLayout()
         tabContentView.layoutIfNeeded()
+        
+        print("✅ Tab \(index) loaded, subviews: \(currentTab.subviews.count)")
     }
     
     // 创建简单的文字输入框
