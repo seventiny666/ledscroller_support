@@ -63,7 +63,7 @@ class LEDScreenCardView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         setupLEDDots()
-        setupBorders()
+        // 不再设置边框，只显示矩阵点
     }
     
     private func setupLEDDots() {
@@ -108,147 +108,13 @@ class LEDScreenCardView: UIView {
     }
     
     private func setupBorders() {
-        // 清除旧的边框和发光层
-        outerBorderLayer?.removeFromSuperlayer()
-        innerBorderLayer?.removeFromSuperlayer()
-        innermostBorderLayer?.removeFromSuperlayer()
-        outerGlowLayers.forEach { $0.removeFromSuperlayer() }
-        innerGlowLayers.forEach { $0.removeFromSuperlayer() }
-        innermostGlowLayers.forEach { $0.removeFromSuperlayer() }
-        outerGlowLayers.removeAll()
-        innerGlowLayers.removeAll()
-        innermostGlowLayers.removeAll()
-        
-        let bounds = self.bounds
-        
-        // 外层虚线边框 - 距离边缘20px，线宽8px，圆角20px
-        let outerInset: CGFloat = 20
-        let outerRect = bounds.insetBy(dx: outerInset, dy: outerInset)
-        let outerPath = UIBezierPath(roundedRect: outerRect, cornerRadius: 20)
-        
-        // 外层边框 - 第一层发光（扩展4px，模糊效果）
-        let outerGlow1 = CAShapeLayer()
-        outerGlow1.path = outerPath.cgPath
-        outerGlow1.fillColor = UIColor.clear.cgColor
-        outerGlow1.strokeColor = style.color.cgColor
-        outerGlow1.lineWidth = 8 + 8 // 边框宽度 + 扩展4px*2
-        outerGlow1.lineDashPattern = [70, 6]
-        outerGlow1.opacity = 0.3
-        layer.addSublayer(outerGlow1)
-        outerGlowLayers.append(outerGlow1)
-        
-        // 外层边框 - 第二层发光（扩展10px，更强模糊）
-        let outerGlow2 = CAShapeLayer()
-        outerGlow2.path = outerPath.cgPath
-        outerGlow2.fillColor = UIColor.clear.cgColor
-        outerGlow2.strokeColor = style.color.cgColor
-        outerGlow2.lineWidth = 8 + 20 // 边框宽度 + 扩展10px*2
-        outerGlow2.lineDashPattern = [70, 6]
-        outerGlow2.opacity = 0.15
-        layer.addSublayer(outerGlow2)
-        outerGlowLayers.append(outerGlow2)
-        
-        // 外层边框 - 主边框
-        outerBorderLayer = CAShapeLayer()
-        outerBorderLayer!.path = outerPath.cgPath
-        outerBorderLayer!.fillColor = UIColor.clear.cgColor
-        outerBorderLayer!.strokeColor = UIColor.white.cgColor
-        outerBorderLayer!.lineWidth = 8
-        outerBorderLayer!.lineDashPattern = [70, 6]
-        
-        // 主边框发光效果
-        outerBorderLayer!.shadowColor = style.color.cgColor
-        outerBorderLayer!.shadowRadius = 12.0
-        outerBorderLayer!.shadowOpacity = 1.0
-        outerBorderLayer!.shadowOffset = .zero
-        
-        layer.addSublayer(outerBorderLayer!)
-        
-        // 内层实线边框 - 距离边缘34px，线宽3px，圆角20px
-        let innerInset: CGFloat = 34
-        let innerRect = bounds.insetBy(dx: innerInset, dy: innerInset)
-        let innerPath = UIBezierPath(roundedRect: innerRect, cornerRadius: 20)
-        
-        // 内层边框 - 第一层发光（扩展4px，模糊效果）
-        let innerGlow1 = CAShapeLayer()
-        innerGlow1.path = innerPath.cgPath
-        innerGlow1.fillColor = UIColor.clear.cgColor
-        innerGlow1.strokeColor = style.color.cgColor
-        innerGlow1.lineWidth = 3 + 8 // 边框宽度 + 扩展4px*2
-        innerGlow1.opacity = 0.3
-        layer.addSublayer(innerGlow1)
-        innerGlowLayers.append(innerGlow1)
-        
-        // 内层边框 - 第二层发光（扩展10px，更强模糊）
-        let innerGlow2 = CAShapeLayer()
-        innerGlow2.path = innerPath.cgPath
-        innerGlow2.fillColor = UIColor.clear.cgColor
-        innerGlow2.strokeColor = style.color.cgColor
-        innerGlow2.lineWidth = 3 + 20 // 边框宽度 + 扩展10px*2
-        innerGlow2.opacity = 0.15
-        layer.addSublayer(innerGlow2)
-        innerGlowLayers.append(innerGlow2)
-        
-        // 内层边框 - 主边框
-        innerBorderLayer = CAShapeLayer()
-        innerBorderLayer!.path = innerPath.cgPath
-        innerBorderLayer!.fillColor = UIColor.clear.cgColor
-        innerBorderLayer!.strokeColor = UIColor.white.cgColor
-        innerBorderLayer!.lineWidth = 3
-        
-        // 主边框发光效果
-        innerBorderLayer!.shadowColor = style.color.cgColor
-        innerBorderLayer!.shadowRadius = 10.0
-        innerBorderLayer!.shadowOpacity = 1.0
-        innerBorderLayer!.shadowOffset = .zero
-        
-        layer.addSublayer(innerBorderLayer!)
-        
-        // 最内层实线边框 - 距离边缘60px，线宽3px，圆角20px，使用亮色
-        let innermostInset: CGFloat = 60
-        let innermostRect = bounds.insetBy(dx: innermostInset, dy: innermostInset)
-        let innermostPath = UIBezierPath(roundedRect: innermostRect, cornerRadius: 20)
-        
-        // 最内边框 - 第一层发光（扩展4px，模糊效果）
-        let innermostGlow1 = CAShapeLayer()
-        innermostGlow1.path = innermostPath.cgPath
-        innermostGlow1.fillColor = UIColor.clear.cgColor
-        innermostGlow1.strokeColor = style.brightColor.cgColor
-        innermostGlow1.lineWidth = 3 + 8 // 边框宽度 + 扩展4px*2
-        innermostGlow1.opacity = 0.3
-        layer.addSublayer(innermostGlow1)
-        innermostGlowLayers.append(innermostGlow1)
-        
-        // 最内边框 - 第二层发光（扩展10px，更强模糊）
-        let innermostGlow2 = CAShapeLayer()
-        innermostGlow2.path = innermostPath.cgPath
-        innermostGlow2.fillColor = UIColor.clear.cgColor
-        innermostGlow2.strokeColor = style.brightColor.cgColor
-        innermostGlow2.lineWidth = 3 + 20 // 边框宽度 + 扩展10px*2
-        innermostGlow2.opacity = 0.15
-        layer.addSublayer(innermostGlow2)
-        innermostGlowLayers.append(innermostGlow2)
-        
-        // 最内边框 - 主边框（使用亮色）
-        innermostBorderLayer = CAShapeLayer()
-        innermostBorderLayer!.path = innermostPath.cgPath
-        innermostBorderLayer!.fillColor = UIColor.clear.cgColor
-        innermostBorderLayer!.strokeColor = style.brightColor.cgColor
-        innermostBorderLayer!.lineWidth = 3
-        
-        // 主边框发光效果
-        innermostBorderLayer!.shadowColor = style.brightColor.cgColor
-        innermostBorderLayer!.shadowRadius = 10.0
-        innermostBorderLayer!.shadowOpacity = 1.0
-        innermostBorderLayer!.shadowOffset = .zero
-        
-        layer.addSublayer(innermostBorderLayer!)
+        // 不再显示边框，只保留矩阵点状背景
     }
     
     func setStyle(_ newStyle: LEDScreenStyle) {
         style = newStyle
         setupLEDDots()
-        setupBorders()
+        // 不再设置边框，只更新矩阵点
     }
 }
 
@@ -612,23 +478,6 @@ class LEDCreateViewController: UIViewController {
         
         var tabYOffset: CGFloat = 0
         
-        // 添加测试按钮
-        let testButton = UIButton(type: .system)
-        testButton.setTitle("🔴 测试按钮 - 点我", for: .normal)
-        testButton.backgroundColor = .red
-        testButton.setTitleColor(.white, for: .normal)
-        testButton.layer.cornerRadius = 8
-        testButton.translatesAutoresizingMaskIntoConstraints = false
-        testButton.addTarget(self, action: #selector(testButtonTapped), for: .touchUpInside)
-        fontTabView.addSubview(testButton)
-        NSLayoutConstraint.activate([
-            testButton.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
-            testButton.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            testButton.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
-            testButton.heightAnchor.constraint(equalToConstant: 50)
-        ])
-        tabYOffset += 60
-        
         // 字体大小
         fontSizeLabel.text = "fontSize".localized
         fontSizeLabel.textColor = UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)
@@ -916,11 +765,11 @@ class LEDCreateViewController: UIViewController {
         ])
         tabYOffset += 70
         
-        // 线性边框（8个颜色，3行布局：3-3-2）
+        // 线性边框（8个颜色，2行布局：4-4）
         addSectionLabelToView(borderTabView, text: "线性边框", yOffset: &tabYOffset)
         
-        // 第1行（颜色0-2：红、绿、蓝）
-        let linearRow1 = createLinearBorderStack(startIndex: 0, count: 3, tag: 800)
+        // 第1行（颜色0-3：红、绿、蓝、黄）
+        let linearRow1 = createLinearBorderStack(startIndex: 0, count: 4, tag: 800)
         borderTabView.addSubview(linearRow1)
         NSLayoutConstraint.activate([
             linearRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
@@ -930,25 +779,14 @@ class LEDCreateViewController: UIViewController {
         ])
         tabYOffset += 60
         
-        // 第2行（颜色3-5：黄、紫、青）
-        let linearRow2 = createLinearBorderStack(startIndex: 3, count: 3, tag: 803)
+        // 第2行（颜色4-7：紫、青、橙、白）
+        let linearRow2 = createLinearBorderStack(startIndex: 4, count: 4, tag: 804)
         borderTabView.addSubview(linearRow2)
         NSLayoutConstraint.activate([
             linearRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
             linearRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
             linearRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
             linearRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
-        
-        // 第3行（颜色6-7：橙、白）
-        let linearRow3 = createLinearBorderStack(startIndex: 6, count: 2, tag: 806)
-        borderTabView.addSubview(linearRow3)
-        NSLayoutConstraint.activate([
-            linearRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            linearRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            linearRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
     }
     
@@ -1061,7 +899,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除所有按钮的选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1073,7 +911,7 @@ class LEDCreateViewController: UIViewController {
             
             // 更新选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
                     button.layer.borderWidth = (i == styleIndex) ? 3 : 2
                     button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1081,7 +919,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除跑马灯边框的选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1104,7 +942,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除所有按钮的选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1116,7 +954,7 @@ class LEDCreateViewController: UIViewController {
             
             // 更新选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
                     button.layer.borderWidth = (i == styleIndex) ? 3 : 2
                     button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1124,7 +962,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除灯牌边框的选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1141,8 +979,8 @@ class LEDCreateViewController: UIViewController {
             let btn = UIButton(type: .system)
             let styleIndex = startIndex + index
             
-            // 创建线性边框预览视图
-            let borderView = LinearBorderView(style: LinearBorderStyle(rawValue: styleIndex) ?? .red)
+            // 创建线性边框预览视图 - 选择按钮模式（更小更精致）
+            let borderView = LinearBorderView(style: LinearBorderStyle(rawValue: styleIndex) ?? .red, isSelectionMode: true)
             borderView.isUserInteractionEnabled = false
             borderView.translatesAutoresizingMaskIntoConstraints = false
             btn.addSubview(borderView)
@@ -1194,7 +1032,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除所有按钮的选中状态
             for i in 0..<8 {
-                if let button = contentView.viewWithTag(800 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1207,7 +1045,7 @@ class LEDCreateViewController: UIViewController {
             
             // 更新选中状态
             for i in 0..<8 {
-                if let button = contentView.viewWithTag(800 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     button.layer.borderWidth = (i == styleIndex) ? 3 : 2
                     button.layer.borderColor = (i == styleIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1215,7 +1053,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除跑马灯边框的选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1223,7 +1061,7 @@ class LEDCreateViewController: UIViewController {
             
             // 清除灯牌边框的选中状态
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1439,13 +1277,6 @@ class LEDCreateViewController: UIViewController {
         showTab(index: tabSegment.selectedSegmentIndex)
     }
     
-    @objc private func testButtonTapped() {
-        print("🎉 测试按钮被点击了！")
-        let alert = UIAlertController(title: "成功", message: "按钮可以点击！", preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "确定", style: .default))
-        present(alert, animated: true)
-    }
-    
     private func showTab(index: Int) {
         // 移除旧的约束
         NSLayoutConstraint.deactivate(currentTabConstraints)
@@ -1472,12 +1303,13 @@ class LEDCreateViewController: UIViewController {
         currentTab.backgroundColor = .clear // 确保不阻挡内容
         tabContentView.addSubview(currentTab)
         
-        // 创建并激活新的约束
+        // 创建并激活新的约束 - 关键修复：使用bottom约束而不是height约束
         currentTabConstraints = [
             currentTab.topAnchor.constraint(equalTo: tabContentView.topAnchor),
             currentTab.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
             currentTab.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
-            currentTab.bottomAnchor.constraint(equalTo: tabContentView.bottomAnchor)
+            currentTab.bottomAnchor.constraint(equalTo: tabContentView.bottomAnchor), // 使用bottom约束
+            currentTab.heightAnchor.constraint(greaterThanOrEqualToConstant: 600) // 设置最小高度
         ]
         NSLayoutConstraint.activate(currentTabConstraints)
         
@@ -1489,10 +1321,17 @@ class LEDCreateViewController: UIViewController {
         tabContentScrollView.setContentOffset(.zero, animated: false)
         
         // 强制布局更新，确保内容高度正确
-        tabContentView.setNeedsLayout()
-        tabContentView.layoutIfNeeded()
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
         
-        print("✅ Tab \(index) loaded, subviews: \(currentTab.subviews.count)")
+        // 延迟打印调试信息，确保布局完成
+        DispatchQueue.main.async {
+            print("✅ Tab \(index) loaded, subviews: \(currentTab.subviews.count)")
+            print("   currentTab frame: \(currentTab.frame)")
+            print("   tabContentView frame: \(self.tabContentView.frame)")
+            print("   tabContentScrollView frame: \(self.tabContentScrollView.frame)")
+            print("   tabContentScrollView contentSize: \(self.tabContentScrollView.contentSize)")
+        }
     }
     
     // 创建简单的文字输入框
@@ -2069,26 +1908,35 @@ class LEDCreateViewController: UIViewController {
     }
     
     private func updateColorButtonSelection(tag: Int, selectedIndex: Int) {
-        // 根据tag确定要检查的按钮数量
+        // 根据tag确定要检查的按钮数量和查找的视图
         let maxCount: Int
+        let searchView: UIView
+        
         if tag == 100 {
             maxCount = textColors.count // 15个文字颜色（包括自定义颜色选择器）
+            searchView = fontTabView // 文字颜色在字体Tab
         } else if tag == 200 {
             maxCount = bgColors.count // 背景颜色
+            searchView = backgroundTabView // 背景颜色在背景Tab
         } else if tag == 400 {
             maxCount = bgGradientColors.count // 12个背景渐变
+            searchView = backgroundTabView // 背景渐变在背景Tab
         } else if tag == 500 {
             maxCount = getAvailableImageCount(category: "neon") // 霓虹灯看板
+            searchView = backgroundTabView // 背景图片在背景Tab
         } else if tag == 510 {
             maxCount = getAvailableImageCount(category: "idol") // 偶像应援
+            searchView = backgroundTabView // 背景图片在背景Tab
         } else if tag == 520 {
             maxCount = 8 // LED屏幕（8种颜色）
+            searchView = backgroundTabView // 背景图片在背景Tab
         } else {
             maxCount = 20 // 默认值
+            searchView = view // 默认在主视图中查找
         }
         
         for i in 0..<maxCount {
-            if let button = contentView.viewWithTag(tag + i) as? UIButton {
+            if let button = searchView.viewWithTag(tag + i) as? UIButton {
                 button.layer.borderWidth = i == selectedIndex ? 3 : 2
                 button.layer.borderColor = i == selectedIndex ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
             }
@@ -2099,7 +1947,7 @@ class LEDCreateViewController: UIViewController {
         // 更新跑马灯边框按钮选中状态
         if let borderStyle = currentItem.borderStyle {
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(600 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
                     button.layer.borderWidth = (i == borderStyle) ? 3 : 2
                     button.layer.borderColor = (i == borderStyle) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -2109,7 +1957,7 @@ class LEDCreateViewController: UIViewController {
         // 更新灯牌边框按钮选中状态
         if let lightBoardStyle = currentItem.lightBoardStyle {
             for i in 0..<12 {
-                if let button = contentView.viewWithTag(700 + i) as? UIButton {
+                if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
                     button.layer.borderWidth = (i == lightBoardStyle) ? 3 : 2
                     button.layer.borderColor = (i == lightBoardStyle) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
                 }
