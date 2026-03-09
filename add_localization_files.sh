@@ -1,16 +1,16 @@
 #!/bin/bash
 
-# GlowLed 多语言文件添加脚本
+# LedScreen 多语言文件添加脚本
 # 此脚本会打开Xcode项目，你需要手动添加文件
 
 echo "========================================="
-echo "GlowLed 多语言功能 - 文件添加助手"
+echo "LedScreen 多语言功能 - 文件添加助手"
 echo "========================================="
 echo ""
 
 # 检查文件是否存在
 echo "检查必要文件..."
-if [ ! -f "GlowLed/LanguageManager.swift" ]; then
+if [ ! -f "LedScreen/LanguageManager.swift" ]; then
     echo "❌ 错误: LanguageManager.swift 不存在"
     exit 1
 fi
@@ -30,7 +30,7 @@ LOCALIZATION_FOLDERS=(
 )
 
 for folder in "${LOCALIZATION_FOLDERS[@]}"; do
-    if [ ! -d "GlowLed/$folder" ]; then
+    if [ ! -d "LedScreen/$folder" ]; then
         echo "❌ 错误: $folder 不存在"
         exit 1
     fi
@@ -46,22 +46,22 @@ echo "========================================="
 echo ""
 echo "1. 打开Xcode项目"
 echo "   正在打开..."
-open GlowLed.xcodeproj
+open LedScreen.xcodeproj
 
 sleep 2
 
 echo ""
 echo "2. 添加 LanguageManager.swift"
-echo "   - 在Xcode左侧，右键点击 'GlowLed' 文件夹"
-echo "   - 选择 'Add Files to GlowLed...'"
-echo "   - 选择: GlowLed/LanguageManager.swift"
+echo "   - 在Xcode左侧，右键点击 'LedScreen' 文件夹"
+echo "   - 选择 'Add Files to LedScreen...'"
+echo "   - 选择: LedScreen/LanguageManager.swift"
 echo "   - 确保勾选 'Copy items if needed'"
 echo "   - 点击 'Add'"
 echo ""
 echo "3. 添加本地化文件夹"
 echo "   对以下每个文件夹重复上述步骤："
 for folder in "${LOCALIZATION_FOLDERS[@]}"; do
-    echo "   - GlowLed/$folder/"
+    echo "   - LedScreen/$folder/"
 done
 echo ""
 echo "4. 配置项目本地化"
@@ -70,7 +70,7 @@ echo "   - 在 PROJECT 设置 -> Info -> Localizations"
 echo "   - 点击 '+' 添加所有语言"
 echo ""
 echo "5. 创建 Localizable.strings"
-echo "   - 右键 'GlowLed' 文件夹 -> New File"
+echo "   - 右键 'LedScreen' 文件夹 -> New File"
 echo "   - 选择 'Strings File'"
 echo "   - 命名为 'Localizable'"
 echo "   - 在检查器中点击 'Localize...'"

@@ -1,0 +1,120 @@
+/* Tab Bar */
+"home" = "Home";
+"templates" = "Templates";
+"creations" = "Creations";
+"settings" = "Settings";
+
+/* Template Categories */
+"neon" = "Neon Screen";
+"idol" = "Idol Screen";
+"led" = "LED Screen";
+"clock" = "Clock Screen";
+"other" = "Other Screen";
+
+/* Buttons */
+"try" = "Try";
+"preview" = "Preview";
+"edit" = "Edit";
+"save" = "Save";
+"cancel" = "Cancel";
+"delete" = "Delete";
+"tip" = "Tip";
+"confirm" = "OK";
+"create" = "Create";
+"done" = "Done";
+
+/* Settings */
+"language" = "Language";
+"about" = "About";
+"version" = "Version";
+"feedback" = "Feedback";
+"rate" = "Rate App";
+"share" = "Share";
+"restorePurchase" = "Restore Purchase";
+
+/* Messages */
+"saved" = "New page saved to My Creations";
+"deleted" = "Deleted successfully";
+"error" = "Operation failed";
+"languageChanged" = "Language Changed";
+"restartRequired" = "Please restart the app to apply the new language settings";
+"noRestorableItems" = "No restorable purchase items";
+
+/* About Messages */
+"aboutMessage" = "LedScreen - Make Your Text Glow\n\nA professional LED display simulation app";
+"versionMessage" = "Current Version: 1.0\n\nThank you for using!";
+"feedbackMessage" = "Please send email to:\n784430005@qq.com";
+"rateMessage" = "Thank you for your support!\nPlease rate us on the App Store";
+
+/* Create LED */
+"createTitle" = "Create LED";
+"editTitle" = "Edit LED";
+"textContent" = "Text Content";
+"textPlaceholder" = "Enter LED text";
+"pleaseEnterText" = "Please enter text content";
+"previewText" = "Preview";
+"fontSize" = "Font Size";
+"fontSelection" = "Font Selection";
+"textColor" = "Text Color";
+"gradientColor" = "Gradient Color";
+"glowIntensity" = "Glow Intensity";
+"backgroundColor" = "Background Color";
+"backgroundGradient" = "Background Gradient";
+"scrollType" = "Scroll Type";
+"speed" = "Playback Speed";
+
+/* Font Names */
+"pingfang" = "PingFang";
+"heiti" = "Heiti";
+"songti" = "Songti";
+"kaiti" = "Kaiti";
+
+/* Scroll Types */
+"static" = "Static";
+"scrollToggle" = "Scroll";
+"scrollLeft" = "Scroll Left";
+"scrollRight" = "Scroll Right";
+"scrollUp" = "Scroll Up";
+"scrollDown" = "Scroll Down";
+
+/* Blink Speeds */
+"blinkSpeed" = "Blink Speed";
+"blinkToggle" = "Blink";
+"verySlow" = "Very Slow";
+"slow" = "Slow";
+"fast" = "Fast";
+"veryFast" = "Very Fast";
+"superFast" = "Super Fast";
+"ultraFast" = "Ultra Fast";
+
+/* Tab Segments */
+"popular" = "Popular";
+"animation" = "Animation";
+"font" = "Font";
+"background" = "Background";
+"gradientBackground" = "Gradient Background";
+
+/* Presets */
+"happyBirthday" = "HAPPY BIRTHDAY";
+"happyNewYear" = "HAPPY NEW YEAR";
+"merryChristmas" = "MERRY CHRISTMAS";
+"marryMe" = "MARRY ME";
+"iLoveU" = "I LOVE U";
+
+/* Special Effects */
+"loveRain" = "💖 Love Rain";
+"flipClock" = "Digital Clock";
+"fireworks" = "Fireworks";
+
+/* My Creations */
+"createFirstLED" = "Start creating your first LED screen";
+"createLED" = "Create LED";
+"confirmDelete" = "Confirm Delete";
+"confirmDeleteMessage" = "Are you sure you want to delete this LED screen?";
+"addSuccess" = "Added successfully!";
+"updateSuccess" = "Update saved successfully!";
+
+/* Language Confirmation */
+"selectLanguage" = "Select Language";
+"confirmLanguageTitle" = "Do you want to set %@ as the primary language?";
+"useLanguage" = "Use %@";

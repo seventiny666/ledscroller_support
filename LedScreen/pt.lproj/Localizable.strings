@@ -1,0 +1,124 @@
+/* Tab Bar */
+"home" = "Início";
+"templates" = "Modelos";
+"creations" = "Criações";
+"settings" = "Configurações";
+
+/* Template Categories */
+"neon" = "Tela Neon";
+"idol" = "Tela Ídolo";
+"led" = "Tela LED";
+"popularAnimation" = "Animação Popular";
+"clock" = "Tela Relógio";
+"other" = "Outra Tela";
+
+/* Buttons */
+"try" = "Tentar";
+"preview" = "Visualizar";
+"edit" = "Editar";
+"save" = "Salvar";
+"cancel" = "Cancelar";
+"delete" = "Excluir";
+"tip" = "Dica";
+"confirm" = "OK";
+"create" = "Criar";
+"done" = "Concluído";
+
+/* Settings */
+"language" = "Idioma";
+"about" = "Sobre";
+"version" = "Versão";
+"feedback" = "Feedback";
+"rate" = "Avaliar";
+"share" = "Compartilhar";
+"restorePurchase" = "Restaurar Compra";
+
+/* Messages */
+"saved" = "Nova página salva em Minhas Criações";
+"deleted" = "Excluído com sucesso";
+"error" = "Operação falhou";
+"languageChanged" = "Idioma Alterado";
+"restartRequired" = "Por favor, reinicie o aplicativo para aplicar as novas configurações de idioma";
+"noRestorableItems" = "Nenhum item de compra restaurável";
+
+/* About Messages */
+"aboutMessage" = "LedScreen - Faça seu texto brilhar\n\nUm aplicativo profissional de simulação de display LED";
+"versionMessage" = "Versão Atual: 1.0\n\nObrigado por usar!";
+"feedbackMessage" = "Por favor, envie um e-mail para:\n784430005@qq.com";
+"rateMessage" = "Obrigado pelo seu apoio!\nPor favor, avalie-nos na App Store";
+
+/* Create LED */
+"createTitle" = "Criar LED";
+"editTitle" = "Editar LED";
+"textContent" = "Conteúdo de Texto";
+"textPlaceholder" = "Digite o texto LED";
+"pleaseEnterText" = "Por favor, digite o conteúdo do texto";
+"previewText" = "Visualizar";
+"fontSize" = "Tamanho da Fonte";
+"fontSelection" = "Seleção de Fonte";
+"textColor" = "Cor do Texto";
+"gradientColor" = "Cor Gradiente";
+"glowIntensity" = "Intensidade do Brilho";
+"backgroundColor" = "Cor de Fundo";
+"backgroundGradient" = "Gradiente de Fundo";
+"scrollType" = "Tipo de Rolagem";
+"speed" = "Velocidade de Reprodução";
+
+/* Font Names */
+"pingfang" = "PingFang";
+"heiti" = "Heiti";
+"songti" = "Songti";
+"kaiti" = "Kaiti";
+
+/* Scroll Types */
+"static" = "Estático";
+"scrollLeft" = "Rolar para Esquerda";
+"scrollRight" = "Rolar para Direita";
+"scrollUp" = "Rolar para Cima";
+"scrollDown" = "Rolar para Baixo";
+
+/* Tab Segments */
+"popular" = "Popular";
+"animation" = "Animação";
+"font" = "Fonte";
+"background" = "Fundo";
+"border" = "Borda";
+"gradientBackground" = "Fundo Gradiente";
+"marqueeBorder" = "Borda Marquise";
+"marqueeBorderDesc" = "Borda marquise de pontos LED retangulares arredondados, um círculo de pontos que fluem e brilham";
+"lightBoardBorder" = "Borda de Painel Luminoso";
+
+/* Presets */
+"happyBirthday" = "FELIZ ANIVERSÁRIO";
+"happyNewYear" = "FELIZ ANO NOVO";
+"merryChristmas" = "FELIZ NATAL";
+"marryMe" = "CASE COMIGO";
+"iLoveU" = "EU TE AMO";
+
+/* Special Effects */
+"loveRain" = "💖 Chuva de Corações";
+"flipClock" = "Relógio Digital";
+"fireworks" = "Fogos de Artifício";
+
+/* My Creations */
+"createFirstLED" = "Comece a criar sua primeira tela LED";
+"createLED" = "Criar LED";
+"confirmDelete" = "Confirmar Exclusão";
+"confirmDeleteMessage" = "Tem certeza de que deseja excluir esta tela LED?";
+"addSuccess" = "Adicionado com sucesso!";
+"updateSuccess" = "Atualização salva com sucesso!";
+
+/* Language Confirmation */
+"selectLanguage" = "Selecionar idioma";
+"confirmLanguageTitle" = "Deseja definir %@ como idioma principal?";
+"useLanguage" = "Usar %@";
+
+/* Blink Speeds */
+"blinkSpeed" = "Velocidade de Piscar";
+"blinkToggle" = "Piscar";
+"verySlow" = "Muito Lento";
+"slow" = "Lento";
+"fast" = "Rápido";
+"veryFast" = "Muito Rápido";
+"superFast" = "Super Rápido";
+"ultraFast" = "Ultra Rápido";

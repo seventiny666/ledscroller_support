@@ -1,4 +1,4 @@
-# GlowLed - LED霓虹灯效果iOS应用
+# LedScreen - LED霓虹灯效果iOS应用
 
 一个功能强大的LED霓虹灯效果展示应用，支持自定义文字、颜色、动画和特效。
 
@@ -59,7 +59,7 @@
 ## 项目结构
 
 ```
-GlowLed/
+LedScreen/
 ├── AppDelegate.swift              # 应用委托
 ├── SceneDelegate.swift            # 场景委托
 ├── MainTabBarController.swift    # 主TabBar控制器
@@ -87,12 +87,12 @@ GlowLed/
 ### 1. 克隆项目
 ```bash
 git clone <repository-url>
-cd GlowLedIos
+cd LedScreenIos
 ```
 
 ### 2. 打开项目
 ```bash
-open GlowLed.xcodeproj
+open LedScreen.xcodeproj
 ```
 
 ### 3. 编译运行
