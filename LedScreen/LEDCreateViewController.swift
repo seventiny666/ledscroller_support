@@ -386,13 +386,13 @@ class LEDCreateViewController: UIViewController {
     @objc private func keyboardWillShow(notification: NSNotification) {
         guard let keyboardFrame = notification.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? CGRect else { return }
         let keyboardHeight = keyboardFrame.height
-        scrollView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
-        scrollView.scrollIndicatorInsets = scrollView.contentInset
+        tabContentScrollView.contentInset = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+        tabContentScrollView.scrollIndicatorInsets = tabContentScrollView.contentInset
     }
     
     @objc private func keyboardWillHide(notification: NSNotification) {
-        scrollView.contentInset = .zero
-        scrollView.scrollIndicatorInsets = .zero
+        tabContentScrollView.contentInset = .zero
+        tabContentScrollView.scrollIndicatorInsets = .zero
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -402,6 +402,13 @@ class LEDCreateViewController: UIViewController {
         print("📱 View appeared")
         print("   TextField frame: \(textField.frame)")
         print("   TextField superview: \(textField.superview?.description ?? "nil")")
+        print("   tabContentScrollView frame: \(tabContentScrollView.frame)")
+        print("   tabContentScrollView isUserInteractionEnabled: \(tabContentScrollView.isUserInteractionEnabled)")
+        print("   tabContentView frame: \(tabContentView.frame)")
+        print("   tabContentView subviews: \(tabContentView.subviews.count)")
+        print("   fontTabView frame: \(fontTabView.frame)")
+        print("   fontTabView isUserInteractionEnabled: \(fontTabView.isUserInteractionEnabled)")
+        print("   fontTabView subviews: \(fontTabView.subviews.count)")
     }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
@@ -599,9 +606,28 @@ class LEDCreateViewController: UIViewController {
     private func setupFontTab(yOffset: CGFloat) {
         fontTabView = UIView()
         fontTabView.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.backgroundColor = .clear
+        fontTabView.isUserInteractionEnabled = true
         // 不在这里添加到父视图，在showTab时添加
         
         var tabYOffset: CGFloat = 0
+        
+        // 添加测试按钮
+        let testButton = UIButton(type: .system)
+        testButton.setTitle("🔴 测试按钮 - 点我", for: .normal)
+        testButton.backgroundColor = .red
+        testButton.setTitleColor(.white, for: .normal)
+        testButton.layer.cornerRadius = 8
+        testButton.translatesAutoresizingMaskIntoConstraints = false
+        testButton.addTarget(self, action: #selector(testButtonTapped), for: .touchUpInside)
+        fontTabView.addSubview(testButton)
+        NSLayoutConstraint.activate([
+            testButton.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            testButton.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            testButton.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            testButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        tabYOffset += 60
         
         // 字体大小
         fontSizeLabel.text = "fontSize".localized
@@ -1411,6 +1437,13 @@ class LEDCreateViewController: UIViewController {
     
     @objc private func tabChanged() {
         showTab(index: tabSegment.selectedSegmentIndex)
+    }
+    
+    @objc private func testButtonTapped() {
+        print("🎉 测试按钮被点击了！")
+        let alert = UIAlertController(title: "成功", message: "按钮可以点击！", preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "确定", style: .default))
+        present(alert, animated: true)
     }
     
     private func showTab(index: Int) {
