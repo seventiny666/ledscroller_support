@@ -262,9 +262,12 @@ class LEDCreateViewController: UIViewController {
     
     private let scrollView = UIScrollView()
     private let contentView = UIView()
+    private let tabContentScrollView = UIScrollView() // Tab内容的滚动视图
+    private let tabContentView = UIView() // Tab内容的容器
     private let previewContainer = UIView()
     private let previewLabel = UILabel()
     private var textField = UITextField()
+    private let fixedContainer = UIView() // 固定区域容器（文字输入+Tab）
     
     // Tab切换
     private let tabSegment = UISegmentedControl(items: ["font".localized, "background".localized, "border".localized, "animation".localized])
@@ -471,44 +474,24 @@ class LEDCreateViewController: UIViewController {
             previewLabel.heightAnchor.constraint(lessThanOrEqualTo: previewContainer.heightAnchor, multiplier: 0.9)
         ])
         
-        // 滚动视图
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.keyboardDismissMode = .interactive
-        scrollView.isScrollEnabled = true
-        scrollView.showsVerticalScrollIndicator = true
-        scrollView.alwaysBounceVertical = true
-        view.addSubview(scrollView)
+        // 固定区域容器（文字输入 + Tab切换）
+        fixedContainer.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        fixedContainer.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(fixedContainer)
         
-        contentView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(contentView)
-        
-        NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: previewContainer.bottomAnchor, constant: 10),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
-            
-            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
-            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
-            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
-            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
-            // 为contentView设置一个足够大的最小高度，确保内容超出scrollView时可以滚动
-            contentView.heightAnchor.constraint(greaterThanOrEqualToConstant: 1200) // 增加高度以容纳所有内容
-        ])
-        
-        var yOffset: CGFloat = 20
+        var yOffset: CGFloat = 10
         
         // 文字输入
-        addSectionLabel("textContent".localized, yOffset: &yOffset)
+        addSectionLabelToFixedContainer("textContent".localized, yOffset: &yOffset)
         
         // 创建一个简单的文字输入框
         textField = createSimpleTextField()
-        contentView.addSubview(textField)
+        fixedContainer.addSubview(textField)
         
         NSLayoutConstraint.activate([
-            textField.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
-            textField.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            textField.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            textField.topAnchor.constraint(equalTo: fixedContainer.topAnchor, constant: yOffset),
+            textField.leadingAnchor.constraint(equalTo: fixedContainer.leadingAnchor, constant: 20),
+            textField.trailingAnchor.constraint(equalTo: fixedContainer.trailingAnchor, constant: -20),
             textField.heightAnchor.constraint(equalToConstant: 50)
         ])
         yOffset += 70
@@ -520,12 +503,12 @@ class LEDCreateViewController: UIViewController {
         tabSegment.setTitleTextAttributes([.foregroundColor: UIColor.lightGray], for: .normal)
         tabSegment.addTarget(self, action: #selector(tabChanged), for: .valueChanged)
         tabSegment.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(tabSegment)
+        fixedContainer.addSubview(tabSegment)
         
         NSLayoutConstraint.activate([
-            tabSegment.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
-            tabSegment.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            tabSegment.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -20),
+            tabSegment.topAnchor.constraint(equalTo: fixedContainer.topAnchor, constant: yOffset),
+            tabSegment.leadingAnchor.constraint(equalTo: fixedContainer.leadingAnchor, constant: 20),
+            tabSegment.trailingAnchor.constraint(equalTo: fixedContainer.trailingAnchor, constant: -20),
             tabSegment.heightAnchor.constraint(equalToConstant: 40)
         ])
         
@@ -535,22 +518,49 @@ class LEDCreateViewController: UIViewController {
             self.tabSegment.layer.masksToBounds = true
         }
         
-        yOffset += 55
+        yOffset += 50 // Tab高度40 + 底部间距10
         
-        // 创建四个Tab视图
-        setupFontTab(yOffset: yOffset)
-        setupBackgroundTab(yOffset: yOffset)
-        setupBorderTab(yOffset: yOffset)
-        setupAnimationTab(yOffset: yOffset)
+        // 设置固定容器的约束
+        NSLayoutConstraint.activate([
+            fixedContainer.topAnchor.constraint(equalTo: previewContainer.bottomAnchor, constant: 10),
+            fixedContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            fixedContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            fixedContainer.heightAnchor.constraint(equalToConstant: yOffset)
+        ])
+        
+        // Tab内容滚动视图
+        tabContentScrollView.translatesAutoresizingMaskIntoConstraints = false
+        tabContentScrollView.keyboardDismissMode = .interactive
+        tabContentScrollView.isScrollEnabled = true
+        tabContentScrollView.showsVerticalScrollIndicator = true
+        tabContentScrollView.alwaysBounceVertical = true
+        view.addSubview(tabContentScrollView)
+        
+        tabContentView.translatesAutoresizingMaskIntoConstraints = false
+        tabContentScrollView.addSubview(tabContentView)
+        
+        NSLayoutConstraint.activate([
+            tabContentScrollView.topAnchor.constraint(equalTo: fixedContainer.bottomAnchor),
+            tabContentScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            tabContentScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            tabContentScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
+            
+            tabContentView.topAnchor.constraint(equalTo: tabContentScrollView.topAnchor),
+            tabContentView.leadingAnchor.constraint(equalTo: tabContentScrollView.leadingAnchor),
+            tabContentView.trailingAnchor.constraint(equalTo: tabContentScrollView.trailingAnchor),
+            tabContentView.bottomAnchor.constraint(equalTo: tabContentScrollView.bottomAnchor),
+            tabContentView.widthAnchor.constraint(equalTo: tabContentScrollView.widthAnchor)
+        ])
+        
+        // 创建四个Tab视图（现在添加到tabContentView）
+        let tabYOffset: CGFloat = 0
+        setupFontTab(yOffset: tabYOffset)
+        setupBackgroundTab(yOffset: tabYOffset)
+        setupBorderTab(yOffset: tabYOffset)
+        setupAnimationTab(yOffset: tabYOffset)
         
         // 默认显示字体Tab
         showTab(index: 0)
-        
-        // 设置 contentView 的底部约束（根据最高的Tab视图）
-        let maxHeight: CGFloat = 1000 // 增加高度确保内容不被遮挡
-        NSLayoutConstraint.activate([
-            contentView.bottomAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset + maxHeight)
-        ])
     }
     
     private func addSectionLabel(_ text: String, yOffset: inout CGFloat) {
@@ -568,17 +578,32 @@ class LEDCreateViewController: UIViewController {
         yOffset += 30
     }
     
+    private func addSectionLabelToFixedContainer(_ text: String, yOffset: inout CGFloat) {
+        let label = UILabel()
+        label.text = text
+        label.textColor = UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0) // 柔和的蓝色
+        label.font = .boldSystemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        fixedContainer.addSubview(label)
+        
+        NSLayoutConstraint.activate([
+            label.topAnchor.constraint(equalTo: fixedContainer.topAnchor, constant: yOffset),
+            label.leadingAnchor.constraint(equalTo: fixedContainer.leadingAnchor, constant: 20)
+        ])
+        yOffset += 30
+    }
+    
     // MARK: - Tab视图设置
     
     private func setupFontTab(yOffset: CGFloat) {
         fontTabView = UIView()
         fontTabView.translatesAutoresizingMaskIntoConstraints = false
-        contentView.addSubview(fontTabView)
+        tabContentView.addSubview(fontTabView)
         
         NSLayoutConstraint.activate([
-            fontTabView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
-            fontTabView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            fontTabView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            fontTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
+            fontTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
+            fontTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             fontTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 600)
         ])
         
@@ -630,7 +655,7 @@ class LEDCreateViewController: UIViewController {
             textColorStack.trailingAnchor.constraint(equalTo: textColorScrollView.trailingAnchor),
             textColorStack.heightAnchor.constraint(equalToConstant: 28) // 改为28，与按钮高度一致
         ])
-        tabYOffset += 65
+        tabYOffset += 50
         
         // 渐变颜色（1行，可滑动）
         addSectionLabelToView(fontTabView, text: "gradientColor".localized, yOffset: &tabYOffset)
@@ -654,7 +679,7 @@ class LEDCreateViewController: UIViewController {
             gradientStack.trailingAnchor.constraint(equalTo: gradientScrollView.trailingAnchor),
             gradientStack.heightAnchor.constraint(equalToConstant: 28) // 改为28，与按钮高度一致
         ])
-        tabYOffset += 65
+        tabYOffset += 50
         
         // 霓虹强度 (0-20)
         glowLabel.text = "glowIntensity".localized
@@ -690,19 +715,19 @@ class LEDCreateViewController: UIViewController {
             glowSlider.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
             glowSlider.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20)
         ])
-        tabYOffset += 70
+        tabYOffset += 60
     }
     
     private func setupBackgroundTab(yOffset: CGFloat) {
         backgroundTabView = UIView()
         backgroundTabView.translatesAutoresizingMaskIntoConstraints = false
         backgroundTabView.isHidden = true
-        contentView.addSubview(backgroundTabView)
+        tabContentView.addSubview(backgroundTabView)
         
         NSLayoutConstraint.activate([
-            backgroundTabView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
-            backgroundTabView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            backgroundTabView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            backgroundTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
+            backgroundTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
+            backgroundTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             backgroundTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 600)
         ])
         
@@ -806,12 +831,12 @@ class LEDCreateViewController: UIViewController {
         borderTabView = UIView()
         borderTabView.translatesAutoresizingMaskIntoConstraints = false
         borderTabView.isHidden = true
-        contentView.addSubview(borderTabView)
+        tabContentView.addSubview(borderTabView)
         
         NSLayoutConstraint.activate([
-            borderTabView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
-            borderTabView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            borderTabView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            borderTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
+            borderTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
+            borderTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             borderTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 700)
         ])
         
@@ -1212,12 +1237,12 @@ class LEDCreateViewController: UIViewController {
         animationTabView = UIView()
         animationTabView.translatesAutoresizingMaskIntoConstraints = false
         animationTabView.isHidden = true
-        contentView.addSubview(animationTabView)
+        tabContentView.addSubview(animationTabView)
         
         NSLayoutConstraint.activate([
-            animationTabView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: yOffset),
-            animationTabView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
-            animationTabView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            animationTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
+            animationTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
+            animationTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             animationTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 500)
         ])
         
@@ -1426,6 +1451,9 @@ class LEDCreateViewController: UIViewController {
         backgroundTabView.isHidden = (index != 1)
         borderTabView.isHidden = (index != 2)
         animationTabView.isHidden = (index != 3)
+        
+        // 切换Tab时滚动到顶部
+        tabContentScrollView.setContentOffset(.zero, animated: false)
     }
     
     // 创建简单的文字输入框
