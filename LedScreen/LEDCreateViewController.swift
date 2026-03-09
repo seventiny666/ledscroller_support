@@ -598,13 +598,7 @@ class LEDCreateViewController: UIViewController {
     private func setupFontTab(yOffset: CGFloat) {
         fontTabView = UIView()
         fontTabView.translatesAutoresizingMaskIntoConstraints = false
-        tabContentView.addSubview(fontTabView)
-        
-        NSLayoutConstraint.activate([
-            fontTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
-            fontTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            fontTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
-        ])
+        // 不在这里添加到父视图，在showTab时添加
         
         var tabYOffset: CGFloat = 0
         
@@ -712,22 +706,14 @@ class LEDCreateViewController: UIViewController {
             
             glowSlider.topAnchor.constraint(equalTo: glowLabel.bottomAnchor, constant: 10),
             glowSlider.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            glowSlider.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
-            glowSlider.bottomAnchor.constraint(equalTo: fontTabView.bottomAnchor, constant: -30) // 添加底部约束，留30px底部间距
+            glowSlider.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20)
         ])
     }
     
     private func setupBackgroundTab(yOffset: CGFloat) {
         backgroundTabView = UIView()
         backgroundTabView.translatesAutoresizingMaskIntoConstraints = false
-        backgroundTabView.isHidden = true
-        tabContentView.addSubview(backgroundTabView)
-        
-        NSLayoutConstraint.activate([
-            backgroundTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
-            backgroundTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            backgroundTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
-        ])
+        // 不在这里添加到父视图，在showTab时添加
         
         var tabYOffset: CGFloat = 0
         
@@ -820,22 +806,14 @@ class LEDCreateViewController: UIViewController {
             idolScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
             idolScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
             idolScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight),
-            idolScrollView.bottomAnchor.constraint(equalTo: backgroundTabView.bottomAnchor, constant: -30) // 添加底部约束
+            idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
         ])
     }
     
     private func setupBorderTab(yOffset: CGFloat) {
         borderTabView = UIView()
         borderTabView.translatesAutoresizingMaskIntoConstraints = false
-        borderTabView.isHidden = true
-        tabContentView.addSubview(borderTabView)
-        
-        NSLayoutConstraint.activate([
-            borderTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
-            borderTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            borderTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
-        ])
+        // 不在这里添加到父视图，在showTab时添加
         
         var tabYOffset: CGFloat = 0
         
@@ -943,8 +921,7 @@ class LEDCreateViewController: UIViewController {
             linearRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
             linearRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
             linearRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
-            linearRow3.bottomAnchor.constraint(equalTo: borderTabView.bottomAnchor, constant: -30) // 添加底部约束
+            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
     }
     
@@ -1233,14 +1210,7 @@ class LEDCreateViewController: UIViewController {
     private func setupAnimationTab(yOffset: CGFloat) {
         animationTabView = UIView()
         animationTabView.translatesAutoresizingMaskIntoConstraints = false
-        animationTabView.isHidden = true
-        tabContentView.addSubview(animationTabView)
-        
-        NSLayoutConstraint.activate([
-            animationTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
-            animationTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            animationTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
-        ])
+        // 不在这里添加到父视图，在showTab时添加
         
         var tabYOffset: CGFloat = 0
         
@@ -1397,8 +1367,7 @@ class LEDCreateViewController: UIViewController {
         NSLayoutConstraint.activate([
             blinkSegment.topAnchor.constraint(equalTo: blinkSectionLabel.bottomAnchor, constant: 10),
             blinkSegment.leadingAnchor.constraint(equalTo: animationTabView.leadingAnchor, constant: 20),
-            blinkSegment.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20),
-            blinkSegment.bottomAnchor.constraint(equalTo: animationTabView.bottomAnchor, constant: -30) // 添加底部约束
+            blinkSegment.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
         ])
         
         // 初始状态：根据toggle状态显示/隐藏控件
@@ -1444,17 +1413,31 @@ class LEDCreateViewController: UIViewController {
     }
     
     private func showTab(index: Int) {
-        // 显示/隐藏Tab视图
-        fontTabView.isHidden = (index != 0)
-        backgroundTabView.isHidden = (index != 1)
-        borderTabView.isHidden = (index != 2)
-        animationTabView.isHidden = (index != 3)
+        // 移除所有Tab视图
+        fontTabView.removeFromSuperview()
+        backgroundTabView.removeFromSuperview()
+        borderTabView.removeFromSuperview()
+        animationTabView.removeFromSuperview()
         
-        // 禁用隐藏Tab的用户交互，防止拦截触摸事件
-        fontTabView.isUserInteractionEnabled = (index == 0)
-        backgroundTabView.isUserInteractionEnabled = (index == 1)
-        borderTabView.isUserInteractionEnabled = (index == 2)
-        animationTabView.isUserInteractionEnabled = (index == 3)
+        // 只添加当前选中的Tab视图
+        let currentTab: UIView
+        switch index {
+        case 0: currentTab = fontTabView
+        case 1: currentTab = backgroundTabView
+        case 2: currentTab = borderTabView
+        case 3: currentTab = animationTabView
+        default: currentTab = fontTabView
+        }
+        
+        tabContentView.addSubview(currentTab)
+        
+        // 设置约束让Tab视图填充整个tabContentView
+        NSLayoutConstraint.activate([
+            currentTab.topAnchor.constraint(equalTo: tabContentView.topAnchor),
+            currentTab.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
+            currentTab.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
+            currentTab.bottomAnchor.constraint(equalTo: tabContentView.bottomAnchor)
+        ])
         
         // 切换Tab时滚动到顶部
         tabContentScrollView.setContentOffset(.zero, animated: false)
