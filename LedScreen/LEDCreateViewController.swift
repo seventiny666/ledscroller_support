@@ -1444,10 +1444,17 @@ class LEDCreateViewController: UIViewController {
     }
     
     private func showTab(index: Int) {
+        // 显示/隐藏Tab视图
         fontTabView.isHidden = (index != 0)
         backgroundTabView.isHidden = (index != 1)
         borderTabView.isHidden = (index != 2)
         animationTabView.isHidden = (index != 3)
+        
+        // 禁用隐藏Tab的用户交互，防止拦截触摸事件
+        fontTabView.isUserInteractionEnabled = (index == 0)
+        backgroundTabView.isUserInteractionEnabled = (index == 1)
+        borderTabView.isUserInteractionEnabled = (index == 2)
+        animationTabView.isUserInteractionEnabled = (index == 3)
         
         // 切换Tab时滚动到顶部
         tabContentScrollView.setContentOffset(.zero, animated: false)
