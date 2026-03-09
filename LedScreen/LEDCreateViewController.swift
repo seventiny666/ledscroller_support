@@ -603,8 +603,7 @@ class LEDCreateViewController: UIViewController {
         NSLayoutConstraint.activate([
             fontTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
             fontTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            fontTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
-            fontTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 600)
+            fontTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
         ])
         
         var tabYOffset: CGFloat = 0
@@ -713,9 +712,9 @@ class LEDCreateViewController: UIViewController {
             
             glowSlider.topAnchor.constraint(equalTo: glowLabel.bottomAnchor, constant: 10),
             glowSlider.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            glowSlider.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20)
+            glowSlider.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            glowSlider.bottomAnchor.constraint(equalTo: fontTabView.bottomAnchor, constant: -30) // 添加底部约束，留30px底部间距
         ])
-        tabYOffset += 60
     }
     
     private func setupBackgroundTab(yOffset: CGFloat) {
@@ -727,8 +726,7 @@ class LEDCreateViewController: UIViewController {
         NSLayoutConstraint.activate([
             backgroundTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
             backgroundTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            backgroundTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
-            backgroundTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 600)
+            backgroundTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
         ])
         
         var tabYOffset: CGFloat = 0
@@ -822,9 +820,9 @@ class LEDCreateViewController: UIViewController {
             idolScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
             idolScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
             idolScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
+            idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight),
+            idolScrollView.bottomAnchor.constraint(equalTo: backgroundTabView.bottomAnchor, constant: -30) // 添加底部约束
         ])
-        tabYOffset += scrollViewHeight + 20 // 动态间距，最后一个区域
     }
     
     private func setupBorderTab(yOffset: CGFloat) {
@@ -836,8 +834,7 @@ class LEDCreateViewController: UIViewController {
         NSLayoutConstraint.activate([
             borderTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
             borderTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            borderTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
-            borderTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 700)
+            borderTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
         ])
         
         var tabYOffset: CGFloat = 0
@@ -946,9 +943,9 @@ class LEDCreateViewController: UIViewController {
             linearRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
             linearRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
             linearRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50),
+            linearRow3.bottomAnchor.constraint(equalTo: borderTabView.bottomAnchor, constant: -30) // 添加底部约束
         ])
-        tabYOffset += 70
     }
     
     // 创建跑马灯边框选择器（一行4个按钮）
@@ -1242,8 +1239,7 @@ class LEDCreateViewController: UIViewController {
         NSLayoutConstraint.activate([
             animationTabView.topAnchor.constraint(equalTo: tabContentView.topAnchor, constant: yOffset),
             animationTabView.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
-            animationTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
-            animationTabView.heightAnchor.constraint(greaterThanOrEqualToConstant: 500)
+            animationTabView.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor)
         ])
         
         var tabYOffset: CGFloat = 0
@@ -1401,7 +1397,8 @@ class LEDCreateViewController: UIViewController {
         NSLayoutConstraint.activate([
             blinkSegment.topAnchor.constraint(equalTo: blinkSectionLabel.bottomAnchor, constant: 10),
             blinkSegment.leadingAnchor.constraint(equalTo: animationTabView.leadingAnchor, constant: 20),
-            blinkSegment.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
+            blinkSegment.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20),
+            blinkSegment.bottomAnchor.constraint(equalTo: animationTabView.bottomAnchor, constant: -30) // 添加底部约束
         ])
         
         // 初始状态：根据toggle状态显示/隐藏控件
@@ -1454,6 +1451,10 @@ class LEDCreateViewController: UIViewController {
         
         // 切换Tab时滚动到顶部
         tabContentScrollView.setContentOffset(.zero, animated: false)
+        
+        // 强制布局更新，确保内容高度正确
+        tabContentView.setNeedsLayout()
+        tabContentView.layoutIfNeeded()
     }
     
     // 创建简单的文字输入框
