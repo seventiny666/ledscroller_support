@@ -8,7 +8,7 @@ class LEDFullScreenViewController: UIViewController {
     private var ledCardView: LEDScreenCardView? // LED卡片背景视图
     private let borderView = MarqueeBorderView(displayMode: .fullScreen) // 跑马灯边框视图
     private let lightBoardView = LightBoardBorderView(displayMode: .fullScreen) // 灯牌边框视图
-    private let linearBorderView = LinearBorderView() // 线性边框视图
+    private let linearBorderView = LinearBorderView(displayMode: .fullscreen) // 线性边框视图
     private let textLabel = UILabel()
     private var displayLink: CADisplayLink?
     

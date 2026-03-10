@@ -72,20 +72,6 @@ class LEDSquareViewController: UIViewController {
     
     private func loadData() {
         ledItems = LEDDataManager.shared.loadItems()
-        
-        // 调试：检查爱心流星雨是否存在
-        let loveRainItem = ledItems.first { $0.isLoveRain }
-        if loveRainItem != nil {
-            print("✅ 爱心流星雨卡片存在，ID: \(loveRainItem!.id)")
-        } else {
-            print("❌ 爱心流星雨卡片不存在！")
-        }
-        print("📊 总卡片数：\(ledItems.count)")
-        print("📋 所有卡片：")
-        for (index, item) in ledItems.enumerated() {
-            print("   \(index + 1). \(item.text) (isLoveRain: \(item.isLoveRain))")
-        }
-        
         collectionView.reloadData()
     }
     
@@ -110,7 +96,8 @@ extension LEDSquareViewController: UICollectionViewDelegate, UICollectionViewDat
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "LEDCell", for: indexPath) as! LEDCell
-        cell.configure(with: ledItems[indexPath.item])
+        let item = ledItems[indexPath.item]
+        cell.configure(with: item)
         return cell
     }
     
@@ -204,6 +191,7 @@ class LEDCell: UICollectionViewCell {
     
     private let containerView = UIView()
     private let textLabel = UILabel()
+    private let clockTitleLabel = UILabel() // 翻页时钟标题标签
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -216,12 +204,14 @@ class LEDCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        // 清理烟花静态粒子
+        // 清理烟花静态粒子，但保留textLabel和clockTitleLabel
         containerView.subviews.forEach { subview in
-            if subview != textLabel {
+            if subview != textLabel && subview != clockTitleLabel {
                 subview.removeFromSuperview()
             }
         }
+        // 隐藏时钟标题
+        clockTitleLabel.isHidden = true
     }
     
     private func setupUI() {
@@ -239,6 +229,15 @@ class LEDCell: UICollectionViewCell {
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(textLabel)
         
+        // 设置时钟标题标签
+        clockTitleLabel.text = "翻页时钟"
+        clockTitleLabel.textColor = .white
+        clockTitleLabel.font = .systemFont(ofSize: 14, weight: .bold)
+        clockTitleLabel.textAlignment = .center
+        clockTitleLabel.isHidden = true // 默认隐藏
+        clockTitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(clockTitleLabel)
+        
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -248,7 +247,13 @@ class LEDCell: UICollectionViewCell {
             textLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             textLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             textLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
-            textLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8)
+            textLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            
+            // 时钟标题约束
+            clockTitleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            clockTitleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            clockTitleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
+            clockTitleLabel.heightAnchor.constraint(equalToConstant: 20)
         ])
     }
     
@@ -258,12 +263,15 @@ class LEDCell: UICollectionViewCell {
         textLabel.font = UIFont(name: item.fontName, size: 24) ?? .boldSystemFont(ofSize: 24)
         textLabel.textColor = UIColor(hex: item.textColor)
         
-        // 清理旧的效果
+        // 清理旧的效果，但保留textLabel和clockTitleLabel
         containerView.subviews.forEach { subview in
-            if subview != textLabel {
+            if subview != textLabel && subview != clockTitleLabel {
                 subview.removeFromSuperview()
             }
         }
+        
+        // 重置时钟标题显示状态
+        clockTitleLabel.isHidden = true
         
         // 如果是爱心流星雨卡片 - 显示静态爱心图案
         if item.isLoveRain {
@@ -372,6 +380,9 @@ class LEDCell: UICollectionViewCell {
         textLabel.alpha = 0
         textLabel.text = "" // 清空文字
         
+        // 显示时钟标题
+        clockTitleLabel.isHidden = false
+        
         // 获取当前时间
         let now = Date()
         let calendar = Calendar.current
@@ -384,7 +395,7 @@ class LEDCell: UICollectionViewCell {
         let secondOnes = second % 10
         
         let centerX = containerView.bounds.width / 2
-        let centerY = containerView.bounds.height / 2
+        let centerY = containerView.bounds.height / 2 - 10 // 向上移动一点，为底部文字留空间
         
         let digitWidth: CGFloat = 28
         let digitHeight: CGFloat = 42 // 增加高度
@@ -409,6 +420,8 @@ class LEDCell: UICollectionViewCell {
         
         createSimpleFlipDigit(digit: secondTens, x: startX + digitWidth * 2 + spacing * 2 + colonWidth, y: centerY - digitHeight / 2, width: digitWidth, height: digitHeight)
         createSimpleFlipDigit(digit: secondOnes, x: startX + digitWidth * 3 + spacing * 3 + colonWidth, y: centerY - digitHeight / 2, width: digitWidth, height: digitHeight)
+        
+        print("🕐 时钟数字创建完成，容器尺寸: \(containerView.bounds)")
     }
     
     // 创建简单的单层翻页数字

@@ -93,12 +93,12 @@ class LEDScreenCardView: UIView {
                 let dotLayer = CAShapeLayer()
                 let dotPath = UIBezierPath(ovalIn: CGRect(x: x, y: y, width: dotSize, height: dotSize))
                 dotLayer.path = dotPath.cgPath
-                dotLayer.fillColor = style.color.cgColor
+                dotLayer.fillColor = style.color.withAlphaComponent(0.7).cgColor
                 
                 // 添加发光效果
                 dotLayer.shadowColor = style.color.cgColor
                 dotLayer.shadowRadius = 1.5
-                dotLayer.shadowOpacity = 0.8
+                dotLayer.shadowOpacity = 0.7
                 dotLayer.shadowOffset = .zero
                 
                 layer.addSublayer(dotLayer)
@@ -146,7 +146,8 @@ class LEDCreateViewController: UIViewController {
     // 字体Tab控件
     private let fontSizeSlider = UISlider()
     private let fontSizeLabel = UILabel()
-    private let fontSegment = UISegmentedControl(items: ["pingfang".localized, "heiti".localized, "songti".localized, "kaiti".localized])
+    private var fontSizeValueLabel: UILabel! // 字体大小数值标签
+    private var fontButtons: [UIButton] = [] // 字体选择按钮数组
     private let glowSlider = UISlider()
     private let glowLabel = UILabel()
     private var glowValueLabel: UILabel! // 霓虹强度数值标签
@@ -176,46 +177,52 @@ class LEDCreateViewController: UIViewController {
     private var previewLEDCardView: LEDScreenCardView? // 预览区域的LED卡片视图
     
     // 文字颜色：合并为1行，可滑动（15个颜色，第一个为自定义颜色选择器）
+    // 文字颜色：1行8个
     private let textColors = [
-        "CUSTOM", // 自定义颜色选择器
-        "#FF00FF", "#00FFFF", "#FFD700", "#FF1493", "#00FF00", "#FF4500",
-        "#FF69B4", "#8B00FF", "#00CED1", "#FFB6C1", "#32CD32", "#FF8C00", "#F0E68C", "#FFFFFF"
+        "#FFFFFF", "#FF00FF", "#00FFFF", "#FFD700", "#FF1493", "#00FF00", "#FF4500", "#FF69B4"
     ]
     
-    // 渐变颜色：合并为1行，可滑动（14个渐变）
+    // 渐变颜色：2行，每行8个（16个渐变）
     private let gradientColors = [
-        // 经典渐变
-        ["#FF0080", "#FF8C00"], ["#00F5FF", "#0080FF"], ["#FFD700", "#FF1493"], 
+        // 第一行：8个经典渐变
+        ["#FF0080", "#FF8C00"], ["#00F5FF", "#0080FF"], ["#0080FF", "#8B00FF"], 
         ["#00FF00", "#00CED1"], ["#FF00FF", "#8B00FF"], ["#FF4500", "#FFD700"], 
-        ["#FF1493", "#00FFFF"],
-        // 霓虹渐变
-        ["#FF006E", "#8338EC"], ["#06FFA5", "#FFFB00"], ["#F72585", "#7209B7"], 
+        ["#0080FF", "#000000"], ["#FF006E", "#8338EC"],
+        // 第二行：8个霓虹渐变
+        ["#FFD700", "#FFFF00"], ["#F72585", "#7209B7"], 
         ["#4CC9F0", "#4361EE"], ["#FF006E", "#FFBE0B"], ["#06FFA5", "#3A86FF"], 
-        ["#F72585", "#4CC9F0"]
+        ["#F72585", "#4CC9F0"], ["#8B00FF", "#FF1493"], ["#00CED1", "#FFD700"]
     ]
     
     private let bgColors = [
-        "#000000", "#1a1a2e", "#0f3460", "#16213e", "#1f1f1f", "#2d2d2d",
-        "#0a0a0a", "#1a1a1a", "#2a2a2a", "#0d1117", "#161b22", "#21262d",
-        "#FF0000", "#00FF00", "#0000FF", "#FFFF00" // 添加明显的测试颜色
+        "#000000", // 黑色
+        "#8B0000", // 暗红色
+        "#00008B", // 暗蓝色
+        "#4B0082", // 暗紫色（靛蓝）
+        "#FF69B4", // 粉色
+        "#FF8C00", // 橘色（深橙色）
+        "#F5DEB3"  // 米黄色（小麦色）
     ]
     private let bgTextures = ["stars", "gradient", "dots", "waves", "grid", "noise"] // 纹理名称
     
-    // 背景渐变颜色：合并为1行，可滑动（12个渐变）
+    // 背景渐变颜色：2行，每行7个（14个渐变）
     private let bgGradientColors = [
-        // 绚丽渐变背景 - 更加鲜艳和漂亮
-        ["#FF1493", "#9370DB"], // 粉紫渐变：深粉红到中紫色
-        ["#FF4500", "#FF1493"], // 橙红渐变：橙红到深粉红
-        ["#1E90FF", "#9370DB"], // 蓝紫渐变：道奇蓝到中紫色
-        ["#00FA9A", "#00CED1"], // 绿青渐变：中春绿到深绿松石
-        ["#FFD700", "#FF8C00"], // 黄橙渐变：金色到深橙色
-        ["#FF69B4", "#BA55D3"], // 粉紫渐变2：热粉红到中兰花紫
-        ["#FF6347", "#DC143C"], // 红色渐变：番茄红到深红
-        ["#00CED1", "#4169E1"], // 青蓝渐变：深绿松石到皇家蓝
-        ["#32CD32", "#00FA9A"], // 绿色渐变：酸橙绿到中春绿
-        ["#FF1493", "#FF69B4"], // 粉色渐变：深粉红到热粉红
-        ["#9370DB", "#8A2BE2"], // 紫色渐变：中紫色到蓝紫色
-        ["#FF8C00", "#FF4500"]  // 橙色渐变：深橙色到橙红色
+        // 第一行：7个渐变
+        ["#FF1493", "#9370DB"], // 粉紫渐变
+        ["#FF4500", "#FF1493"], // 橙红渐变
+        ["#1E90FF", "#9370DB"], // 蓝紫渐变
+        ["#00FA9A", "#00CED1"], // 绿青渐变
+        ["#FFD700", "#FF8C00"], // 黄橙渐变
+        ["#FF69B4", "#BA55D3"], // 粉紫渐变2
+        ["#FF6347", "#DC143C"], // 红色渐变
+        // 第二行：7个渐变
+        ["#00CED1", "#4169E1"], // 青蓝渐变
+        ["#32CD32", "#00FA9A"], // 绿色渐变
+        ["#FF1493", "#FF69B4"], // 粉色渐变
+        ["#9370DB", "#8A2BE2"], // 紫色渐变
+        ["#FF8C00", "#FF4500"], // 橙色渐变
+        ["#4169E1", "#1E90FF"], // 蓝色渐变
+        ["#BA55D3", "#FF1493"]  // 紫粉渐变
     ]
     
     init(editingItem: LEDItem? = nil, isTemplateEdit: Bool = false) {
@@ -317,8 +324,8 @@ class LEDCreateViewController: UIViewController {
         previewLabel.textColor = UIColor(hex: currentItem.textColor)
         previewLabel.textAlignment = .center
         previewLabel.numberOfLines = 0
-        previewLabel.adjustsFontSizeToFitWidth = true
-        previewLabel.minimumScaleFactor = 0.5
+        previewLabel.adjustsFontSizeToFitWidth = false  // 禁用自动调整字体大小
+        previewLabel.lineBreakMode = .byWordWrapping     // 按单词换行
         previewLabel.translatesAutoresizingMaskIntoConstraints = false
         previewContainer.addSubview(previewLabel)
         
@@ -329,7 +336,7 @@ class LEDCreateViewController: UIViewController {
         previewLabel.layer.shadowOffset = .zero
         
         NSLayoutConstraint.activate([
-            previewContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 10),
+            previewContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6), // 从10改为6，往上移动4px
             previewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
             previewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
             // 19.5:9 比例，基于宽度计算高度（适配现代手机全屏比例）
@@ -396,7 +403,7 @@ class LEDCreateViewController: UIViewController {
         
         // 设置固定容器的约束
         NSLayoutConstraint.activate([
-            fixedContainer.topAnchor.constraint(equalTo: previewContainer.bottomAnchor, constant: 10),
+            fixedContainer.topAnchor.constraint(equalTo: previewContainer.bottomAnchor, constant: 2), // 从10改为2，往上移动8px
             fixedContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             fixedContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             fixedContainer.heightAnchor.constraint(equalToConstant: yOffset)
@@ -414,7 +421,7 @@ class LEDCreateViewController: UIViewController {
         tabContentScrollView.addSubview(tabContentView)
         
         NSLayoutConstraint.activate([
-            tabContentScrollView.topAnchor.constraint(equalTo: fixedContainer.bottomAnchor),
+            tabContentScrollView.topAnchor.constraint(equalTo: fixedContainer.bottomAnchor, constant: -8), // 往上移动8px
             tabContentScrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             tabContentScrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tabContentScrollView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor),
@@ -476,79 +483,138 @@ class LEDCreateViewController: UIViewController {
         fontTabView.isUserInteractionEnabled = true
         // 不在这里添加到父视图，在showTab时添加
         
-        var tabYOffset: CGFloat = 0
+        var tabYOffset: CGFloat = 20 // 增加顶部间距20px，让内容不要太贴近Tab切换控件
         
         // 字体大小
         fontSizeLabel.text = "fontSize".localized
         fontSizeLabel.textColor = UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)
         fontSizeLabel.font = .boldSystemFont(ofSize: 16)
-        addSliderSectionToView(fontTabView, label: fontSizeLabel, slider: fontSizeSlider, yOffset: &tabYOffset)
+        fontSizeLabel.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(fontSizeLabel)
+        
+        // 字体大小数值标签（在标签右侧显示数值）
+        fontSizeValueLabel = UILabel()
+        fontSizeValueLabel.text = String(format: "%.0f", fontSizeSlider.value)
+        fontSizeValueLabel.textColor = UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)
+        fontSizeValueLabel.font = .systemFont(ofSize: 14)
+        fontSizeValueLabel.textAlignment = .right
+        fontSizeValueLabel.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(fontSizeValueLabel)
+        
+        fontSizeSlider.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
         fontSizeSlider.minimumValue = 20  // 人眼可见的最小LED字体
         fontSizeSlider.maximumValue = 160 // 横屏全屏时接近屏幕高度90%
         fontSizeSlider.addTarget(self, action: #selector(fontSizeChanged), for: .valueChanged)
+        fontSizeSlider.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(fontSizeSlider)
+        
+        NSLayoutConstraint.activate([
+            fontSizeLabel.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            fontSizeLabel.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            
+            fontSizeValueLabel.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            fontSizeValueLabel.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            
+            fontSizeSlider.topAnchor.constraint(equalTo: fontSizeLabel.bottomAnchor, constant: 10),
+            fontSizeSlider.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            fontSizeSlider.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20)
+        ])
+        tabYOffset += 70
         
         // 字体选择
         addSectionLabelToView(fontTabView, text: "fontSelection".localized, yOffset: &tabYOffset)
-        fontSegment.selectedSegmentTintColor = UIColor(red: 0.3, green: 0.5, blue: 0.8, alpha: 1.0)
-        fontSegment.setTitleTextAttributes([.foregroundColor: UIColor.black, .font: UIFont.boldSystemFont(ofSize: 13)], for: .selected)
-        fontSegment.setTitleTextAttributes([.foregroundColor: UIColor.lightGray], for: .normal)
-        fontSegment.addTarget(self, action: #selector(fontChanged), for: .valueChanged)
-        fontSegment.translatesAutoresizingMaskIntoConstraints = false
-        fontTabView.addSubview(fontSegment)
-        NSLayoutConstraint.activate([
-            fontSegment.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
-            fontSegment.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            fontSegment.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20)
-        ])
-        tabYOffset += 50
         
-        // 文字颜色（1行，可滑动）
+        // 创建字体选择按钮（单个圆角按钮样式）
+        let fontNames = ["pingfang".localized, "thin".localized, "medium".localized, "bold".localized]
+        let fontScrollView = UIScrollView()
+        fontScrollView.showsHorizontalScrollIndicator = false
+        fontScrollView.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(fontScrollView)
+        
+        let fontStack = UIStackView()
+        fontStack.axis = .horizontal
+        fontStack.distribution = .equalSpacing
+        fontStack.spacing = 10
+        fontStack.translatesAutoresizingMaskIntoConstraints = false
+        fontScrollView.addSubview(fontStack)
+        
+        for (index, fontName) in fontNames.enumerated() {
+            let btn = UIButton(type: .system)
+            btn.setTitle(fontName, for: .normal)
+            btn.setTitleColor(.white, for: .normal)
+            btn.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+            btn.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 1.0)
+            btn.layer.cornerRadius = 8
+            btn.layer.borderWidth = 0 // 默认无边框
+            btn.layer.borderColor = UIColor.white.cgColor
+            btn.tag = 600 + index // tag从600开始
+            btn.addTarget(self, action: #selector(fontButtonTapped(_:)), for: .touchUpInside)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            
+            // 设置按钮尺寸
+            NSLayoutConstraint.activate([
+                btn.widthAnchor.constraint(equalToConstant: 80),
+                btn.heightAnchor.constraint(equalToConstant: 32) // 从40减少到32
+            ])
+            
+            fontStack.addArrangedSubview(btn)
+            fontButtons.append(btn)
+        }
+        
+        NSLayoutConstraint.activate([
+            fontScrollView.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            fontScrollView.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            fontScrollView.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            fontScrollView.heightAnchor.constraint(equalToConstant: 32), // 从40减少到32
+            
+            fontStack.topAnchor.constraint(equalTo: fontScrollView.topAnchor),
+            fontStack.leadingAnchor.constraint(equalTo: fontScrollView.leadingAnchor),
+            fontStack.trailingAnchor.constraint(equalTo: fontScrollView.trailingAnchor),
+            fontStack.heightAnchor.constraint(equalToConstant: 32) // 从40减少到32
+        ])
+        tabYOffset += 52 // 从60减少到52（32+20）
+        
+        // 文字颜色（3行：第1行纯色，第2-3行渐变色）
         addSectionLabelToView(fontTabView, text: "textColor".localized, yOffset: &tabYOffset)
         
-        let textColorScrollView = UIScrollView()
-        textColorScrollView.showsHorizontalScrollIndicator = false
-        textColorScrollView.translatesAutoresizingMaskIntoConstraints = false
-        fontTabView.addSubview(textColorScrollView)
-        
-        let textColorStack = createColorStack(colors: textColors, tag: 100)
-        textColorScrollView.addSubview(textColorStack)
+        // 第1行：纯色文字颜色（8个）
+        let textColorStack = createColorStack(colors: textColors, tag: 100, isCircle: true)
+        textColorStack.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(textColorStack)
         
         NSLayoutConstraint.activate([
-            textColorScrollView.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
-            textColorScrollView.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            textColorScrollView.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
-            textColorScrollView.heightAnchor.constraint(equalToConstant: 28), // 改为28，与按钮高度一致
-            
-            textColorStack.topAnchor.constraint(equalTo: textColorScrollView.topAnchor),
-            textColorStack.leadingAnchor.constraint(equalTo: textColorScrollView.leadingAnchor),
-            textColorStack.trailingAnchor.constraint(equalTo: textColorScrollView.trailingAnchor),
-            textColorStack.heightAnchor.constraint(equalToConstant: 28) // 改为28，与按钮高度一致
+            textColorStack.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            textColorStack.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            textColorStack.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            textColorStack.heightAnchor.constraint(equalToConstant: 32) // 圆形按钮高度32
         ])
-        tabYOffset += 50
+        tabYOffset += 42 // 32 + 10间距
         
-        // 渐变颜色（1行，可滑动）
-        addSectionLabelToView(fontTabView, text: "gradientColor".localized, yOffset: &tabYOffset)
-        
-        let gradientScrollView = UIScrollView()
-        gradientScrollView.showsHorizontalScrollIndicator = false
-        gradientScrollView.translatesAutoresizingMaskIntoConstraints = false
-        fontTabView.addSubview(gradientScrollView)
-        
-        let gradientStack = createGradientStack(gradients: gradientColors, tag: 400)
-        gradientScrollView.addSubview(gradientStack)
+        // 第2行：渐变颜色（8个）
+        let gradientStack1 = createGradientStack(gradients: Array(gradientColors.prefix(8)), tag: 400, isCircle: true)
+        gradientStack1.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(gradientStack1)
         
         NSLayoutConstraint.activate([
-            gradientScrollView.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
-            gradientScrollView.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            gradientScrollView.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
-            gradientScrollView.heightAnchor.constraint(equalToConstant: 28), // 改为28，与按钮高度一致
-            
-            gradientStack.topAnchor.constraint(equalTo: gradientScrollView.topAnchor),
-            gradientStack.leadingAnchor.constraint(equalTo: gradientScrollView.leadingAnchor),
-            gradientStack.trailingAnchor.constraint(equalTo: gradientScrollView.trailingAnchor),
-            gradientStack.heightAnchor.constraint(equalToConstant: 28) // 改为28，与按钮高度一致
+            gradientStack1.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            gradientStack1.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            gradientStack1.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            gradientStack1.heightAnchor.constraint(equalToConstant: 32) // 圆形按钮高度32
         ])
-        tabYOffset += 50
+        tabYOffset += 42 // 32 + 10间距
+        
+        // 第3行：渐变颜色（8个）
+        let gradientStack2 = createGradientStack(gradients: Array(gradientColors.suffix(8)), tag: 408, isCircle: true)
+        gradientStack2.translatesAutoresizingMaskIntoConstraints = false
+        fontTabView.addSubview(gradientStack2)
+        
+        NSLayoutConstraint.activate([
+            gradientStack2.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            gradientStack2.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            gradientStack2.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            gradientStack2.heightAnchor.constraint(equalToConstant: 32) // 圆形按钮高度32
+        ])
+        tabYOffset += 52 // 32 + 20间距（最后一行后面间距大一些）
         
         // 霓虹强度 (0-20)
         glowLabel.text = "glowIntensity".localized
@@ -591,98 +657,128 @@ class LEDCreateViewController: UIViewController {
         backgroundTabView.translatesAutoresizingMaskIntoConstraints = false
         // 不在这里添加到父视图，在showTab时添加
         
-        var tabYOffset: CGFloat = 0
+        var tabYOffset: CGFloat = 20 // 增加顶部间距20px，让内容不要太贴近Tab切换控件
         
-        // 背景颜色（1行，可滑动）
+        // 背景颜色（3行：第1行纯色7个，第2-3行渐变色各7个）
         addSectionLabelToView(backgroundTabView, text: "backgroundColor".localized, yOffset: &tabYOffset)
         
-        let bgColorScrollView = UIScrollView()
-        bgColorScrollView.showsHorizontalScrollIndicator = false
-        bgColorScrollView.isUserInteractionEnabled = true // 确保可以接收触摸事件
-        bgColorScrollView.translatesAutoresizingMaskIntoConstraints = false
-        backgroundTabView.addSubview(bgColorScrollView)
-        
+        // 第1行：纯色背景颜色（7个）
         let bgColorStack = createBgColorStack(colors: bgColors, tag: 200)
-        bgColorStack.isUserInteractionEnabled = true // 确保StackView可以接收触摸事件
-        bgColorScrollView.addSubview(bgColorStack)
+        bgColorStack.isUserInteractionEnabled = true
+        bgColorStack.translatesAutoresizingMaskIntoConstraints = false
+        backgroundTabView.addSubview(bgColorStack)
         
         NSLayoutConstraint.activate([
-            bgColorScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            bgColorScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            bgColorScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            bgColorScrollView.heightAnchor.constraint(equalToConstant: 36),
-            
-            bgColorStack.topAnchor.constraint(equalTo: bgColorScrollView.topAnchor),
-            bgColorStack.leadingAnchor.constraint(equalTo: bgColorScrollView.leadingAnchor),
-            bgColorStack.trailingAnchor.constraint(equalTo: bgColorScrollView.trailingAnchor),
+            bgColorStack.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            bgColorStack.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            bgColorStack.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
             bgColorStack.heightAnchor.constraint(equalToConstant: 36)
         ])
-        tabYOffset += 50 // 统一间距
+        tabYOffset += 46 // 36 + 10间距
         
-        // 渐变背景色（1行，可滑动）
-        addSectionLabelToView(backgroundTabView, text: "gradientBackground".localized, yOffset: &tabYOffset)
-        
-        let bgGradientScrollView = UIScrollView()
-        bgGradientScrollView.showsHorizontalScrollIndicator = false
-        bgGradientScrollView.translatesAutoresizingMaskIntoConstraints = false
-        backgroundTabView.addSubview(bgGradientScrollView)
-        
-        let bgGradientStack = createBgGradientStack(gradients: bgGradientColors, tag: 400)
-        bgGradientScrollView.addSubview(bgGradientStack)
+        // 第2行：渐变背景色（7个）
+        let bgGradientStack1 = createBgGradientStack(gradients: Array(bgGradientColors.prefix(7)), tag: 300)
+        bgGradientStack1.translatesAutoresizingMaskIntoConstraints = false
+        backgroundTabView.addSubview(bgGradientStack1)
         
         NSLayoutConstraint.activate([
-            bgGradientScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            bgGradientScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            bgGradientScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            bgGradientScrollView.heightAnchor.constraint(equalToConstant: 36),
-            
-            bgGradientStack.topAnchor.constraint(equalTo: bgGradientScrollView.topAnchor),
-            bgGradientStack.leadingAnchor.constraint(equalTo: bgGradientScrollView.leadingAnchor),
-            bgGradientStack.trailingAnchor.constraint(equalTo: bgGradientScrollView.trailingAnchor),
-            bgGradientStack.heightAnchor.constraint(equalToConstant: 36)
+            bgGradientStack1.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            bgGradientStack1.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            bgGradientStack1.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            bgGradientStack1.heightAnchor.constraint(equalToConstant: 36)
         ])
-        tabYOffset += 60 // 统一间距
+        tabYOffset += 46 // 36 + 10间距
         
-        // LED横幅
-        addSectionLabelToView(backgroundTabView, text: "led".localized, yOffset: &tabYOffset)
-        let ledScrollView = createTemplateScrollView(category: "led", tag: 520)
-        backgroundTabView.addSubview(ledScrollView)
+        // 第3行：渐变背景色（7个）
+        let bgGradientStack2 = createBgGradientStack(gradients: Array(bgGradientColors.suffix(7)), tag: 307) // tag从307开始（300+7）
+        bgGradientStack2.translatesAutoresizingMaskIntoConstraints = false
+        backgroundTabView.addSubview(bgGradientStack2)
         
-        // 计算滑动区域高度：按钮宽度 * 9/16 = 正确的16:9比例高度
+        NSLayoutConstraint.activate([
+            bgGradientStack2.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            bgGradientStack2.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            bgGradientStack2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            bgGradientStack2.heightAnchor.constraint(equalToConstant: 36)
+        ])
+        tabYOffset += 56 // 36 + 20间距（最后一行后面间距大一些）
+        
+        // 计算按钮尺寸：每行4个按钮，16:9比例
         let screenWidth = UIScreen.main.bounds.width
-        let buttonWidth = (screenWidth - 40 - 30) / 4
-        let scrollViewHeight = buttonWidth * 9.0 / 16.0
+        let buttonWidth = (screenWidth - 40 - 30) / 4 // 左右边距20 + 3个间距10
+        let buttonHeight = buttonWidth * 9.0 / 16.0
         
+        // LED横幅（8个，2行，每行4个）
+        addSectionLabelToView(backgroundTabView, text: "led".localized, yOffset: &tabYOffset)
+        
+        // LED第一行（0-3）
+        let ledRow1 = createTemplateStack(category: "led", startIndex: 0, count: 4, tag: 520, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(ledRow1)
         NSLayoutConstraint.activate([
-            ledScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            ledScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            ledScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            ledScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
+            ledRow1.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            ledRow1.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            ledRow1.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            ledRow1.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
-        tabYOffset += scrollViewHeight + 20 // 动态间距
+        tabYOffset += buttonHeight + 10
         
-        // 霓虹灯看板
+        // LED第二行（4-7）
+        let ledRow2 = createTemplateStack(category: "led", startIndex: 4, count: 4, tag: 524, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(ledRow2)
+        NSLayoutConstraint.activate([
+            ledRow2.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            ledRow2.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            ledRow2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            ledRow2.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
+        tabYOffset += buttonHeight + 20
+        
+        // 霓虹灯看板（8个，2行，每行4个）
         addSectionLabelToView(backgroundTabView, text: "neon".localized, yOffset: &tabYOffset)
-        let neonScrollView = createTemplateScrollView(category: "neon", tag: 500)
-        backgroundTabView.addSubview(neonScrollView)
         
+        // 霓虹灯第一行（0-3）
+        let neonRow1 = createTemplateStack(category: "neon", startIndex: 0, count: 4, tag: 500, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(neonRow1)
         NSLayoutConstraint.activate([
-            neonScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            neonScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            neonScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            neonScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
+            neonRow1.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            neonRow1.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            neonRow1.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            neonRow1.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
-        tabYOffset += scrollViewHeight + 20 // 动态间距
+        tabYOffset += buttonHeight + 10
         
-        // 偶像应援
-        addSectionLabelToView(backgroundTabView, text: "idol".localized, yOffset: &tabYOffset)
-        let idolScrollView = createTemplateScrollView(category: "idol", tag: 510)
-        backgroundTabView.addSubview(idolScrollView)
+        // 霓虹灯第二行（4-7）
+        let neonRow2 = createTemplateStack(category: "neon", startIndex: 4, count: 4, tag: 504, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(neonRow2)
         NSLayoutConstraint.activate([
-            idolScrollView.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            idolScrollView.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            idolScrollView.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            idolScrollView.heightAnchor.constraint(equalToConstant: scrollViewHeight)
+            neonRow2.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            neonRow2.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            neonRow2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            neonRow2.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
+        tabYOffset += buttonHeight + 20
+        
+        // 偶像应援（8个，2行，每行4个）
+        addSectionLabelToView(backgroundTabView, text: "idol".localized, yOffset: &tabYOffset)
+        
+        // 偶像第一行（0-3）
+        let idolRow1 = createTemplateStack(category: "idol", startIndex: 0, count: 4, tag: 510, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(idolRow1)
+        NSLayoutConstraint.activate([
+            idolRow1.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            idolRow1.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            idolRow1.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            idolRow1.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
+        tabYOffset += buttonHeight + 10
+        
+        // 偶像第二行（4-7）
+        let idolRow2 = createTemplateStack(category: "idol", startIndex: 4, count: 4, tag: 514, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(idolRow2)
+        NSLayoutConstraint.activate([
+            idolRow2.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            idolRow2.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            idolRow2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            idolRow2.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
     }
     
@@ -691,7 +787,7 @@ class LEDCreateViewController: UIViewController {
         borderTabView.translatesAutoresizingMaskIntoConstraints = false
         // 不在这里添加到父视图，在showTab时添加
         
-        var tabYOffset: CGFloat = 0
+        var tabYOffset: CGFloat = 20 // 增加顶部间距20px，让内容不要太贴近Tab切换控件
         
         // 跑马灯边框（12个样式，3行4列）
         addSectionLabelToView(borderTabView, text: "marqueeBorder".localized, yOffset: &tabYOffset)
@@ -908,6 +1004,7 @@ class LEDCreateViewController: UIViewController {
             // 选择新的边框
             currentItem.lightBoardStyle = styleIndex
             currentItem.borderStyle = nil // 清除跑马灯边框
+            currentItem.linearBorderStyle = nil // 清除线性边框
             
             // 更新选中状态
             for i in 0..<12 {
@@ -920,6 +1017,14 @@ class LEDCreateViewController: UIViewController {
             // 清除跑马灯边框的选中状态
             for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除线性边框的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -951,6 +1056,7 @@ class LEDCreateViewController: UIViewController {
             // 选择新的边框
             currentItem.borderStyle = styleIndex
             currentItem.lightBoardStyle = nil // 清除灯牌边框
+            currentItem.linearBorderStyle = nil // 清除线性边框
             
             // 更新选中状态
             for i in 0..<12 {
@@ -963,6 +1069,14 @@ class LEDCreateViewController: UIViewController {
             // 清除灯牌边框的选中状态
             for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除线性边框的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1077,7 +1191,7 @@ class LEDCreateViewController: UIViewController {
         animationTabView.translatesAutoresizingMaskIntoConstraints = false
         // 不在这里添加到父视图，在showTab时添加
         
-        var tabYOffset: CGFloat = 0
+        var tabYOffset: CGFloat = 30 // 增加顶部间距30px，让内容距离Tab切换控件更远
         
         // 滚动Toggle开关
         scrollToggleLabel = UILabel()
@@ -1100,7 +1214,7 @@ class LEDCreateViewController: UIViewController {
             scrollToggle.centerYAnchor.constraint(equalTo: scrollToggleLabel.centerYAnchor),
             scrollToggle.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
         ])
-        tabYOffset += 50
+        tabYOffset += 50 // 滚动Toggle下方间距50px
         
         // 滚动方式标签（默认隐藏）
         scrollTypeLabel = UILabel()
@@ -1115,7 +1229,7 @@ class LEDCreateViewController: UIViewController {
             scrollTypeLabel.topAnchor.constraint(equalTo: animationTabView.topAnchor, constant: tabYOffset),
             scrollTypeLabel.leadingAnchor.constraint(equalTo: animationTabView.leadingAnchor, constant: 20)
         ])
-        tabYOffset += 30
+        tabYOffset += 25 // 标签到SegmentedControl的间距减少到25px
         
         // 滚动方式选择（默认隐藏）
         scrollTypeSegment.selectedSegmentIndex = 0 // 默认左滚
@@ -1131,26 +1245,9 @@ class LEDCreateViewController: UIViewController {
             scrollTypeSegment.leadingAnchor.constraint(equalTo: animationTabView.leadingAnchor, constant: 20),
             scrollTypeSegment.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
         ])
-        tabYOffset += 60 // 增加间距
+        tabYOffset += 50 // SegmentedControl下方间距50px
         
-        // 播放速度滑块（默认隐藏）
-        speedSlider.value = 1.5 // 默认速度
-        speedSlider.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
-        speedSlider.minimumValue = 0.5
-        speedSlider.maximumValue = 3.0
-        speedSlider.addTarget(self, action: #selector(speedChanged), for: .valueChanged)
-        speedSlider.translatesAutoresizingMaskIntoConstraints = false
-        speedSlider.isHidden = true
-        animationTabView.addSubview(speedSlider)
-        
-        NSLayoutConstraint.activate([
-            speedSlider.topAnchor.constraint(equalTo: animationTabView.topAnchor, constant: tabYOffset),
-            speedSlider.leadingAnchor.constraint(equalTo: animationTabView.leadingAnchor, constant: 20),
-            speedSlider.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
-        ])
-        tabYOffset += 40
-        
-        // 速度标签（在滑块下面，左侧显示"滚动速度"，右侧显示数值）
+        // 速度标签（在SegmentedControl下面，左侧显示"滚动速度"，右侧显示数值）
         speedLabel = UILabel()
         speedLabel.text = "speed".localized
         speedLabel.textColor = UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)
@@ -1175,10 +1272,27 @@ class LEDCreateViewController: UIViewController {
             speedValueLabel.topAnchor.constraint(equalTo: animationTabView.topAnchor, constant: tabYOffset),
             speedValueLabel.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
         ])
+        tabYOffset += 30 // 速度标签下方间距30px
         
-        // 记录滚动方式区域的总高度（标签30 + 滚动方式60 + 速度滑块40 + 速度标签30 = 160）
-        scrollTypeHeightConstraint = 160
-        tabYOffset += 40
+        // 播放速度滑块（默认隐藏）
+        speedSlider.value = 1.5 // 默认速度
+        speedSlider.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        speedSlider.minimumValue = 0.0  // 最小速度改为0
+        speedSlider.maximumValue = 3.0
+        speedSlider.addTarget(self, action: #selector(speedChanged), for: .valueChanged)
+        speedSlider.translatesAutoresizingMaskIntoConstraints = false
+        speedSlider.isHidden = true
+        animationTabView.addSubview(speedSlider)
+        
+        NSLayoutConstraint.activate([
+            speedSlider.topAnchor.constraint(equalTo: animationTabView.topAnchor, constant: tabYOffset),
+            speedSlider.leadingAnchor.constraint(equalTo: animationTabView.leadingAnchor, constant: 20),
+            speedSlider.trailingAnchor.constraint(equalTo: animationTabView.trailingAnchor, constant: -20)
+        ])
+        
+        // 记录滚动方式区域的总高度（标签25 + 滚动方式50 + 速度标签30 + 速度滑块40 = 145）
+        scrollTypeHeightConstraint = 145
+        tabYOffset += 50 // 滑块下方间距50px
         
         // 闪烁Toggle开关（使用动态约束）
         blinkToggleLabel = UILabel()
@@ -1194,8 +1308,8 @@ class LEDCreateViewController: UIViewController {
         blinkToggle.translatesAutoresizingMaskIntoConstraints = false
         animationTabView.addSubview(blinkToggle)
         
-        // 创建动态约束：默认紧跟在滚动toggle后面（间距20px）
-        blinkToggleLabelTopConstraint = blinkToggleLabel.topAnchor.constraint(equalTo: scrollToggleLabel.bottomAnchor, constant: 20)
+        // 创建动态约束：默认紧跟在滚动toggle后面（间距40px，给滚动区域留出足够空间）
+        blinkToggleLabelTopConstraint = blinkToggleLabel.topAnchor.constraint(equalTo: scrollToggleLabel.bottomAnchor, constant: 40)
         
         NSLayoutConstraint.activate([
             blinkToggleLabelTopConstraint,
@@ -1309,7 +1423,7 @@ class LEDCreateViewController: UIViewController {
             currentTab.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
             currentTab.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             currentTab.bottomAnchor.constraint(equalTo: tabContentView.bottomAnchor), // 使用bottom约束
-            currentTab.heightAnchor.constraint(greaterThanOrEqualToConstant: 600) // 设置最小高度
+            currentTab.heightAnchor.constraint(greaterThanOrEqualToConstant: 800) // 增加最小高度到800
         ]
         NSLayoutConstraint.activate(currentTabConstraints)
         
@@ -1390,7 +1504,9 @@ class LEDCreateViewController: UIViewController {
         yOffset += 70
     }
     
-    private func createColorStack(colors: [String], tag: Int) -> UIStackView {
+    private func createColorStack(colors: [String], tag: Int, isCircle: Bool = false) -> UIStackView {
+        let buttonSize: CGFloat = isCircle ? 32 : 40 // 圆形按钮32，圆角矩形40
+        
         let buttons = colors.enumerated().map { index, color -> UIButton in
             let btn = UIButton(type: .system)
             
@@ -1408,8 +1524,8 @@ class LEDCreateViewController: UIViewController {
                 ]
                 gradientLayer.startPoint = CGPoint(x: 0, y: 0)
                 gradientLayer.endPoint = CGPoint(x: 1, y: 1)
-                gradientLayer.frame = CGRect(x: 0, y: 0, width: 28, height: 28)
-                gradientLayer.cornerRadius = 14
+                gradientLayer.frame = CGRect(x: 0, y: 0, width: buttonSize, height: buttonSize)
+                gradientLayer.cornerRadius = isCircle ? buttonSize / 2 : 8
                 btn.layer.insertSublayer(gradientLayer, at: 0)
                 
                 // 添加"+"符号
@@ -1432,25 +1548,22 @@ class LEDCreateViewController: UIViewController {
                 btn.backgroundColor = UIColor(hex: color)
             }
             
-            btn.layer.cornerRadius = 14 // 圆形：28/2
-            btn.layer.borderWidth = 2
-            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.layer.cornerRadius = isCircle ? buttonSize / 2 : 8 // 圆形或圆角矩形
+            btn.layer.borderWidth = 0 // 默认无边框
+            btn.layer.borderColor = UIColor.white.cgColor
             btn.layer.masksToBounds = true
             btn.tag = tag + index
             btn.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
             
-            // 确保按钮是正方形，使用更强的约束优先级
-            let widthConstraint = btn.widthAnchor.constraint(equalToConstant: 28)
+            // 设置按钮尺寸
+            let widthConstraint = btn.widthAnchor.constraint(equalToConstant: buttonSize)
             widthConstraint.priority = .required
             widthConstraint.isActive = true
             
-            let heightConstraint = btn.heightAnchor.constraint(equalToConstant: 28)
+            let heightConstraint = btn.heightAnchor.constraint(equalToConstant: buttonSize)
             heightConstraint.priority = .required
             heightConstraint.isActive = true
-            
-            // 确保宽高相等
-            btn.heightAnchor.constraint(equalTo: btn.widthAnchor).isActive = true
             
             return btn
         }
@@ -1458,13 +1571,15 @@ class LEDCreateViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .equalSpacing // 保持按钮原始尺寸，不拉伸
-        stack.spacing = 10
+        stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }
     
     // 创建渐变颜色按钮
-    private func createGradientStack(gradients: [[String]], tag: Int) -> UIStackView {
+    private func createGradientStack(gradients: [[String]], tag: Int, isCircle: Bool = false) -> UIStackView {
+        let buttonSize: CGFloat = isCircle ? 32 : 40 // 圆形按钮32，圆角矩形40
+        
         let buttons = gradients.enumerated().map { index, colors -> UIButton in
             let btn = UIButton(type: .system)
             
@@ -1473,21 +1588,21 @@ class LEDCreateViewController: UIViewController {
             gradientLayer.colors = colors.map { UIColor(hex: $0).cgColor }
             gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
             gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
-            gradientLayer.frame = CGRect(x: 0, y: 0, width: 28, height: 28)
-            gradientLayer.cornerRadius = 14
+            gradientLayer.frame = CGRect(x: 0, y: 0, width: buttonSize, height: buttonSize)
+            gradientLayer.cornerRadius = isCircle ? buttonSize / 2 : 8
             
             // 将渐变层添加到按钮
             btn.layer.insertSublayer(gradientLayer, at: 0)
             
-            btn.layer.cornerRadius = 14
-            btn.layer.borderWidth = 2
-            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-            btn.layer.masksToBounds = true // 确保圆形裁剪
+            btn.layer.cornerRadius = isCircle ? buttonSize / 2 : 8 // 圆形或圆角矩形
+            btn.layer.borderWidth = 0 // 默认无边框
+            btn.layer.borderColor = UIColor.white.cgColor
+            btn.layer.masksToBounds = true
             btn.tag = tag + index
             btn.addTarget(self, action: #selector(gradientButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
-            btn.widthAnchor.constraint(equalToConstant: 28).isActive = true
-            btn.heightAnchor.constraint(equalToConstant: 28).isActive = true
+            btn.widthAnchor.constraint(equalToConstant: buttonSize).isActive = true
+            btn.heightAnchor.constraint(equalToConstant: buttonSize).isActive = true
             
             // 保存渐变颜色信息到按钮
             btn.accessibilityHint = colors.joined(separator: ",")
@@ -1498,7 +1613,7 @@ class LEDCreateViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .equalSpacing
-        stack.spacing = 10
+        stack.spacing = 8
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }
@@ -1508,15 +1623,16 @@ class LEDCreateViewController: UIViewController {
         let buttons = colors.enumerated().map { index, color -> UIButton in
             let btn = UIButton(type: .system)
             btn.backgroundColor = UIColor(hex: color)
-            btn.layer.cornerRadius = 6
-            btn.layer.borderWidth = 2
-            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.layer.cornerRadius = 8 // 圆角矩形
+            btn.layer.borderWidth = 0 // 默认无边框
+            btn.layer.borderColor = UIColor.white.cgColor // 确保边框颜色已设置
+            btn.layer.masksToBounds = true // 确保边框正确显示
             btn.tag = tag + index
-            btn.isUserInteractionEnabled = true // 确保按钮可以接收触摸事件
+            btn.isUserInteractionEnabled = true
             btn.addTarget(self, action: #selector(colorButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
-            // 4:3 比例，宽度48，高度36
-            btn.widthAnchor.constraint(equalToConstant: 48).isActive = true
+            // 改为36x36的正方形圆角矩形
+            btn.widthAnchor.constraint(equalToConstant: 36).isActive = true
             btn.heightAnchor.constraint(equalToConstant: 36).isActive = true
             print("创建背景颜色按钮: tag=\(btn.tag), color=\(color)")
             return btn
@@ -1525,7 +1641,7 @@ class LEDCreateViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .equalSpacing
-        stack.spacing = 8
+        stack.spacing = 10 // 增加间距从8到10
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }
@@ -1555,7 +1671,7 @@ class LEDCreateViewController: UIViewController {
         return stack
     }
     
-    // 创建背景渐变颜色按钮（圆角矩形样式，与背景颜色一致）
+    // 创建背景渐变颜色按钮（圆角矩形样式，与字体颜色一致）
     private func createBgGradientStack(gradients: [[String]], tag: Int) -> UIStackView {
         let buttons = gradients.enumerated().map { index, colors -> UIButton in
             let btn = UIButton(type: .system)
@@ -1565,21 +1681,21 @@ class LEDCreateViewController: UIViewController {
             gradientLayer.colors = colors.map { UIColor(hex: $0).cgColor }
             gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
             gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
-            gradientLayer.frame = CGRect(x: 0, y: 0, width: 48, height: 36) // 4:3比例，与背景颜色一致
-            gradientLayer.cornerRadius = 6 // 圆角矩形
+            gradientLayer.frame = CGRect(x: 0, y: 0, width: 36, height: 36) // 改为36x36正方形
+            gradientLayer.cornerRadius = 8 // 圆角矩形
             
             // 将渐变层添加到按钮
             btn.layer.insertSublayer(gradientLayer, at: 0)
             
-            btn.layer.cornerRadius = 6 // 圆角矩形
-            btn.layer.borderWidth = 2
-            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.layer.cornerRadius = 8 // 圆角矩形
+            btn.layer.borderWidth = 0 // 默认无边框
+            btn.layer.borderColor = UIColor.white.cgColor
             btn.layer.masksToBounds = true
             btn.tag = tag + index
             btn.addTarget(self, action: #selector(bgGradientButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
-            btn.widthAnchor.constraint(equalToConstant: 48).isActive = true // 与背景颜色宽度一致
-            btn.heightAnchor.constraint(equalToConstant: 36).isActive = true // 与背景颜色高度一致
+            btn.widthAnchor.constraint(equalToConstant: 36).isActive = true
+            btn.heightAnchor.constraint(equalToConstant: 36).isActive = true
             
             // 保存渐变颜色信息到按钮
             btn.accessibilityHint = colors.joined(separator: ",")
@@ -1589,8 +1705,8 @@ class LEDCreateViewController: UIViewController {
         
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
-        stack.distribution = .equalSpacing // 与背景颜色一致
-        stack.spacing = 8 // 与背景颜色一致
+        stack.distribution = .equalSpacing
+        stack.spacing = 10 // 增加间距从8到10
         stack.translatesAutoresizingMaskIntoConstraints = false
         return stack
     }
@@ -1758,6 +1874,97 @@ class LEDCreateViewController: UIViewController {
         return stack
     }
     
+    // 创建模版背景选择器 - 固定布局版本（每行4个）
+    private func createTemplateStack(category: String, startIndex: Int, count: Int, tag: Int, buttonWidth: CGFloat, buttonHeight: CGFloat) -> UIStackView {
+        let buttons: [UIButton]
+        
+        if category == "led" {
+            // LED屏幕使用特殊的自定义卡片（8种颜色）
+            buttons = (0..<count).map { i -> UIButton in
+                let index = startIndex + i
+                let btn = UIButton(type: .system)
+                
+                // 创建LED屏幕卡片视图
+                let ledCardView = LEDScreenCardView(style: LEDScreenCardView.LEDScreenStyle(rawValue: index) ?? .red)
+                ledCardView.translatesAutoresizingMaskIntoConstraints = false
+                ledCardView.isUserInteractionEnabled = false
+                btn.addSubview(ledCardView)
+                
+                NSLayoutConstraint.activate([
+                    ledCardView.topAnchor.constraint(equalTo: btn.topAnchor),
+                    ledCardView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
+                    ledCardView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
+                    ledCardView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
+                ])
+                
+                btn.layer.cornerRadius = 8
+                btn.layer.borderWidth = 2
+                btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                btn.clipsToBounds = true
+                btn.tag = tag + i
+                btn.addTarget(self, action: #selector(templateButtonTapped(_:)), for: .touchUpInside)
+                btn.translatesAutoresizingMaskIntoConstraints = false
+                
+                // 设置固定尺寸
+                btn.widthAnchor.constraint(equalToConstant: buttonWidth).isActive = true
+                btn.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
+                
+                return btn
+            }
+        } else {
+            // 其他类别使用图片或占位符
+            buttons = (0..<count).map { i -> UIButton in
+                let imageIndex = startIndex + i + 1 // 图片从1开始
+                let btn = UIButton(type: .system)
+                
+                // 尝试加载图片
+                let imageName = "\(category)_\(imageIndex)"
+                if let image = UIImage(named: imageName) {
+                    btn.setBackgroundImage(image, for: .normal)
+                    btn.imageView?.contentMode = .scaleAspectFill
+                } else {
+                    // 占位符
+                    let placeholderColor = getPlaceholderColor(category: category, index: imageIndex)
+                    btn.backgroundColor = placeholderColor
+                    
+                    let label = UILabel()
+                    label.text = "\(imageIndex)"
+                    label.textColor = .white
+                    label.font = .boldSystemFont(ofSize: 16)
+                    label.textAlignment = .center
+                    label.translatesAutoresizingMaskIntoConstraints = false
+                    btn.addSubview(label)
+                    NSLayoutConstraint.activate([
+                        label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                        label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                    ])
+                }
+                
+                btn.layer.cornerRadius = 8
+                btn.layer.borderWidth = 2
+                btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                btn.clipsToBounds = true
+                btn.tag = tag + i
+                btn.addTarget(self, action: #selector(templateButtonTapped(_:)), for: .touchUpInside)
+                btn.translatesAutoresizingMaskIntoConstraints = false
+                
+                // 设置固定尺寸
+                btn.widthAnchor.constraint(equalToConstant: buttonWidth).isActive = true
+                btn.heightAnchor.constraint(equalToConstant: buttonHeight).isActive = true
+                
+                return btn
+            }
+        }
+        
+        let stack = UIStackView(arrangedSubviews: buttons)
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        return stack
+    }
+    
     // 自动检测可用的图片数量（最多检测20张）
     private func getAvailableImageCount(category: String) -> Int {
         var count = 0
@@ -1833,7 +2040,7 @@ class LEDCreateViewController: UIViewController {
         glowSlider.value = Float(currentItem.glowIntensity)
         speedSlider.value = Float(currentItem.speed)
         
-        fontSizeLabel.text = "\("fontSize".localized): \(Int(currentItem.fontSize))"
+        fontSizeValueLabel.text = String(format: "%.0f", currentItem.fontSize)
         glowValueLabel.text = String(format: "%.1f", currentItem.glowIntensity)
         
         // 加载背景图片
@@ -1879,17 +2086,29 @@ class LEDCreateViewController: UIViewController {
         }
         
         // 加载字体设置
+        // 设置字体选择按钮的选中状态
+        let fontIndex: Int
         switch currentItem.fontName {
         case "PingFangSC-Regular":
-            fontSegment.selectedSegmentIndex = 0
-        case "STHeitiSC-Medium":
-            fontSegment.selectedSegmentIndex = 1
-        case "STSongti-SC-Regular":
-            fontSegment.selectedSegmentIndex = 2
-        case "STKaiti":
-            fontSegment.selectedSegmentIndex = 3
+            fontIndex = 0
+        case "PingFangSC-Light":
+            fontIndex = 1
+        case "PingFangSC-Semibold":
+            fontIndex = 2
+        case "PingFangSC-Bold":
+            fontIndex = 3
+        case "STHeitiSC-Medium", "PingFangSC-Medium": // 兼容旧数据
+            fontIndex = 2
+        case "STSongti-SC-Regular": // 兼容旧数据
+            fontIndex = 1
+        case "STKaitiSC-Regular", "STKaiti": // 兼容旧数据
+            fontIndex = 3
         default:
-            fontSegment.selectedSegmentIndex = 0
+            fontIndex = 0
+        }
+        
+        for (i, btn) in fontButtons.enumerated() {
+            btn.layer.borderWidth = i == fontIndex ? 3 : 0
         }
         
         // 更新速度控件显示状态
@@ -1913,14 +2132,17 @@ class LEDCreateViewController: UIViewController {
         let searchView: UIView
         
         if tag == 100 {
-            maxCount = textColors.count // 15个文字颜色（包括自定义颜色选择器）
+            maxCount = 8 // 文字颜色1行8个
             searchView = fontTabView // 文字颜色在字体Tab
         } else if tag == 200 {
-            maxCount = bgColors.count // 背景颜色
+            maxCount = bgColors.count // 7个背景颜色
             searchView = backgroundTabView // 背景颜色在背景Tab
-        } else if tag == 400 {
-            maxCount = bgGradientColors.count // 12个背景渐变
+        } else if tag == 300 || tag == 307 {
+            maxCount = 7 // 背景渐变颜色每行7个
             searchView = backgroundTabView // 背景渐变在背景Tab
+        } else if tag == 400 || tag == 408 {
+            maxCount = 8 // 文字渐变颜色每行8个
+            searchView = fontTabView // 文字渐变在字体Tab
         } else if tag == 500 {
             maxCount = getAvailableImageCount(category: "neon") // 霓虹灯看板
             searchView = backgroundTabView // 背景图片在背景Tab
@@ -1937,8 +2159,15 @@ class LEDCreateViewController: UIViewController {
         
         for i in 0..<maxCount {
             if let button = searchView.viewWithTag(tag + i) as? UIButton {
-                button.layer.borderWidth = i == selectedIndex ? 3 : 2
-                button.layer.borderColor = i == selectedIndex ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                if tag == 100 || tag == 400 || tag == 408 || tag == 300 || tag == 307 || tag == 200 {
+                    // 文字颜色按钮、文字渐变按钮、背景颜色按钮和背景渐变按钮：选中时显示白色描边，未选中时无描边
+                    button.layer.borderWidth = i == selectedIndex ? 3 : 0
+                    button.layer.borderColor = UIColor.white.cgColor
+                } else {
+                    // 其他按钮保持原样式
+                    button.layer.borderWidth = i == selectedIndex ? 3 : 2
+                    button.layer.borderColor = i == selectedIndex ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
             }
         }
     }
@@ -1967,7 +2196,7 @@ class LEDCreateViewController: UIViewController {
     
     @objc private func fontSizeChanged() {
         currentItem.fontSize = CGFloat(fontSizeSlider.value)
-        fontSizeLabel.text = "\("fontSize".localized): \(Int(currentItem.fontSize))"
+        fontSizeValueLabel.text = String(format: "%.0f", fontSizeSlider.value)
         updatePreview()
     }
     
@@ -2019,11 +2248,11 @@ class LEDCreateViewController: UIViewController {
         // 动态调整闪烁toggle的位置
         blinkToggleLabelTopConstraint.isActive = false
         if isScrollEnabled {
-            // 滚动开启：闪烁toggle在滚动区域下面（间距30px）
-            blinkToggleLabelTopConstraint = blinkToggleLabel.topAnchor.constraint(equalTo: scrollToggleLabel.bottomAnchor, constant: 30 + scrollTypeHeightConstraint)
+            // 滚动开启：闪烁toggle在滚动区域下面（间距50px，确保滚动区域完全显示）
+            blinkToggleLabelTopConstraint = blinkToggleLabel.topAnchor.constraint(equalTo: scrollToggleLabel.bottomAnchor, constant: 50 + scrollTypeHeightConstraint)
         } else {
-            // 滚动关闭：闪烁toggle紧跟在滚动toggle后面（间距20px）
-            blinkToggleLabelTopConstraint = blinkToggleLabel.topAnchor.constraint(equalTo: scrollToggleLabel.bottomAnchor, constant: 20)
+            // 滚动关闭：闪烁toggle紧跟在滚动toggle后面（间距40px，给滚动区域留出足够空间）
+            blinkToggleLabelTopConstraint = blinkToggleLabel.topAnchor.constraint(equalTo: scrollToggleLabel.bottomAnchor, constant: 40)
         }
         blinkToggleLabelTopConstraint.isActive = true
         
@@ -2221,19 +2450,29 @@ class LEDCreateViewController: UIViewController {
         previewLabel.layer.add(animation, forKey: "scrollDown")
     }
     
-    @objc private func fontChanged() {
-        switch fontSegment.selectedSegmentIndex {
+    @objc private func fontButtonTapped(_ sender: UIButton) {
+        let index = sender.tag - 600
+        
+        // 更新选中状态
+        for (i, btn) in fontButtons.enumerated() {
+            btn.layer.borderWidth = i == index ? 3 : 0
+        }
+        
+        // 设置字体（使用iOS系统中实际可用的PingFang字体系列）
+        switch index {
         case 0:
-            currentItem.fontName = "PingFangSC-Regular" // 苹方
+            currentItem.fontName = "PingFangSC-Regular" // 常规
         case 1:
-            currentItem.fontName = "STHeitiSC-Medium" // 黑体
+            currentItem.fontName = "PingFangSC-Light" // 细体
         case 2:
-            currentItem.fontName = "STSongti-SC-Regular" // 宋体
+            currentItem.fontName = "PingFangSC-Semibold" // 半粗
         case 3:
-            currentItem.fontName = "STKaiti" // 楷体
+            currentItem.fontName = "PingFangSC-Bold" // 粗体
         default:
             currentItem.fontName = "PingFangSC-Regular"
         }
+        
+        print("🔤 选择字体: \(currentItem.fontName)")
         updatePreview()
     }
     
@@ -2251,8 +2490,9 @@ class LEDCreateViewController: UIViewController {
                 // 清除背景渐变层
                 previewContainer.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer && $0 !== previewBackgroundImageView.layer })
                 updateColorButtonSelection(tag: 200, selectedIndex: selectedBgColorIndex)
-                // 清除渐变选择
-                updateColorButtonSelection(tag: 400, selectedIndex: -1)
+                // 清除背景渐变选择
+                updateColorButtonSelection(tag: 300, selectedIndex: -1)
+                updateColorButtonSelection(tag: 307, selectedIndex: -1)
                 // 清除模版选择
                 updateColorButtonSelection(tag: 500, selectedIndex: -1)
                 updateColorButtonSelection(tag: 510, selectedIndex: -1)
@@ -2264,18 +2504,13 @@ class LEDCreateViewController: UIViewController {
             // 文字颜色
             let index = sender.tag - 100
             
-            // 检查是否点击了自定义颜色按钮（第一个按钮，index = 0）
-            if index == 0 {
-                showCustomColorPicker()
-                return
-            }
-            
             selectedTextColorIndex = index
             currentItem.textColor = textColors[selectedTextColorIndex]
             updateColorButtonSelection(tag: 100, selectedIndex: selectedTextColorIndex)
             // 清除渐变选择
             selectedGradientIndex = -1
             updateColorButtonSelection(tag: 400, selectedIndex: -1)
+            updateColorButtonSelection(tag: 408, selectedIndex: -1)
         }
         updatePreview()
     }
@@ -2284,9 +2519,17 @@ class LEDCreateViewController: UIViewController {
         // 清除纯色选择
         updateColorButtonSelection(tag: 100, selectedIndex: -1)
         
+        // 判断是第一行还是第二行渐变
+        let tag = sender.tag >= 408 ? 408 : 400
+        let index = sender.tag - tag
+        
         // 更新渐变选择
-        selectedGradientIndex = sender.tag - 400
-        updateColorButtonSelection(tag: 400, selectedIndex: selectedGradientIndex)
+        selectedGradientIndex = sender.tag - 400 // 保持原有的全局索引计算
+        updateColorButtonSelection(tag: tag, selectedIndex: index)
+        
+        // 清除另一行的选择
+        let otherTag = tag == 400 ? 408 : 400
+        updateColorButtonSelection(tag: otherTag, selectedIndex: -1)
         
         // 获取渐变颜色
         let colors = gradientColors[selectedGradientIndex]
@@ -2390,12 +2633,17 @@ class LEDCreateViewController: UIViewController {
         // 清除背景图片
         selectedBackgroundImage = nil
         
+        // 判断是第一行还是第二行渐变
+        let tag = sender.tag >= 307 ? 307 : 300
+        let index = sender.tag - tag
+        
         // 更新选择状态
-        updateColorButtonSelection(tag: 400, selectedIndex: sender.tag - 400)
+        updateColorButtonSelection(tag: tag, selectedIndex: index)
         
         // 清除其他选择
+        let otherGradientTag = tag == 300 ? 307 : 300
         updateColorButtonSelection(tag: 200, selectedIndex: -1)
-        updateColorButtonSelection(tag: 300, selectedIndex: -1)
+        updateColorButtonSelection(tag: otherGradientTag, selectedIndex: -1)
         updateColorButtonSelection(tag: 500, selectedIndex: -1)
         updateColorButtonSelection(tag: 510, selectedIndex: -1)
         updateColorButtonSelection(tag: 520, selectedIndex: -1)
@@ -2462,7 +2710,6 @@ class LEDCreateViewController: UIViewController {
     private func updatePreview() {
         // 更新预览文字
         let displayText = textField.text?.isEmpty == false ? textField.text! : "previewText".localized
-        previewLabel.text = displayText
         
         // 计算预览字体大小：使用简单的缩放比例
         // 将实际字体大小(20-160)按比例缩放到预览区域
@@ -2470,7 +2717,29 @@ class LEDCreateViewController: UIViewController {
         let scaleFactor: CGFloat = 0.4
         let previewFontSize = currentItem.fontSize * scaleFactor
         
-        previewLabel.font = UIFont(name: currentItem.fontName, size: previewFontSize) ?? .boldSystemFont(ofSize: previewFontSize)
+        // 尝试使用指定字体，如果失败则使用系统字体
+        let font: UIFont
+        if let customFont = UIFont(name: currentItem.fontName, size: previewFontSize) {
+            font = customFont
+            print("✅ 成功应用字体: \(currentItem.fontName)")
+        } else {
+            // 字体加载失败，使用系统字体作为回退
+            font = .systemFont(ofSize: previewFontSize, weight: .medium)
+            print("⚠️ 字体加载失败: \(currentItem.fontName)，使用系统字体")
+        }
+        
+        // 创建带行间距的属性字符串
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = previewFontSize * 0.1  // 行间距为字体大小的0.1倍 (1.1倍行高)
+        paragraphStyle.alignment = .center
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        let attributedString = NSMutableAttributedString(string: displayText)
+        attributedString.addAttribute(.font, value: font, range: NSRange(location: 0, length: displayText.count))
+        attributedString.addAttribute(.foregroundColor, value: UIColor(hex: currentItem.textColor), range: NSRange(location: 0, length: displayText.count))
+        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: displayText.count))
+        
+        previewLabel.attributedText = attributedString
         
         // 更新背景（LED卡片、图片或颜色）
         if let imageName = selectedBackgroundImage {

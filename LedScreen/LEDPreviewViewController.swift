@@ -105,13 +105,26 @@ class LEDPreviewViewController: UIViewController {
         let calculatedFontSize = ledItem.fontSize * scaleFactor
         
         textLabel.text = ledItem.text
-        textLabel.font = UIFont(name: ledItem.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
         textLabel.textColor = UIColor(hex: ledItem.textColor)
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0
-        textLabel.adjustsFontSizeToFitWidth = true
-        textLabel.minimumScaleFactor = 0.3
+        textLabel.adjustsFontSizeToFitWidth = false  // 禁用自动调整字体大小
+        textLabel.lineBreakMode = .byWordWrapping     // 按单词换行
         textLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 创建带行间距的属性字符串
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = calculatedFontSize * 0.1  // 行间距为字体大小的0.1倍 (1.1倍行高)
+        paragraphStyle.alignment = .center
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        
+        let font = UIFont(name: ledItem.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
+        let attributedString = NSMutableAttributedString(string: ledItem.text)
+        attributedString.addAttribute(.font, value: font, range: NSRange(location: 0, length: ledItem.text.count))
+        attributedString.addAttribute(.foregroundColor, value: UIColor(hex: ledItem.textColor), range: NSRange(location: 0, length: ledItem.text.count))
+        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: ledItem.text.count))
+        
+        textLabel.attributedText = attributedString
         previewContainer.addSubview(textLabel)
 
         // 霓虹发光效果 (支持0-20范围)

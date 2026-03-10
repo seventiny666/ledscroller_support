@@ -64,10 +64,10 @@
 "speed" = "Playback Speed";
 
 /* Font Names */
-"pingfang" = "PingFang";
-"heiti" = "Heiti";
-"songti" = "Songti";
-"kaiti" = "Kaiti";
+"pingfang" = "Regular";
+"thin" = "Light";
+"medium" = "Semibold";
+"bold" = "Bold";
 
 /* Scroll Types */
 "static" = "Static";

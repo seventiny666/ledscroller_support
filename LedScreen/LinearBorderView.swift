@@ -8,8 +8,8 @@ enum LinearBorderStyle: Int, CaseIterable {
         switch self {
         case .red: return UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
         case .green: return UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
-        case .blue: return UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0)
-        case .yellow: return UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0)
+        case .blue: return UIColor(red: 0.0, green: 0.6, blue: 1.0, alpha: 1.0) // 提高亮度和饱和度
+        case .yellow: return UIColor(red: 1.0, green: 0.95, blue: 0.0, alpha: 1.0) // 提高饱和度
         case .purple: return UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0)
         case .cyan: return UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0)
         case .orange: return UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0)
@@ -22,8 +22,8 @@ enum LinearBorderStyle: Int, CaseIterable {
         switch self {
         case .red: return UIColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0)
         case .green: return UIColor(red: 0.3, green: 1.0, blue: 0.3, alpha: 1.0)
-        case .blue: return UIColor(red: 0.3, green: 0.7, blue: 1.0, alpha: 1.0)
-        case .yellow: return UIColor(red: 1.0, green: 1.0, blue: 0.5, alpha: 1.0)
+        case .blue: return UIColor(red: 0.3, green: 0.75, blue: 1.0, alpha: 1.0) // 亮蓝色 - 调整以匹配新的基础蓝色
+        case .yellow: return UIColor(red: 1.0, green: 0.98, blue: 0.5, alpha: 1.0) // 亮黄色 - 调整以匹配新的基础黄色
         case .purple: return UIColor(red: 1.0, green: 0.4, blue: 1.0, alpha: 1.0)
         case .cyan: return UIColor(red: 0.4, green: 1.0, blue: 1.0, alpha: 1.0)
         case .orange: return UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
@@ -32,27 +32,37 @@ enum LinearBorderStyle: Int, CaseIterable {
     }
 }
 
-// 线性边框视图 - 三层边框系统
+// 线性边框视图 - 外层边框 + 中间圆点 + 内层边框系统
 class LinearBorderView: UIView {
     
     enum DisplayMode {
         case selection      // 选择按钮模式（8个小卡片）
         case preview        // 创建页面预览区模式
         case fullscreen     // 全屏预览模式
+        case cardCover      // 创作模块卡片封面模式
     }
     
     private var style: LinearBorderStyle = .red
     private var displayMode: DisplayMode = .fullscreen
     private var outerBorderLayer: CAShapeLayer?
-    private var middleBorderLayer: CAShapeLayer?
     private var innerBorderLayer: CAShapeLayer?
     private var outerGlowLayers: [CAShapeLayer] = []
-    private var middleGlowLayers: [CAShapeLayer] = []
     private var innerGlowLayers: [CAShapeLayer] = []
+    
+    // 圆点相关属性
+    private var dotLayers: [CAShapeLayer] = []
+    private var dotAnimationTimer: Timer?
     
     init(style: LinearBorderStyle = .red, isSelectionMode: Bool = false) {
         self.style = style
         self.displayMode = isSelectionMode ? .selection : .preview
+        super.init(frame: .zero)
+        backgroundColor = .clear
+    }
+    
+    init(style: LinearBorderStyle = .red, displayMode: DisplayMode) {
+        self.style = style
+        self.displayMode = displayMode
         super.init(frame: .zero)
         backgroundColor = .clear
     }
@@ -65,18 +75,24 @@ class LinearBorderView: UIView {
     override func layoutSubviews() {
         super.layoutSubviews()
         setupBorders()
+        setupDots()
+        // 只在全屏模式下添加呼吸动画
+        if displayMode == .fullscreen {
+            startBreathingAnimation()
+        }
+    }
+    
+    deinit {
+        stopDotAnimation()
     }
     
     private func setupBorders() {
         // 清除旧的边框和发光层
         outerBorderLayer?.removeFromSuperlayer()
-        middleBorderLayer?.removeFromSuperlayer()
         innerBorderLayer?.removeFromSuperlayer()
         outerGlowLayers.forEach { $0.removeFromSuperlayer() }
-        middleGlowLayers.forEach { $0.removeFromSuperlayer() }
         innerGlowLayers.forEach { $0.removeFromSuperlayer() }
         outerGlowLayers.removeAll()
-        middleGlowLayers.removeAll()
         innerGlowLayers.removeAll()
         
         let bounds = self.bounds
@@ -86,120 +102,75 @@ class LinearBorderView: UIView {
         let outerLineWidth: CGFloat
         let outerCornerRadius: CGFloat
         let outerGlow1Width: CGFloat
-        let outerGlow2Width: CGFloat
         let outerGlowOpacity: Float
-        let outerShadowRadius: CGFloat
-        let outerShadowOpacity: Float
         let outerDashPattern: [NSNumber]
-        
-        let middleInset: CGFloat
-        let middleLineWidth: CGFloat
-        let middleCornerRadius: CGFloat
-        let middleGlow1Width: CGFloat
-        let middleGlow2Width: CGFloat
-        let middleGlowOpacity: Float
-        let middleShadowRadius: CGFloat
-        let middleShadowOpacity: Float
         
         let innerInset: CGFloat
         let innerLineWidth: CGFloat
         let innerCornerRadius: CGFloat
         let innerGlow1Width: CGFloat
-        let innerGlow2Width: CGFloat
         let innerGlowOpacity: Float
-        let innerShadowRadius: CGFloat
-        let innerShadowOpacity: Float
         
         switch displayMode {
         case .selection:
-            // 选择按钮模式 - 更小更精致，发光效果减弱
+            // 选择按钮模式
             outerInset = 4
             outerLineWidth = 2
             outerCornerRadius = 5
             outerGlow1Width = 8
-            outerGlow2Width = 18
             outerGlowOpacity = 0.1
-            outerShadowRadius = 8.0
-            outerShadowOpacity = 0.3
             outerDashPattern = [60, 6]
-            
-            middleInset = 7
-            middleLineWidth = 1.3
-            middleCornerRadius = 4
-            middleGlow1Width = 6
-            middleGlow2Width = 16
-            middleGlowOpacity = 0.1
-            middleShadowRadius = 6.0
-            middleShadowOpacity = 0.3
             
             innerInset = 10
             innerLineWidth = 1.2
             innerCornerRadius = 4
             innerGlow1Width = 6
-            innerGlow2Width = 16
             innerGlowOpacity = 0.1
-            innerShadowRadius = 6.0
-            innerShadowOpacity = 0.3
             
         case .preview:
-            // 创建页面预览区模式 - 适中尺寸，适中发光
-            outerInset = 18
-            outerLineWidth = 8
+            // 创建页面预览区模式
+            outerInset = 10
+            outerLineWidth = 6
             outerCornerRadius = 12
             outerGlow1Width = 14
-            outerGlow2Width = 20
             outerGlowOpacity = 0.2
-            outerShadowRadius = 8.0
-            outerShadowOpacity = 0.6
             outerDashPattern = [50, 3]
             
-            middleInset = 28
-            middleLineWidth = 3
-            middleCornerRadius = 12
-            middleGlow1Width = 7
-            middleGlow2Width = 18
-            middleGlowOpacity = 0.2
-            middleShadowRadius = 7.0
-            middleShadowOpacity = 0.5
+            innerInset = 32  // 内边框距离再-4px
+            innerLineWidth = 3
+            innerCornerRadius = 12
+            innerGlow1Width = 7
+            innerGlowOpacity = 0.2
+            
+        case .fullscreen:
+            // 全屏预览模式
+            outerInset = 24
+            outerLineWidth = 8
+            outerCornerRadius = 34
+            outerGlow1Width = 16
+            outerGlowOpacity = 0.2
+            outerDashPattern = [76, 6]
+            
+            innerInset = 70
+            innerLineWidth = 3
+            innerCornerRadius = 30
+            innerGlow1Width = 11
+            innerGlowOpacity = 0.2
+            
+        case .cardCover:
+            // 卡片封面模式
+            outerInset = 8
+            outerLineWidth = 2
+            outerCornerRadius = 12
+            outerGlow1Width = 14
+            outerGlowOpacity = 0.2
+            outerDashPattern = [50, 3]
             
             innerInset = 40
             innerLineWidth = 3
             innerCornerRadius = 12
             innerGlow1Width = 7
-            innerGlow2Width = 18
             innerGlowOpacity = 0.2
-            innerShadowRadius = 8.0
-            innerShadowOpacity = 0.6
-            
-        case .fullscreen:
-            // 全屏预览模式 - 更大的尺寸，发光效果强
-            outerInset = 26
-            outerLineWidth = 8
-            outerCornerRadius = 36
-            outerGlow1Width = 16
-            outerGlow2Width = 28
-            outerGlowOpacity = 0.3
-            outerShadowRadius = 12.0
-            outerShadowOpacity = 1.0
-            outerDashPattern = [70, 6]
-            
-            middleInset = 40
-            middleLineWidth = 3
-            middleCornerRadius = 36
-            middleGlow1Width = 11
-            middleGlow2Width = 23
-            middleGlowOpacity = 0.3
-            middleShadowRadius = 10.0
-            middleShadowOpacity = 1.0
-            
-            innerInset = 66
-            innerLineWidth = 3
-            innerCornerRadius = 36
-            innerGlow1Width = 11
-            innerGlow2Width = 23
-            innerGlowOpacity = 0.3
-            innerShadowRadius = 10.0
-            innerShadowOpacity = 1.0
         }
         
         // 外层虚线边框
@@ -217,65 +188,14 @@ class LinearBorderView: UIView {
         layer.addSublayer(outerGlow1)
         outerGlowLayers.append(outerGlow1)
         
-        // 外层边框 - 第二层发光
-        let outerGlow2 = CAShapeLayer()
-        outerGlow2.path = outerPath.cgPath
-        outerGlow2.fillColor = UIColor.clear.cgColor
-        outerGlow2.strokeColor = style.color.cgColor
-        outerGlow2.lineWidth = outerGlow2Width
-        outerGlow2.lineDashPattern = outerDashPattern
-        outerGlow2.opacity = outerGlowOpacity
-        layer.addSublayer(outerGlow2)
-        outerGlowLayers.append(outerGlow2)
-        
-        // 外层边框 - 主边框
+        // 外层边框 - 主边框（使用调整后的颜色）
         outerBorderLayer = CAShapeLayer()
         outerBorderLayer!.path = outerPath.cgPath
         outerBorderLayer!.fillColor = UIColor.clear.cgColor
-        outerBorderLayer!.strokeColor = UIColor.white.cgColor
+        outerBorderLayer!.strokeColor = getAdjustedOuterBorderColor().cgColor  // 使用调整后的颜色
         outerBorderLayer!.lineWidth = outerLineWidth
         outerBorderLayer!.lineDashPattern = outerDashPattern
-        outerBorderLayer!.shadowColor = style.color.cgColor
-        outerBorderLayer!.shadowRadius = outerShadowRadius
-        outerBorderLayer!.shadowOpacity = outerShadowOpacity
-        outerBorderLayer!.shadowOffset = .zero
         layer.addSublayer(outerBorderLayer!)
-        
-        // 中层实线边框
-        let middleRect = bounds.insetBy(dx: middleInset, dy: middleInset)
-        let middlePath = UIBezierPath(roundedRect: middleRect, cornerRadius: middleCornerRadius)
-        
-        // 中层边框 - 第一层发光
-        let middleGlow1 = CAShapeLayer()
-        middleGlow1.path = middlePath.cgPath
-        middleGlow1.fillColor = UIColor.clear.cgColor
-        middleGlow1.strokeColor = style.color.cgColor
-        middleGlow1.lineWidth = middleGlow1Width
-        middleGlow1.opacity = middleGlowOpacity
-        layer.addSublayer(middleGlow1)
-        middleGlowLayers.append(middleGlow1)
-        
-        // 中层边框 - 第二层发光
-        let middleGlow2 = CAShapeLayer()
-        middleGlow2.path = middlePath.cgPath
-        middleGlow2.fillColor = UIColor.clear.cgColor
-        middleGlow2.strokeColor = style.color.cgColor
-        middleGlow2.lineWidth = middleGlow2Width
-        middleGlow2.opacity = middleGlowOpacity
-        layer.addSublayer(middleGlow2)
-        middleGlowLayers.append(middleGlow2)
-        
-        // 中层边框 - 主边框
-        middleBorderLayer = CAShapeLayer()
-        middleBorderLayer!.path = middlePath.cgPath
-        middleBorderLayer!.fillColor = UIColor.clear.cgColor
-        middleBorderLayer!.strokeColor = UIColor.white.cgColor
-        middleBorderLayer!.lineWidth = middleLineWidth
-        middleBorderLayer!.shadowColor = style.color.cgColor
-        middleBorderLayer!.shadowRadius = middleShadowRadius
-        middleBorderLayer!.shadowOpacity = middleShadowOpacity
-        middleBorderLayer!.shadowOffset = .zero
-        layer.addSublayer(middleBorderLayer!)
         
         // 最内层实线边框 - 使用亮色
         let innerRect = bounds.insetBy(dx: innerInset, dy: innerInset)
@@ -291,31 +211,257 @@ class LinearBorderView: UIView {
         layer.addSublayer(innerGlow1)
         innerGlowLayers.append(innerGlow1)
         
-        // 最内边框 - 第二层发光
-        let innerGlow2 = CAShapeLayer()
-        innerGlow2.path = innerPath.cgPath
-        innerGlow2.fillColor = UIColor.clear.cgColor
-        innerGlow2.strokeColor = style.brightColor.cgColor
-        innerGlow2.lineWidth = innerGlow2Width
-        innerGlow2.opacity = innerGlowOpacity
-        layer.addSublayer(innerGlow2)
-        innerGlowLayers.append(innerGlow2)
-        
         // 最内边框 - 主边框（使用亮色）
         innerBorderLayer = CAShapeLayer()
         innerBorderLayer!.path = innerPath.cgPath
         innerBorderLayer!.fillColor = UIColor.clear.cgColor
         innerBorderLayer!.strokeColor = style.brightColor.cgColor
         innerBorderLayer!.lineWidth = innerLineWidth
-        innerBorderLayer!.shadowColor = style.brightColor.cgColor
-        innerBorderLayer!.shadowRadius = innerShadowRadius
-        innerBorderLayer!.shadowOpacity = innerShadowOpacity
-        innerBorderLayer!.shadowOffset = .zero
         layer.addSublayer(innerBorderLayer!)
+    }
+    
+    // 设置中间圆点矩形
+    private func setupDots() {
+        // 清除旧的圆点
+        dotLayers.forEach { $0.removeFromSuperlayer() }
+        dotLayers.removeAll()
+        
+        let bounds = self.bounds
+        
+        // 根据模式选择不同的参数
+        let outerInset: CGFloat
+        let innerInset: CGFloat  // 内边框距离
+        let outerCornerRadius: CGFloat  // 外边框的圆角
+        let outerLineWidth: CGFloat
+        let dotCount: Int  // 圆点数量
+        
+        switch displayMode {
+        case .selection:
+            outerInset = 4   // 外边框距离
+            innerInset = 10  // 内边框距离
+            outerCornerRadius = 5  // 外边框圆角
+            outerLineWidth = 2  // 外边框粗细
+            dotCount = 16  // 圆点数量
+            
+        case .preview:
+            outerInset = 10  // 外边框距离
+            innerInset = 32  // 内边框距离再-4px (36-4=32)
+            outerCornerRadius = 12  // 外边框圆角
+            outerLineWidth = 6  // 外边框粗细
+            dotCount = 24  // 圆点数量
+            
+        case .fullscreen:
+            outerInset = 24  // 外边框距离
+            innerInset = 70  // 内边框距离
+            outerCornerRadius = 34  // 外边框圆角
+            outerLineWidth = 8  // 外边框粗细
+            dotCount = 48  // 圆点数量
+            
+        case .cardCover:
+            outerInset = 8   // 外边框距离
+            innerInset = 40  // 内边框距离
+            outerCornerRadius = 12  // 外边框圆角
+            outerLineWidth = 2  // 外边框粗细
+            dotCount = 24  // 圆点数量
+        }
+        
+        // 计算圆点矩形位置
+        let middleInset: CGFloat
+        if displayMode == .fullscreen {
+            // 全屏模式：白色外框和黄色内框的正中间
+            middleInset = (outerInset + innerInset) / 2
+        } else {
+            // 其他模式：外边框距离 + 10px
+            middleInset = outerInset + 10
+        }
+        
+        // 圆点直径计算 - 根据模式设置特定尺寸
+        var dotSize: CGFloat
+        switch displayMode {
+        case .selection:
+            dotSize = 3  // 3px
+        case .preview:
+            dotSize = 8  // 8px
+        case .fullscreen:
+            dotSize = 10  // 10px
+        case .cardCover:
+            dotSize = 1  // 1px
+        }
+        
+        // 计算中间矩形区域
+        let middleRect = bounds.insetBy(dx: middleInset, dy: middleInset)
+        
+        // 沿着圆角矩形路径放置圆点
+        for i in 0..<dotCount {
+            let progress = CGFloat(i) / CGFloat(dotCount)
+            let position = calculatePositionOnRoundedRect(progress: progress, rect: middleRect, cornerRadius: outerCornerRadius)
+            
+            let dotLayer = CAShapeLayer()
+            // 创建以原点为中心的圆形路径
+            let dotRect = CGRect(x: -dotSize/2, y: -dotSize/2, width: dotSize, height: dotSize)
+            dotLayer.path = UIBezierPath(ovalIn: dotRect).cgPath
+            dotLayer.fillColor = UIColor.white.withAlphaComponent(0.9).cgColor
+            dotLayer.position = position
+            
+            layer.addSublayer(dotLayer)
+            dotLayers.append(dotLayer)
+        }
+    }
+    
+    // 计算圆角矩形路径上的位置（参照LightBoardBorderView的实现）
+    private func calculatePositionOnRoundedRect(progress: CGFloat, rect: CGRect, cornerRadius: CGFloat) -> CGPoint {
+        let width = rect.width
+        let height = rect.height
+        
+        // 各段长度
+        let topLength = width - 2 * cornerRadius
+        let rightLength = height - 2 * cornerRadius
+        let bottomLength = width - 2 * cornerRadius
+        let leftLength = height - 2 * cornerRadius
+        let cornerLength = .pi * cornerRadius / 2
+        
+        let totalLength = topLength + rightLength + bottomLength + leftLength + 4 * cornerLength
+        let distance = progress * totalLength
+        
+        var currentDistance = distance
+        
+        // 顶边（左上角圆弧后到右上角圆弧前）
+        if currentDistance <= topLength {
+            return CGPoint(x: rect.minX + cornerRadius + currentDistance, y: rect.minY)
+        }
+        currentDistance -= topLength
+        
+        // 右上角圆弧
+        if currentDistance <= cornerLength {
+            let angle = -(.pi / 2) + (currentDistance / cornerRadius)
+            let centerX = rect.maxX - cornerRadius
+            let centerY = rect.minY + cornerRadius
+            return CGPoint(
+                x: centerX + cornerRadius * cos(angle),
+                y: centerY + cornerRadius * sin(angle)
+            )
+        }
+        currentDistance -= cornerLength
+        
+        // 右边
+        if currentDistance <= rightLength {
+            return CGPoint(x: rect.maxX, y: rect.minY + cornerRadius + currentDistance)
+        }
+        currentDistance -= rightLength
+        
+        // 右下角圆弧
+        if currentDistance <= cornerLength {
+            let angle = (currentDistance / cornerRadius)
+            let centerX = rect.maxX - cornerRadius
+            let centerY = rect.maxY - cornerRadius
+            return CGPoint(
+                x: centerX + cornerRadius * cos(angle),
+                y: centerY + cornerRadius * sin(angle)
+            )
+        }
+        currentDistance -= cornerLength
+        
+        // 底边
+        if currentDistance <= bottomLength {
+            return CGPoint(x: rect.maxX - cornerRadius - currentDistance, y: rect.maxY)
+        }
+        currentDistance -= bottomLength
+        
+        // 左下角圆弧
+        if currentDistance <= cornerLength {
+            let angle = (.pi / 2) + (currentDistance / cornerRadius)
+            let centerX = rect.minX + cornerRadius
+            let centerY = rect.maxY - cornerRadius
+            return CGPoint(
+                x: centerX + cornerRadius * cos(angle),
+                y: centerY + cornerRadius * sin(angle)
+            )
+        }
+        currentDistance -= cornerLength
+        
+        // 左边
+        if currentDistance <= leftLength {
+            return CGPoint(x: rect.minX, y: rect.maxY - cornerRadius - currentDistance)
+        }
+        currentDistance -= leftLength
+        
+        // 左上角圆弧
+        let angle = .pi + (currentDistance / cornerRadius)
+        let centerX = rect.minX + cornerRadius
+        let centerY = rect.minY + cornerRadius
+        return CGPoint(
+            x: centerX + cornerRadius * cos(angle),
+            y: centerY + cornerRadius * sin(angle)
+        )
+    }
+    
+    // 开始呼吸动画（仅全屏模式）
+    private func startBreathingAnimation() {
+        for (index, dotLayer) in dotLayers.enumerated() {
+            addBreathingAnimation(to: dotLayer, index: index)
+        }
+    }
+    
+    // 停止圆点动画
+    private func stopDotAnimation() {
+        dotAnimationTimer?.invalidate()
+        dotAnimationTimer = nil
+        
+        // 移除所有动画
+        dotLayers.forEach { dotLayer in
+            dotLayer.removeAllAnimations()
+        }
+    }
+    
+    // 呼吸动画效果（参照灯牌边框）
+    private func addBreathingAnimation(to layer: CAShapeLayer, index: Int) {
+        let animation = CAKeyframeAnimation(keyPath: "opacity")
+        
+        // 交替呼吸效果：奇偶圆点相位相反，过渡更自然
+        if index % 2 == 0 {
+            // 偶数圆点：从亮到暗，更平滑的过渡
+            animation.values = [1.0, 0.8, 0.4, 0.6, 1.0]
+            animation.keyTimes = [0.0, 0.2, 0.5, 0.8, 1.0]
+        } else {
+            // 奇数圆点：从暗到亮（相反相位），更平滑的过渡
+            animation.values = [0.4, 0.6, 1.0, 0.8, 0.4]
+            animation.keyTimes = [0.0, 0.2, 0.5, 0.8, 1.0]
+        }
+        
+        animation.duration = 3.0  // 延长动画时间，让过渡更缓慢自然
+        animation.repeatCount = .infinity
+        animation.timingFunctions = [
+            CAMediaTimingFunction(name: .easeInEaseOut),
+            CAMediaTimingFunction(name: .easeInEaseOut),
+            CAMediaTimingFunction(name: .easeInEaseOut),
+            CAMediaTimingFunction(name: .easeInEaseOut)
+        ]
+        
+        layer.add(animation, forKey: "breathingAnimation")
     }
     
     func setStyle(_ newStyle: LinearBorderStyle) {
         style = newStyle
         setupBorders()
+        setupDots()
+    }
+    
+    // 获取调整后的外边框颜色（与内边框同色系，但亮度+30%，饱和度-15%）
+    private func getAdjustedOuterBorderColor() -> UIColor {
+        let baseColor = style.brightColor  // 使用内边框的亮色
+        
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var brightness: CGFloat = 0
+        var alpha: CGFloat = 0
+        
+        // 获取HSB值
+        baseColor.getHue(&hue, saturation: &saturation, brightness: &brightness, alpha: &alpha)
+        
+        // 调整亮度+30%，饱和度-15%
+        let adjustedBrightness = min(brightness + 0.3, 1.0)  // 亮度+30%，但不超过1.0
+        let adjustedSaturation = max(saturation - 0.15, 0.0)  // 饱和度-15%，但不低于0.0
+        
+        return UIColor(hue: hue, saturation: adjustedSaturation, brightness: adjustedBrightness, alpha: alpha)
     }
 }

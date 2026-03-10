@@ -1209,7 +1209,12 @@ class TemplateSquareViewController: UIViewController {
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(TemplateCategoryCell.self, forCellReuseIdentifier: "CategoryCell")
-        tableView.contentInset = UIEdgeInsets(top: 12, left: 0, bottom: 20, right: 0)
+        
+        // 根据屏幕尺寸动态调整contentInset
+        let screenHeight = UIScreen.main.bounds.height
+        let topInset: CGFloat = screenHeight >= 926 ? 16 : 12 // 大屏设备增加顶部间距
+        let bottomInset: CGFloat = screenHeight >= 926 ? 30 : 20 // 大屏设备增加底部间距
+        tableView.contentInset = UIEdgeInsets(top: topInset, left: 0, bottom: bottomInset, right: 0)
         tableView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(tableView)
         
@@ -1300,11 +1305,12 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let category = categories[indexPath.section]
-        // 卡片宽度 = (屏幕宽度 - 左右边距40 - 中间间距16) / 2
-        // 卡片高度 = 卡片宽度 * 0.95
-        // 假设屏幕宽度393，卡片宽度 = (393 - 56) / 2 = 168.5，卡片高度 = 160px
         
-        let cardHeight: CGFloat = 160
+        // 动态计算卡片尺寸，与CollectionView的sizeForItemAt保持一致
+        // 卡片宽度 = (屏幕宽度 - 左右边距40 - 中间间距16) / 2
+        let screenWidth = UIScreen.main.bounds.width
+        let cardWidth = (screenWidth - 56) / 2 // 左右各20px，中间16px
+        let cardHeight = cardWidth * 0.95 // 与sizeForItemAt中的比例保持一致
         let lineSpacing: CGFloat = 16
         
         switch category {
@@ -1346,7 +1352,10 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let label = UILabel()
             label.text = category.localizedName
             label.textColor = UIColor.white.withAlphaComponent(0.9)
-            label.font = .systemFont(ofSize: 18, weight: .bold)
+            // 根据屏幕尺寸动态调整字体大小
+            let screenHeight = UIScreen.main.bounds.height
+            let fontSize: CGFloat = screenHeight >= 926 ? 20 : 18 // 大屏设备使用20pt
+            label.font = .systemFont(ofSize: fontSize, weight: .bold)
             label.translatesAutoresizingMaskIntoConstraints = false
             headerView.addSubview(label)
             
@@ -1367,7 +1376,10 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let label = UILabel()
             label.text = category.localizedName
             label.textColor = UIColor.white.withAlphaComponent(0.9) // 白色 0.9透明度
-            label.font = .systemFont(ofSize: 18, weight: .bold)
+            // 根据屏幕尺寸动态调整字体大小
+            let screenHeight = UIScreen.main.bounds.height
+            let fontSize: CGFloat = screenHeight >= 926 ? 20 : 18 // 大屏设备使用20pt
+            label.font = .systemFont(ofSize: fontSize, weight: .bold)
             label.translatesAutoresizingMaskIntoConstraints = false
             headerView.addSubview(label)
             
@@ -1381,8 +1393,14 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     func tableView(_ tableView: UITableView, heightForHeaderInSection section: Int) -> CGFloat {
-        // Header包含：标题(20px) + 标题到卡片的间距(16px)
-        return 36
+        // Header包含：标题 + 标题到卡片的间距
+        // 根据屏幕尺寸动态调整
+        let screenHeight = UIScreen.main.bounds.height
+        if screenHeight >= 926 { // iPhone 14 Pro Max及以上大屏设备
+            return 42 // 大屏设备增加header高度
+        } else {
+            return 36 // 标准高度
+        }
     }
     
     func tableView(_ tableView: UITableView, heightForFooterInSection section: Int) -> CGFloat {
@@ -1391,7 +1409,14 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         if section == categories.count - 1 {
             return 0
         }
-        return 32 // 模块间距32px
+        
+        // 根据屏幕尺寸动态调整模块间距
+        let screenHeight = UIScreen.main.bounds.height
+        if screenHeight >= 926 { // iPhone 14 Pro Max及以上大屏设备
+            return 40 // 大屏设备增加间距
+        } else {
+            return 32 // 标准间距
+        }
     }
     
     private func handleItemTap(_ item: LEDItem) {
@@ -1704,8 +1729,11 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 56) / 2 // 2列，左右各20，中间16
-        return CGSize(width: width, height: width * 0.95) // 增加高度以容纳按钮
+        // 动态计算卡片宽度，适配不同屏幕尺寸
+        // 2列布局：左右边距各20px，中间间距16px
+        let width = (collectionView.bounds.width - 56) / 2
+        let height = width * 0.95 // 保持宽高比
+        return CGSize(width: width, height: height)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -1759,7 +1787,16 @@ class TemplateItemCell: UICollectionViewCell {
         
         // 封面图片上的文字（霓虹效果）
         overlayTextLabel.textColor = .white
-        overlayTextLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        // 根据屏幕尺寸动态调整字体大小
+        let screenHeight = UIScreen.main.bounds.height
+        let overlayFontSize: CGFloat = screenHeight >= 926 ? 22 : 20 // 大屏设备使用22pt
+        let titleFontSize: CGFloat = screenHeight >= 926 ? 15 : 13 // 大屏设备使用15pt
+        let buttonFontSize: CGFloat = screenHeight >= 926 ? 14 : 12 // 大屏设备使用14pt
+        let previewFontSize: CGFloat = screenHeight >= 926 ? 13 : 11 // 大屏设备使用13pt
+        
+        // 封面图片上的文字（霓虹效果）
+        overlayTextLabel.textColor = .white
+        overlayTextLabel.font = .systemFont(ofSize: overlayFontSize, weight: .bold)
         overlayTextLabel.textAlignment = .center
         overlayTextLabel.numberOfLines = 2
         overlayTextLabel.adjustsFontSizeToFitWidth = true
@@ -1769,7 +1806,7 @@ class TemplateItemCell: UICollectionViewCell {
         
         // 标题（动画模版用）
         titleLabel.textColor = .white
-        titleLabel.font = .systemFont(ofSize: 13, weight: .medium)
+        titleLabel.font = .systemFont(ofSize: titleFontSize, weight: .medium)
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 1
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -1785,7 +1822,7 @@ class TemplateItemCell: UICollectionViewCell {
         // 试用模版按钮（胶囊形状）
         tryButton.setTitle("try".localized, for: .normal)
         tryButton.setTitleColor(.white, for: .normal)
-        tryButton.titleLabel?.font = .systemFont(ofSize: 12, weight: .medium)
+        tryButton.titleLabel?.font = .systemFont(ofSize: buttonFontSize, weight: .medium)
         tryButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.3)
         tryButton.layer.cornerRadius = 7 // 胶囊形状（高度14px的一半）
         tryButton.layer.masksToBounds = true
@@ -1797,7 +1834,7 @@ class TemplateItemCell: UICollectionViewCell {
         // 预览模版按钮（胶囊形状）
         previewButton.setTitle("preview".localized, for: .normal)
         previewButton.setTitleColor(.white, for: .normal)
-        previewButton.titleLabel?.font = .systemFont(ofSize: 11, weight: .medium)
+        previewButton.titleLabel?.font = .systemFont(ofSize: previewFontSize, weight: .medium)
         previewButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)
         previewButton.layer.cornerRadius = 7 // 胶囊形状（高度14px的一半）
         previewButton.layer.masksToBounds = true
