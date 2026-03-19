@@ -316,7 +316,7 @@ class SettingsViewController: UIViewController {
             
             alertView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
             alertView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
-            alertView.widthAnchor.constraint(equalToConstant: 308), // 宽度增加8pt (300->308)
+            alertView.widthAnchor.constraint(equalToConstant: 316), // 宽度再增加8pt (308->316)
             
             closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 12),
             closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -12),
@@ -333,7 +333,7 @@ class SettingsViewController: UIViewController {
             
             primaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             primaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
-            primaryButton.heightAnchor.constraint(equalToConstant: 44)
+            primaryButton.heightAnchor.constraint(equalToConstant: 48) // 按钮高度增加4pt (44->48)
         ]
         
         // 如果有次要按钮，添加它
@@ -356,15 +356,15 @@ class SettingsViewController: UIViewController {
                 secondaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
                 secondaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
                 secondaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
-                secondaryButton.heightAnchor.constraint(equalToConstant: 44),
+                secondaryButton.heightAnchor.constraint(equalToConstant: 48), // 按钮高度增加4pt (44->48)
                 
                 primaryButton.topAnchor.constraint(equalTo: secondaryButton.bottomAnchor, constant: 16), // 增加间距从12到16
-                primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -34) // 增加底部间距10pt (从-24到-34)
+                primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -44) // 背景高度再增加10pt (从-34到-44)
             ])
         } else {
             constraints.append(contentsOf: [
                 primaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
-                primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -34) // 增加底部间距10pt (从-24到-34)
+                primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -44) // 背景高度再增加10pt (从-34到-44)
             ])
         }
         

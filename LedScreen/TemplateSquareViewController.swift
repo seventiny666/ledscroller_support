@@ -881,7 +881,7 @@ import StoreKit
         headerView.addSubview(subtitleLabel)
         
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 20), // 再往上移动20pt，从40改为20
+            headerView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 0), // 往上移动20pt，从20改为0
             headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             headerView.heightAnchor.constraint(equalToConstant: 160),
@@ -1116,7 +1116,7 @@ import StoreKit
             cornerLabel!.backgroundColor = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0) // 橙色背景
             cornerLabel!.font = .systemFont(ofSize: 10, weight: .bold)
             cornerLabel!.textAlignment = .center
-            cornerLabel!.layer.cornerRadius = 8
+            cornerLabel!.layer.cornerRadius = 9 // 圆角调整为高度的一半 (18/2=9)
             cornerLabel!.layer.masksToBounds = true
             cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
             // 最后添加，确保在最上层
@@ -1128,7 +1128,7 @@ import StoreKit
             cornerLabel!.backgroundColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0) // 红色背景
             cornerLabel!.font = .systemFont(ofSize: 10, weight: .bold)
             cornerLabel!.textAlignment = .center
-            cornerLabel!.layer.cornerRadius = 8
+            cornerLabel!.layer.cornerRadius = 9 // 圆角调整为高度的一半 (18/2=9)
             cornerLabel!.layer.masksToBounds = true
             cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
             // 最后添加，确保在最上层
@@ -1151,15 +1151,15 @@ import StoreKit
             subtitleLabel.trailingAnchor.constraint(equalTo: priceLabel.leadingAnchor, constant: -8)
         ]
         
-        // 添加右上角标签的约束 - 确保在按钮内部右上角，移动到更靠上的位置
+        // 添加右上角标签的约束 - 确保在按钮内部右上角，往上移动4pt，高度增加2pt
         if let cornerLabel = cornerLabel {
             let labelWidth: CGFloat = index == 0 ? 80 : 60 // 周订阅标签宽度增大
             constraints.append(contentsOf: [
-                // 标签距离按钮顶部0点，往上移动2pt
-                cornerLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 0),
+                // 标签往上移动4pt，从0改为-4
+                cornerLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: -4),
                 cornerLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -12),
                 cornerLabel.widthAnchor.constraint(equalToConstant: labelWidth),
-                cornerLabel.heightAnchor.constraint(equalToConstant: 16),
+                cornerLabel.heightAnchor.constraint(equalToConstant: 18), // 高度增加2pt，从16改为18
                 // 额外约束确保不会超出按钮边界
                 cornerLabel.leadingAnchor.constraint(greaterThanOrEqualTo: button.leadingAnchor, constant: 12),
                 cornerLabel.bottomAnchor.constraint(lessThanOrEqualTo: button.bottomAnchor, constant: -12)
@@ -1324,8 +1324,8 @@ import StoreKit
             subscribeButton.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
             subscribeButton.heightAnchor.constraint(equalToConstant: 50),
             
-            // 免责声明直接放在订阅按钮下面
-            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 12),
+            // 免责声明直接放在订阅按钮下面，往下移动4pt
+            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 16), // 从12改为16，往下移动4pt
             disclaimerLabel.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
             disclaimerLabel.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
             
