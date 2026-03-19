@@ -12,6 +12,7 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         self.delegate = self
         setupViewControllers() // 先设置视图控制器
         setupTabBar() // 再设置 TabBar 样式
+        setupLanguageChangeNotification() // 添加语言切换监听
         
         // 延迟刷新TabBar布局，确保文字正确显示
         DispatchQueue.main.async {
@@ -29,18 +30,18 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
                 switch item.tag {
                 case 0:
                     if item.title?.isEmpty ?? true {
-                        item.title = "首页"
-                        print("🔍 TabBar viewDidAppear: Fixed tag 0 title to '首页'")
+                        item.title = "home".localized
+                        print("🔍 TabBar viewDidAppear: Fixed tag 0 title to '\("home".localized)'")
                     }
                 case 1:
                     if item.title?.isEmpty ?? true {
-                        item.title = "创作"
-                        print("🔍 TabBar viewDidAppear: Fixed tag 1 title to '创作'")
+                        item.title = "creations".localized
+                        print("🔍 TabBar viewDidAppear: Fixed tag 1 title to '\("creations".localized)'")
                     }
                 case 2:
                     if item.title?.isEmpty ?? true {
-                        item.title = "设置"
-                        print("🔍 TabBar viewDidAppear: Fixed tag 2 title to '设置'")
+                        item.title = "settings".localized
+                        print("🔍 TabBar viewDidAppear: Fixed tag 2 title to '\("settings".localized)'")
                     }
                 default:
                     break
@@ -126,14 +127,14 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
             for item in items {
                 switch item.tag {
                 case 0:
-                    item.title = "首页"
-                    print("🔍 TabBar: Set tag 0 title to '首页'")
+                    item.title = "home".localized
+                    print("🔍 TabBar: Set tag 0 title to '\("home".localized)'")
                 case 1:
-                    item.title = "创作"
-                    print("🔍 TabBar: Set tag 1 title to '创作'")
+                    item.title = "creations".localized
+                    print("🔍 TabBar: Set tag 1 title to '\("creations".localized)'")
                 case 2:
-                    item.title = "设置"
-                    print("🔍 TabBar: Set tag 2 title to '设置'")
+                    item.title = "settings".localized
+                    print("🔍 TabBar: Set tag 2 title to '\("settings".localized)'")
                 case 98, 99:
                     // 占位符标签 - 完全隐藏
                     item.title = ""
@@ -151,9 +152,9 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         let templateVC = TemplateSquareViewController()
         let templateNav = UINavigationController(rootViewController: templateVC)
         
-        // 直接使用中文，避免本地化问题
+        // 直接使用本地化字符串
         templateNav.tabBarItem = UITabBarItem(
-            title: "首页",
+            title: "home".localized,
             image: UIImage(systemName: "square.grid.2x2"),
             selectedImage: UIImage(systemName: "square.grid.2x2.fill")
         )
@@ -175,7 +176,7 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         let creationsVC = MyCreationsViewController()
         let creationsNav = UINavigationController(rootViewController: creationsVC)
         creationsNav.tabBarItem = UITabBarItem(
-            title: "创作",
+            title: "creations".localized,
             image: UIImage(systemName: "plus.circle"),
             selectedImage: UIImage(systemName: "plus.circle.fill")
         )
@@ -197,7 +198,7 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         let settingsVC = SettingsViewController()
         let settingsNav = UINavigationController(rootViewController: settingsVC)
         settingsNav.tabBarItem = UITabBarItem(
-            title: "设置",
+            title: "settings".localized,
             image: UIImage(systemName: "gearshape"),
             selectedImage: UIImage(systemName: "gearshape.fill")
         )
@@ -214,5 +215,50 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         viewControllers = [templateNav, spacer1, creationsNav, spacer2, settingsNav]
         
         print("🔍 TabBar: viewControllers count = \(viewControllers?.count ?? 0)")
+    }
+    
+    // MARK: - Language Change Support
+    private func setupLanguageChangeNotification() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: NSNotification.Name("LanguageDidChange"),
+            object: nil
+        )
+    }
+    
+    @objc private func languageDidChange() {
+        // 更新所有TabBar标题
+        updateTabBarTitles()
+        
+        // 强制刷新TabBar布局
+        DispatchQueue.main.async {
+            self.tabBar.setNeedsLayout()
+            self.tabBar.layoutIfNeeded()
+        }
+    }
+    
+    private func updateTabBarTitles() {
+        guard let items = tabBar.items else { return }
+        
+        for item in items {
+            switch item.tag {
+            case 0:
+                item.title = "home".localized
+                print("🔍 TabBar Language Change: Updated tag 0 title to '\("home".localized)'")
+            case 1:
+                item.title = "creations".localized
+                print("🔍 TabBar Language Change: Updated tag 1 title to '\("creations".localized)'")
+            case 2:
+                item.title = "settings".localized
+                print("🔍 TabBar Language Change: Updated tag 2 title to '\("settings".localized)'")
+            default:
+                break
+            }
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }

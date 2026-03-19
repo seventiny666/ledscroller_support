@@ -14,7 +14,18 @@ enum SettingItem {
         case .language: return "language".localized
         case .aboutUs: return "about".localized
         case .version: return "version".localized
-        case .restorePurchase: return "restorePurchase".localized
+        case .restorePurchase: 
+            let vipManager = VIPManager.shared
+            if vipManager.isVIP() {
+                let subscriptionType = vipManager.getSubscriptionTypeText()
+                if !subscriptionType.isEmpty {
+                    return "subscriptionMember".localized + " " + subscriptionType
+                } else {
+                    return "subscriptionMember".localized
+                }
+            } else {
+                return "restorePurchase".localized
+            }
         case .feedback: return "feedback".localized
         case .rate: return "rate".localized
         }
@@ -118,7 +129,7 @@ class SettingsViewController: UIViewController {
         // 版本号（仅版本项显示）
         if case .version = item {
             let versionLabel = UILabel()
-            versionLabel.text = "1.0"
+            versionLabel.text = "1.0.0"
             versionLabel.textColor = .gray
             versionLabel.font = .systemFont(ofSize: 14)
             versionLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -180,12 +191,226 @@ class SettingsViewController: UIViewController {
         case .version:
             showAlert(title: "version".localized, message: "versionMessage".localized)
         case .restorePurchase:
-            showAlert(title: "restorePurchase".localized, message: "noRestorableItems".localized)
+            handleRestorePurchase()
         case .feedback:
             showAlert(title: "feedback".localized, message: "feedbackMessage".localized)
         case .rate:
             showAlert(title: "rate".localized, message: "rateMessage".localized)
         }
+    }
+    
+    private func handleRestorePurchase() {
+        let vipManager = VIPManager.shared
+        
+        if vipManager.isVIP() {
+            // 已是VIP用户，显示管理订阅
+            showCustomVIPAlert(
+                title: "vipMember".localized,
+                message: vipManager.getVIPStatusText(),
+                primaryButtonTitle: vipManager.getVIPButtonText(),
+                primaryAction: {
+                    vipManager.openManageSubscriptions()
+                }
+            )
+        } else {
+            // 非VIP用户，显示开通VIP
+            showCustomVIPAlert(
+                title: "vipMember".localized,
+                message: vipManager.getVIPStatusText(),
+                primaryButtonTitle: vipManager.getVIPButtonText(),
+                primaryAction: {
+                    self.showVIPSubscription()
+                },
+                secondaryButtonTitle: "restorePurchases".localized,
+                secondaryAction: {
+                    vipManager.restorePurchases()
+                }
+            )
+        }
+    }
+    
+    private func showVIPSubscription() {
+        let vipVC = VIPSubscriptionViewController()
+        let nav = UINavigationController(rootViewController: vipVC)
+        nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+        present(nav, animated: true)
+    }
+    
+    private func showCustomVIPAlert(
+        title: String,
+        message: String,
+        primaryButtonTitle: String,
+        primaryAction: @escaping () -> Void,
+        secondaryButtonTitle: String? = nil,
+        secondaryAction: (() -> Void)? = nil
+    ) {
+        // 创建自定义弹窗视图
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let alertView = UIView()
+        alertView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
+        alertView.layer.cornerRadius = 16
+        alertView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 关闭按钮（右上角X）- 改为和订阅界面一样的样式
+        let closeButton = UIButton(type: .system)
+        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+        closeButton.tintColor = .white
+        closeButton.backgroundColor = .clear
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.addTarget(self, action: #selector(dismissCustomAlert), for: .touchUpInside)
+        
+        // 标题
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 消息
+        let messageLabel = UILabel()
+        messageLabel.text = message
+        messageLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        messageLabel.font = .systemFont(ofSize: 16)
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 主按钮
+        let primaryButton = UIButton(type: .system)
+        primaryButton.setTitle(primaryButtonTitle, for: .normal)
+        primaryButton.setTitleColor(.white, for: .normal) // 改为白色文字
+        primaryButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        primaryButton.backgroundColor = .clear // 设为透明，使用渐变背景
+        primaryButton.layer.cornerRadius = 8
+        primaryButton.translatesAutoresizingMaskIntoConstraints = false
+        primaryButton.addAction(UIAction { _ in
+            self.dismissCustomAlert()
+            primaryAction()
+        }, for: .touchUpInside)
+        
+        // 应用渐变背景
+        DispatchQueue.main.async {
+            self.applyGradientToVIPButton(primaryButton)
+        }
+        
+        // 添加视图到层次结构
+        view.addSubview(overlayView)
+        overlayView.addSubview(alertView)
+        alertView.addSubview(closeButton)
+        alertView.addSubview(titleLabel)
+        alertView.addSubview(messageLabel)
+        alertView.addSubview(primaryButton)
+        
+        // 存储overlayView引用以便关闭
+        overlayView.tag = 9999
+        
+        var constraints = [
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            alertView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
+            alertView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
+            alertView.widthAnchor.constraint(equalToConstant: 308), // 宽度增加8pt (300->308)
+            
+            closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 12),
+            closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -12),
+            closeButton.widthAnchor.constraint(equalToConstant: 24),
+            closeButton.heightAnchor.constraint(equalToConstant: 24),
+            
+            titleLabel.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+            
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            messageLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+            messageLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+            
+            primaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+            primaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+            primaryButton.heightAnchor.constraint(equalToConstant: 44)
+        ]
+        
+        // 如果有次要按钮，添加它
+        if let secondaryButtonTitle = secondaryButtonTitle, let secondaryAction = secondaryAction {
+            let secondaryButton = UIButton(type: .system)
+            secondaryButton.setTitle(secondaryButtonTitle, for: .normal)
+            secondaryButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .normal)
+            secondaryButton.titleLabel?.font = .systemFont(ofSize: 16)
+            secondaryButton.backgroundColor = UIColor.white.withAlphaComponent(0.1)
+            secondaryButton.layer.cornerRadius = 8
+            secondaryButton.translatesAutoresizingMaskIntoConstraints = false
+            secondaryButton.addAction(UIAction { _ in
+                self.dismissCustomAlert()
+                secondaryAction()
+            }, for: .touchUpInside)
+            
+            alertView.addSubview(secondaryButton)
+            
+            constraints.append(contentsOf: [
+                secondaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
+                secondaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+                secondaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+                secondaryButton.heightAnchor.constraint(equalToConstant: 44),
+                
+                primaryButton.topAnchor.constraint(equalTo: secondaryButton.bottomAnchor, constant: 16), // 增加间距从12到16
+                primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -34) // 增加底部间距10pt (从-24到-34)
+            ])
+        } else {
+            constraints.append(contentsOf: [
+                primaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
+                primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -34) // 增加底部间距10pt (从-24到-34)
+            ])
+        }
+        
+        NSLayoutConstraint.activate(constraints)
+        
+        // 动画显示
+        overlayView.alpha = 0
+        alertView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0) {
+            overlayView.alpha = 1
+            alertView.transform = .identity
+        } completion: { _ in
+            // 在动画完成后应用渐变，确保按钮已经有正确的frame
+            if let primaryButton = alertView.subviews.first(where: { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == primaryButtonTitle }) as? UIButton {
+                self.applyGradientToVIPButton(primaryButton)
+            }
+        }
+    }
+    
+    @objc private func dismissCustomAlert() {
+        guard let overlayView = view.viewWithTag(9999) else { return }
+        
+        UIView.animate(withDuration: 0.2) {
+            overlayView.alpha = 0
+        } completion: { _ in
+            overlayView.removeFromSuperview()
+        }
+    }
+    
+    // 为VIP按钮应用渐变背景（和订阅界面一样的渐变）
+    private func applyGradientToVIPButton(_ button: UIButton) {
+        // 移除之前的渐变层
+        button.layer.sublayers?.removeAll { $0 is CAGradientLayer }
+        
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0).cgColor,  // 橙色
+            UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1.0).cgColor   // 粉色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0)
+        gradientLayer.frame = button.bounds
+        gradientLayer.cornerRadius = 8
+        
+        button.layer.insertSublayer(gradientLayer, at: 0)
     }
     
     private func showLanguageSelector() {

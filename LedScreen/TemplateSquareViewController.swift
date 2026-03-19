@@ -1,4 +1,1856 @@
 import UIKit
+import StoreKit
+
+// MARK: - VIP订阅管理器
+@objc class VIPManager: NSObject {
+    @objc static let shared = VIPManager()
+    
+    enum ProductID: String, CaseIterable {
+        case weekly = "com.ledscreen.vip.weekly"
+        case monthly = "com.ledscreen.vip.monthly"
+        case yearly = "com.ledscreen.vip.yearly"
+        // 移除终身买断选项
+    }
+    
+    enum VIPStatus {
+        case free
+        case trial(daysRemaining: Int)
+        case subscribed(daysRemaining: Int)
+        case lifetime
+    }
+    
+    // 通知名称
+    static let vipStatusDidChangeNotification = Notification.Name("VIPStatusDidChange")
+    static let purchaseDidCompleteNotification = Notification.Name("PurchaseDidComplete")
+    static let purchaseDidFailNotification = Notification.Name("PurchaseDidFail")
+    
+    var vipStatus: VIPStatus = .free {
+        didSet {
+            // 状态改变时发送通知
+            NotificationCenter.default.post(name: VIPManager.vipStatusDidChangeNotification, object: self)
+        }
+    }
+    var products: [SKProduct] = []
+    var isLoading = false
+    
+    private var productsRequest: SKProductsRequest?
+    private var restoreTimer: Timer? // 添加恢复购买超时定时器
+    private var purchaseTimer: Timer? // 添加购买超时定时器
+    private let userDefaults = UserDefaults.standard
+    
+    private let vipStatusKey = "vip_status"
+    private let subscriptionEndDateKey = "subscription_end_date"
+    private let trialStartDateKey = "trial_start_date"
+    private let isLifetimeKey = "is_lifetime"
+    private let subscriptionTypeKey = "subscription_type" // 新增：存储订阅类型
+    
+    private var isObserverAdded = false
+    
+    override init() {
+        super.init()
+        
+        // 确保只添加一次观察者
+        if !isObserverAdded {
+            SKPaymentQueue.default().add(self)
+            isObserverAdded = true
+            print("🔍 StoreKit观察者已添加")
+        }
+        
+        loadVIPStatus()
+        requestProducts()
+    }
+    
+    deinit {
+        print("🔍 VIPManager deinit - 清理资源")
+        restoreTimer?.invalidate()
+        restoreTimer = nil
+        purchaseTimer?.invalidate()
+        purchaseTimer = nil
+        
+        // 确保移除StoreKit观察者
+        if isObserverAdded {
+            SKPaymentQueue.default().remove(self)
+            isObserverAdded = false
+            print("🔍 StoreKit观察者已移除")
+        }
+        
+        // 清理通知观察者
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    // 强制重置购买状态（用于调试）
+    @objc func forceResetPurchaseState() {
+        print("🔍 强制重置购买状态")
+        DispatchQueue.main.async {
+            self.isLoading = false
+            self.restoreTimer?.invalidate()
+            self.restoreTimer = nil
+            self.purchaseTimer?.invalidate()
+            self.purchaseTimer = nil
+            
+            // 发送重置完成通知，让UI知道状态已重置
+            NotificationCenter.default.post(
+                name: NSNotification.Name("VIPStateReset"),
+                object: self
+            )
+        }
+    }
+    
+    @objc func isVIP() -> Bool {
+        switch vipStatus {
+        case .free:
+            return false
+        case .trial, .subscribed, .lifetime:
+            return true
+        }
+    }
+    
+    @objc func getVIPStatusText() -> String {
+        switch vipStatus {
+        case .free:
+            return "vipStatusFree".localized
+        case .trial(let days):
+            return String(format: "vipStatusTrial".localized, days)
+        case .subscribed(let days):
+            return String(format: "vipStatusSubscribed".localized, days)
+        case .lifetime:
+            return "vipStatusLifetime".localized
+        }
+    }
+    
+    @objc func getVIPButtonText() -> String {
+        switch vipStatus {
+        case .free:
+            return "vipButtonFree".localized
+        case .trial, .subscribed, .lifetime:
+            return "vipButtonManage".localized
+        }
+    }
+    
+    // 获取订阅类型显示文字
+    @objc func getSubscriptionTypeText() -> String {
+        guard let subscriptionTypeString = userDefaults.string(forKey: subscriptionTypeKey),
+              let subscriptionType = ProductID(rawValue: subscriptionTypeString) else {
+            return ""
+        }
+        
+        switch subscriptionType {
+        case .weekly:
+            return "weeklyMember".localized
+        case .monthly:
+            return "monthlyMember".localized
+        case .yearly:
+            return "yearlyMember".localized
+        }
+    }
+    
+    private func loadVIPStatus() {
+        // 检查终身会员
+        if userDefaults.bool(forKey: isLifetimeKey) {
+            vipStatus = .lifetime
+            return
+        }
+        
+        // 检查订阅状态
+        if let endDate = userDefaults.object(forKey: subscriptionEndDateKey) as? Date {
+            let daysRemaining = Calendar.current.dateComponents([.day], from: Date(), to: endDate).day ?? 0
+            if daysRemaining > 0 {
+                vipStatus = .subscribed(daysRemaining: daysRemaining)
+                return
+            } else {
+                // 订阅已过期，清除数据
+                userDefaults.removeObject(forKey: subscriptionEndDateKey)
+            }
+        }
+        
+        // 检查试用期状态
+        if let trialStartDate = userDefaults.object(forKey: trialStartDateKey) as? Date {
+            let daysSinceStart = Calendar.current.dateComponents([.day], from: trialStartDate, to: Date()).day ?? 0
+            let daysRemaining = 3 - daysSinceStart
+            if daysRemaining > 0 {
+                vipStatus = .trial(daysRemaining: daysRemaining)
+                return
+            } else {
+                // 试用期已过期，清除数据
+                userDefaults.removeObject(forKey: trialStartDateKey)
+            }
+        }
+        
+        vipStatus = .free
+    }
+    
+    private func requestProducts() {
+        guard !ProductID.allCases.isEmpty else { return }
+        
+        let productIDs = Set(ProductID.allCases.map { $0.rawValue })
+        productsRequest = SKProductsRequest(productIdentifiers: productIDs)
+        productsRequest?.delegate = self
+        productsRequest?.start()
+    }
+    
+    @objc func startFreeTrial() {
+        guard case .free = vipStatus else { 
+            print("用户已经是VIP或正在试用中")
+            return 
+        }
+        
+        let trialStartDate = Date()
+        userDefaults.set(trialStartDate, forKey: trialStartDateKey)
+        userDefaults.synchronize()
+        
+        vipStatus = .trial(daysRemaining: 3)
+        
+        print("免费试用已开始")
+    }
+    
+    @objc func purchase(product: SKProduct) {
+        guard SKPaymentQueue.canMakePayments() else {
+            NotificationCenter.default.post(
+                name: VIPManager.purchaseDidFailNotification, 
+                object: self, 
+                userInfo: ["error": "设备不支持应用内购买"]
+            )
+            return
+        }
+        
+        // 如果已经在处理中，不要重复处理
+        if isLoading {
+            print("⚠️ 已经在处理购买操作中，忽略重复请求")
+            return
+        }
+        
+        isLoading = true
+        
+        // 设置60秒购买超时
+        purchaseTimer?.invalidate()
+        purchaseTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: false) { [weak self] _ in
+            print("⚠️ 购买超时")
+            DispatchQueue.main.async {
+                self?.handlePurchaseTimeout()
+            }
+        }
+        
+        let payment = SKPayment(product: product)
+        SKPaymentQueue.default().add(payment)
+        
+        print("开始购买产品: \(product.productIdentifier)")
+    }
+    
+    private func handlePurchaseTimeout() {
+        print("🔍 处理购买超时")
+        isLoading = false
+        purchaseTimer?.invalidate()
+        purchaseTimer = nil
+        
+        NotificationCenter.default.post(
+            name: VIPManager.purchaseDidFailNotification,
+            object: self,
+            userInfo: ["error": "购买超时，请检查网络连接后重试"]
+        )
+    }
+    
+    @objc func restorePurchases() {
+        print("🔍 VIPManager.restorePurchases() 被调用")
+        
+        guard SKPaymentQueue.canMakePayments() else {
+            print("⚠️ 设备不支持应用内购买")
+            NotificationCenter.default.post(
+                name: VIPManager.purchaseDidFailNotification, 
+                object: self, 
+                userInfo: ["error": "设备不支持应用内购买"]
+            )
+            return
+        }
+        
+        // 如果已经在处理中，不要重复处理
+        if isLoading {
+            print("⚠️ 已经在处理购买操作中，忽略重复请求")
+            return
+        }
+        
+        print("🔍 设置 isLoading = true")
+        isLoading = true
+        
+        // 设置30秒超时
+        restoreTimer?.invalidate()
+        restoreTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { [weak self] _ in
+            print("⚠️ 恢复购买超时")
+            DispatchQueue.main.async {
+                self?.handleRestoreTimeout()
+            }
+        }
+        
+        print("🔍 调用 SKPaymentQueue.default().restoreCompletedTransactions()")
+        SKPaymentQueue.default().restoreCompletedTransactions()
+        
+        print("🔍 开始恢复购买")
+    }
+    
+    private func handleRestoreTimeout() {
+        print("🔍 处理恢复购买超时")
+        isLoading = false
+        restoreTimer?.invalidate()
+        restoreTimer = nil
+        
+        NotificationCenter.default.post(
+            name: VIPManager.purchaseDidFailNotification,
+            object: self,
+            userInfo: ["error": "恢复购买超时，请检查网络连接后重试"]
+        )
+    }
+    
+    @objc func openManageSubscriptions() {
+        if let url = URL(string: "https://apps.apple.com/account/subscriptions") {
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url)
+            }
+        }
+    }
+    
+    // 处理成功购买
+    private func handleSuccessfulPurchase(productID: String) {
+        // 清理定时器
+        purchaseTimer?.invalidate()
+        purchaseTimer = nil
+        
+        guard let product = ProductID(rawValue: productID) else { 
+            print("未知的产品ID: \(productID)")
+            return 
+        }
+        
+        let currentDate = Date()
+        
+        switch product {
+        case .weekly:
+            let endDate = Calendar.current.date(byAdding: .weekOfYear, value: 1, to: currentDate) ?? currentDate
+            userDefaults.set(endDate, forKey: subscriptionEndDateKey)
+            userDefaults.set(product.rawValue, forKey: subscriptionTypeKey) // 存储订阅类型
+        case .monthly:
+            let endDate = Calendar.current.date(byAdding: .month, value: 1, to: currentDate) ?? currentDate
+            userDefaults.set(endDate, forKey: subscriptionEndDateKey)
+            userDefaults.set(product.rawValue, forKey: subscriptionTypeKey) // 存储订阅类型
+        case .yearly:
+            let endDate = Calendar.current.date(byAdding: .year, value: 1, to: currentDate) ?? currentDate
+            userDefaults.set(endDate, forKey: subscriptionEndDateKey)
+            userDefaults.set(product.rawValue, forKey: subscriptionTypeKey) // 存储订阅类型
+        }
+        
+        // 清除试用期数据
+        userDefaults.removeObject(forKey: trialStartDateKey)
+        userDefaults.synchronize()
+        
+        loadVIPStatus()
+        isLoading = false
+        
+        // 发送购买成功通知
+        NotificationCenter.default.post(
+            name: VIPManager.purchaseDidCompleteNotification, 
+            object: self, 
+            userInfo: ["productID": productID]
+        )
+        
+        print("购买成功: \(productID)")
+    }
+    
+    // 处理购买失败
+    private func handleFailedPurchase(error: Error?) {
+        // 清理定时器
+        purchaseTimer?.invalidate()
+        purchaseTimer = nil
+        restoreTimer?.invalidate()
+        restoreTimer = nil
+        
+        isLoading = false
+        
+        let errorMessage = error?.localizedDescription ?? "购买失败"
+        
+        // 发送购买失败通知
+        NotificationCenter.default.post(
+            name: VIPManager.purchaseDidFailNotification, 
+            object: self, 
+            userInfo: ["error": errorMessage]
+        )
+        
+        print("购买失败: \(errorMessage)")
+    }
+}
+
+// MARK: - VIP标签视图
+@objc class VIPBadgeView: UIView {
+    
+    private let containerView = UIView()
+    private let vipLabel = UILabel()
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        backgroundColor = .clear
+        
+        // 传统VIP标签样式 - 金色渐变背景
+        containerView.backgroundColor = UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // 金色
+        containerView.layer.cornerRadius = 8
+        containerView.layer.borderWidth = 1
+        containerView.layer.borderColor = UIColor(red: 0.8, green: 0.6, blue: 0.0, alpha: 1.0).cgColor // 深金色边框
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(containerView)
+        
+        // VIP文字 - 居中显示
+        vipLabel.text = "VIP"
+        vipLabel.textColor = .black
+        vipLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        vipLabel.textAlignment = .center
+        vipLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(vipLabel)
+        
+        NSLayoutConstraint.activate([
+            containerView.topAnchor.constraint(equalTo: topAnchor),
+            containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
+            
+            vipLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            vipLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            
+            // 调整为稍大一点的尺寸，更醒目的VIP标签
+            widthAnchor.constraint(equalToConstant: 32),
+            heightAnchor.constraint(equalToConstant: 18)
+        ])
+    }
+    
+    // 移除动画效果 - 保留方法以兼容现有代码，但不执行任何动画
+    @objc func startShimmering() {
+        // 不再执行动画
+    }
+    
+    @objc func stopShimmering() {
+        // 不再执行动画
+    }
+}
+
+// MARK: - VIP预览遮罩视图
+@objc class VIPPreviewOverlayView: UIView {
+    
+    var onExitTapped: (() -> Void)?
+    var onBecomeMemberTapped: (() -> Void)?
+    
+    private let containerView = UIView()
+    private let exitButton = UIButton(type: .system)
+    private let becomeMemberButton = UIButton(type: .system)
+    
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        setupUI()
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupUI() {
+        backgroundColor = UIColor.black.withAlphaComponent(0.4)
+        
+        containerView.backgroundColor = .clear
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(containerView)
+        
+        exitButton.setTitle("退出", for: .normal)
+        exitButton.setTitleColor(.white, for: .normal)
+        exitButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        exitButton.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        exitButton.layer.cornerRadius = 25
+        exitButton.layer.borderWidth = 1
+        exitButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+        exitButton.addTarget(self, action: #selector(exitTapped), for: .touchUpInside)
+        exitButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(exitButton)
+        
+        becomeMemberButton.setTitle("成为会员", for: .normal)
+        becomeMemberButton.setTitleColor(.black, for: .normal)
+        becomeMemberButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        becomeMemberButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        becomeMemberButton.layer.cornerRadius = 25
+        becomeMemberButton.addTarget(self, action: #selector(becomeMemberTapped), for: .touchUpInside)
+        becomeMemberButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(becomeMemberButton)
+        
+        NSLayoutConstraint.activate([
+            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            containerView.widthAnchor.constraint(equalToConstant: 240),
+            containerView.heightAnchor.constraint(equalToConstant: 120),
+            
+            exitButton.topAnchor.constraint(equalTo: containerView.topAnchor),
+            exitButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            exitButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            exitButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            becomeMemberButton.topAnchor.constraint(equalTo: exitButton.bottomAnchor, constant: 20),
+            becomeMemberButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            becomeMemberButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+            becomeMemberButton.heightAnchor.constraint(equalToConstant: 50),
+            becomeMemberButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+        ])
+    }
+    
+    @objc private func exitTapped() {
+        onExitTapped?()
+    }
+    
+    @objc private func becomeMemberTapped() {
+        onBecomeMemberTapped?()
+    }
+    
+    @objc func show(in parentView: UIView) {
+        translatesAutoresizingMaskIntoConstraints = false
+        parentView.addSubview(self)
+        
+        NSLayoutConstraint.activate([
+            topAnchor.constraint(equalTo: parentView.topAnchor),
+            leadingAnchor.constraint(equalTo: parentView.leadingAnchor),
+            trailingAnchor.constraint(equalTo: parentView.trailingAnchor),
+            bottomAnchor.constraint(equalTo: parentView.bottomAnchor)
+        ])
+        
+        alpha = 0
+        UIView.animate(withDuration: 0.3) {
+            self.alpha = 1
+        }
+    }
+    
+    @objc func hide(completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: 0.3, animations: {
+            self.alpha = 0
+        }) { _ in
+            self.removeFromSuperview()
+            completion?()
+        }
+    }
+}
+
+// MARK: - VIP订阅页面
+@objc class VIPSubscriptionViewController: UIViewController {
+    
+    private let scrollView = UIScrollView()
+    private let contentView = UIView()
+    private let vipManager = VIPManager.shared
+    
+    // UI组件
+    private let headerView = UIView()
+    private let titleLabel = UILabel()
+    private let subtitleLabel = UILabel()
+    private let featuresView = UIView()
+    private let subscriptionOptionsView = UIView()
+    private let bottomButtonsView = UIView()
+    
+    private var subscriptionButtons: [UIButton] = []
+    private var selectedSubscriptionIndex = 0 // 默认选择周订阅
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        setupUI()
+        setupNotifications()
+        
+        // 监听语言变化通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: NSNotification.Name("LanguageDidChange"),
+            object: nil
+        )
+        
+        // 监听应用进入后台，清理状态
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidEnterBackground),
+            name: UIApplication.didEnterBackgroundNotification,
+            object: nil
+        )
+        
+        // 监听VIP状态重置通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(vipStateDidReset),
+            name: NSNotification.Name("VIPStateReset"),
+            object: nil
+        )
+    }
+    
+    @objc private func applicationDidEnterBackground() {
+        // 应用进入后台时，强制重置购买状态，防止卡死
+        vipManager.forceResetPurchaseState()
+    }
+    
+    @objc private func vipStateDidReset() {
+        print("🔍 收到VIP状态重置通知，确保UI可交互")
+        DispatchQueue.main.async {
+            // 确保视图可以交互
+            self.view.isUserInteractionEnabled = true
+            
+            // 移除任何可能阻塞UI的遮罩
+            self.view.subviews.forEach { subview in
+                if subview.tag == 999 || subview is VIPPreviewOverlayView {
+                    subview.removeFromSuperview()
+                }
+            }
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        AppDelegate.orientationLock = .portrait
+    }
+    
+    override func viewWillDisappear(_ animated: Bool) {
+        super.viewWillDisappear(animated)
+        // 强制重置购买状态，防止卡死
+        vipManager.forceResetPurchaseState()
+    }
+    
+    deinit {
+        print("🔍 VIPSubscriptionViewController deinit - 清理资源")
+        // 移除通知监听
+        NotificationCenter.default.removeObserver(self)
+        // 强制重置购买状态
+        vipManager.forceResetPurchaseState()
+    }
+    
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        
+        // 更新背景渐变大小
+        if let gradientLayer = view.layer.sublayers?.first(where: { $0 is CAGradientLayer }) as? CAGradientLayer {
+            gradientLayer.frame = view.bounds
+        }
+        
+        // 更新订阅按钮渐变
+        if let subscribeButton = bottomButtonsView.subviews.first(where: { $0 is UIButton }) as? UIButton {
+            applyGradientToSubscribeButton(subscribeButton)
+        }
+        
+        // 更新全屏弹窗中的确定按钮渐变
+        if let overlayView = view.viewWithTag(999),
+           let confirmButton = overlayView.subviews.first?.subviews.last?.subviews.first(where: { $0 is UIButton }) as? UIButton {
+            applyGradientToButton(confirmButton)
+        }
+    }
+    
+    @objc private func languageDidChange() {
+        // 更新所有UI文本
+        updateUITexts()
+    }
+    
+    private func updateUITexts() {
+        // 更新标题和副标题
+        titleLabel.text = "vipTitle".localized
+        subtitleLabel.text = "vipSubtitle".localized
+        
+        // 重新设置订阅选项（这会重新创建按钮）
+        setupSubscriptionOptions()
+        setupBottomButtons()
+    }
+    
+    private func setupNotifications() {
+        // 监听购买完成通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(purchaseDidComplete(_:)),
+            name: VIPManager.purchaseDidCompleteNotification,
+            object: nil
+        )
+        
+        // 监听购买失败通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(purchaseDidFail(_:)),
+            name: VIPManager.purchaseDidFailNotification,
+            object: nil
+        )
+        
+        // 监听产品加载完成，刷新价格显示
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(productsDidLoad),
+            name: NSNotification.Name("ProductsDidLoad"),
+            object: nil
+        )
+    }
+    
+    @objc private func productsDidLoad() {
+        DispatchQueue.main.async {
+            self.setupSubscriptionOptions()
+        }
+    }
+    
+    @objc private func purchaseDidComplete(_ notification: Notification) {
+        print("🔍 收到购买完成通知")
+        DispatchQueue.main.async {
+            if let userInfo = notification.userInfo,
+               let restored = userInfo["restored"] as? Bool, restored {
+                print("🔍 恢复购买成功，显示成功提示")
+                // 恢复购买成功，不自动关闭界面
+                self.showSuccessAlert(message: "restoreSuccess".localized, shouldDismiss: false)
+            } else {
+                print("🔍 新购买成功，显示成功提示并关闭界面")
+                // 新购买成功，关闭界面
+                self.showSuccessAlert(message: "purchaseSuccess".localized, shouldDismiss: true)
+            }
+        }
+    }
+    
+    @objc private func purchaseDidFail(_ notification: Notification) {
+        print("🔍 收到购买失败通知")
+        DispatchQueue.main.async {
+            if let userInfo = notification.userInfo,
+               let cancelled = userInfo["cancelled"] as? Bool, cancelled {
+                print("🔍 用户取消购买，不显示错误信息")
+                // 用户取消购买，不显示错误信息
+                return
+            }
+            
+            if let userInfo = notification.userInfo,
+               let error = userInfo["error"] as? String {
+                print("🔍 显示购买失败提示: \(error)")
+                self.showAlert(title: "purchaseFailed".localized, message: error)
+            } else {
+                print("🔍 显示通用购买失败提示")
+                self.showAlert(title: "purchaseFailed".localized, message: "purchaseFailedMessage".localized)
+            }
+        }
+    }
+    
+    private func setupUI() {
+        view.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 1.0) // 改为深蓝灰色，去掉黑色遮罩
+        
+        // 添加背景图片
+        addBackgroundImage()
+        
+        // 添加背景渐变层（在背景图片上方，增加深度）
+        addBackgroundGradient()
+        
+        // 导航栏设置
+        title = ""
+        navigationItem.leftBarButtonItem = UIBarButtonItem(
+            image: UIImage(systemName: "xmark"),
+            style: .plain,
+            target: self,
+            action: #selector(closeTapped)
+        )
+        navigationItem.leftBarButtonItem?.tintColor = .white
+        
+        // 设置导航栏样式 - 完全透明，无遮罩
+        let appearance = UINavigationBarAppearance()
+        appearance.configureWithTransparentBackground()
+        appearance.backgroundColor = .clear
+        appearance.backgroundEffect = nil // 移除任何背景效果
+        appearance.shadowColor = .clear // 移除阴影
+        appearance.shadowImage = UIImage() // 移除阴影图片
+        
+        // 确保所有状态下都使用透明外观
+        navigationController?.navigationBar.standardAppearance = appearance
+        navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        navigationController?.navigationBar.compactAppearance = appearance
+        if #available(iOS 15.0, *) {
+            navigationController?.navigationBar.compactScrollEdgeAppearance = appearance
+        }
+        
+        // 确保导航栏完全透明，不会产生遮罩效果
+        navigationController?.navigationBar.isTranslucent = true
+        navigationController?.navigationBar.barTintColor = .clear
+        navigationController?.navigationBar.tintColor = .white
+        
+        // 移除导航栏的背景视图
+        navigationController?.navigationBar.setBackgroundImage(UIImage(), for: .default)
+        navigationController?.navigationBar.shadowImage = UIImage()
+        
+        // 确保导航栏不会在滚动时显示背景
+        if #available(iOS 13.0, *) {
+            navigationController?.navigationBar.standardAppearance.backgroundEffect = nil
+            navigationController?.navigationBar.standardAppearance.backgroundColor = .clear
+        }
+        
+        // 确保状态栏样式
+        if #available(iOS 13.0, *) {
+            overrideUserInterfaceStyle = .dark
+        }
+        
+        // 滚动视图
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(scrollView)
+        
+        contentView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.addSubview(contentView)
+        
+        NSLayoutConstraint.activate([
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor), // 改为从屏幕顶部开始，避免导航栏遮罩
+            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            contentView.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentView.widthAnchor.constraint(equalTo: scrollView.widthAnchor)
+        ])
+        
+        setupHeader()
+        setupFeatures()
+        setupSubscriptionOptions()
+        setupBottomButtons() // 移到这里，确保所有视图都已添加到层次结构中
+    }
+    
+    // 添加背景图片
+    private func addBackgroundImage() {
+        guard let backgroundImage = UIImage(named: "vipbg") else {
+            print("Warning: vipbg image not found")
+            return
+        }
+        
+        let backgroundImageView = UIImageView(image: backgroundImage)
+        backgroundImageView.contentMode = .scaleAspectFill
+        backgroundImageView.clipsToBounds = true
+        backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 将背景图片添加到视图的最底层
+        view.insertSubview(backgroundImageView, at: 0)
+        
+        // 设置约束使背景图片填满整个视图
+        NSLayoutConstraint.activate([
+            backgroundImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            backgroundImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            backgroundImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            backgroundImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        ])
+    }
+    
+    // 添加背景渐变
+    private func addBackgroundGradient() {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = view.bounds
+        
+        // 创建更加透明的渐变层，让背景图片更好地显示
+        gradientLayer.colors = [
+            UIColor(red: 0.4, green: 0.2, blue: 0.6, alpha: 0.1).cgColor,  // 很透明的紫色
+            UIColor(red: 0.1, green: 0.1, blue: 0.3, alpha: 0.2).cgColor,  // 很透明的深蓝
+            UIColor(red: 0.1, green: 0.1, blue: 0.15, alpha: 0.4).cgColor  // 半透明的深色
+        ]
+        gradientLayer.locations = [0.0, 0.5, 1.0]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        
+        view.layer.insertSublayer(gradientLayer, at: 1) // 插入到背景图片上方
+        
+        // 当视图大小改变时更新渐变层大小
+        DispatchQueue.main.async {
+            gradientLayer.frame = self.view.bounds
+        }
+    }
+    
+    private func setupHeader() {
+        headerView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(headerView)
+        
+        // VIP图标 - 使用PNG图片
+        let vipIconView = UIImageView()
+        vipIconView.image = UIImage(named: "vip")
+        vipIconView.contentMode = .scaleAspectFit
+        vipIconView.translatesAutoresizingMaskIntoConstraints = false
+        headerView.addSubview(vipIconView)
+        
+        // 标题
+        titleLabel.text = "vipTitle".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 28, weight: .bold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        headerView.addSubview(titleLabel)
+        
+        // 副标题
+        subtitleLabel.text = "vipSubtitle".localized
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        subtitleLabel.font = .systemFont(ofSize: 16)
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        headerView.addSubview(subtitleLabel)
+        
+        NSLayoutConstraint.activate([
+            headerView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 20), // 再往上移动20pt，从40改为20
+            headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 160),
+            
+            vipIconView.topAnchor.constraint(equalTo: headerView.topAnchor),
+            vipIconView.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
+            vipIconView.widthAnchor.constraint(equalToConstant: 80),
+            vipIconView.heightAnchor.constraint(equalToConstant: 80),
+            
+            titleLabel.topAnchor.constraint(equalTo: vipIconView.bottomAnchor, constant: 15), // 减少间距，从20改为15
+            titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -20),
+            
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            subtitleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
+            subtitleLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    private func setupFeatures() {
+        featuresView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(featuresView)
+        
+        let features = [
+            ("🎨", "vipFeature1".localized),
+            ("✨", "vipFeature2".localized),
+            ("💝", "vipFeature3".localized),
+            ("🎯", "vipFeature4".localized),
+            ("🚀", "vipFeature5".localized),
+            ("💎", "vipFeature6".localized)
+        ]
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 8 // 减少间距从16到8
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        featuresView.addSubview(stackView)
+        
+        for (icon, text) in features {
+            let featureView = createFeatureView(icon: icon, text: text)
+            stackView.addArrangedSubview(featureView)
+        }
+        
+        NSLayoutConstraint.activate([
+            featuresView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 30), // 增加间距，从10改为30，拉开与上面的距离
+            featuresView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            featuresView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            
+            stackView.topAnchor.constraint(equalTo: featuresView.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: featuresView.leadingAnchor, constant: 30),
+            stackView.trailingAnchor.constraint(equalTo: featuresView.trailingAnchor, constant: -30),
+            stackView.bottomAnchor.constraint(equalTo: featuresView.bottomAnchor)
+        ])
+    }
+    
+    private func createFeatureView(icon: String, text: String) -> UIView {
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let iconLabel = UILabel()
+        iconLabel.text = icon
+        iconLabel.font = .systemFont(ofSize: 20)
+        iconLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(iconLabel)
+        
+        let textLabel = UILabel()
+        textLabel.text = text
+        textLabel.textColor = .white
+        textLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        textLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(textLabel)
+        
+        NSLayoutConstraint.activate([
+            containerView.heightAnchor.constraint(equalToConstant: 24), // 减少高度从30到24
+            
+            iconLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+            iconLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            iconLabel.widthAnchor.constraint(equalToConstant: 30),
+            
+            textLabel.leadingAnchor.constraint(equalTo: iconLabel.trailingAnchor, constant: 12),
+            textLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            textLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+        ])
+        
+        return containerView
+    }
+    
+    private func setupSubscriptionOptions() {
+        subscriptionOptionsView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.addSubview(subscriptionOptionsView)
+        
+        // 清空之前的按钮数组
+        subscriptionButtons.removeAll()
+        
+        // 移除之前的子视图
+        subscriptionOptionsView.subviews.forEach { $0.removeFromSuperview() }
+        
+        // 订阅选项容器（移除标题）
+        let optionsContainer = UIView()
+        optionsContainer.translatesAutoresizingMaskIntoConstraints = false
+        subscriptionOptionsView.addSubview(optionsContainer)
+        
+        // 创建订阅选项 - 使用实际产品价格或回退价格
+        var subscriptionOptions: [(String, String, String, Bool)] = []
+        
+        if vipManager.products.count >= 3 { // 改为3个产品
+            // 使用实际产品价格
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            
+            for (index, product) in vipManager.products.enumerated() {
+                if index >= 3 { break } // 只处理前3个产品
+                
+                formatter.locale = product.priceLocale
+                let priceString = formatter.string(from: product.price) ?? "$0.00"
+                
+                let title: String
+                let subtitle: String
+                let isSelected = (index == 0)
+                
+                switch index {
+                case 0: // Weekly
+                    title = "weeklySubscription".localized
+                    subtitle = "freeTrial".localized
+                case 1: // Monthly
+                    title = "monthlySubscription".localized
+                    subtitle = "mostPopular".localized
+                case 2: // Yearly
+                    title = "🔥 " + "yearlySubscription".localized // 添加火的图标
+                    subtitle = "save76Percent".localized // 改为节省76%
+                default:
+                    title = product.localizedTitle
+                    subtitle = ""
+                }
+                
+                subscriptionOptions.append((title, priceString, subtitle, isSelected))
+            }
+        } else {
+            // 如果产品还没加载完成，使用新的回退价格
+            subscriptionOptions = [
+                ("weeklySubscription".localized, "$2.99", "freeTrial".localized, true),
+                ("monthlySubscription".localized, "$7.99", "mostPopular".localized, false),
+                ("🔥 " + "yearlySubscription".localized, "$29.99", "save76Percent".localized, false)
+            ]
+        }
+        
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 12
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        optionsContainer.addSubview(stackView)
+        
+        for (index, (title, price, subtitle, isSelected)) in subscriptionOptions.enumerated() {
+            let optionButton = createSubscriptionOption(
+                title: title,
+                price: price,
+                subtitle: subtitle,
+                isSelected: isSelected,
+                index: index
+            )
+            stackView.addArrangedSubview(optionButton)
+            subscriptionButtons.append(optionButton)
+        }
+        
+        NSLayoutConstraint.activate([
+            subscriptionOptionsView.topAnchor.constraint(equalTo: featuresView.bottomAnchor, constant: 20), // 减少间距，从30改为20
+            subscriptionOptionsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            subscriptionOptionsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            
+            // 直接约束容器到subscriptionOptionsView的顶部（移除标题的约束）
+            optionsContainer.topAnchor.constraint(equalTo: subscriptionOptionsView.topAnchor),
+            optionsContainer.leadingAnchor.constraint(equalTo: subscriptionOptionsView.leadingAnchor, constant: 20),
+            optionsContainer.trailingAnchor.constraint(equalTo: subscriptionOptionsView.trailingAnchor, constant: -20),
+            optionsContainer.bottomAnchor.constraint(equalTo: subscriptionOptionsView.bottomAnchor),
+            
+            stackView.topAnchor.constraint(equalTo: optionsContainer.topAnchor),
+            stackView.leadingAnchor.constraint(equalTo: optionsContainer.leadingAnchor),
+            stackView.trailingAnchor.constraint(equalTo: optionsContainer.trailingAnchor),
+            stackView.bottomAnchor.constraint(equalTo: optionsContainer.bottomAnchor)
+        ])
+    }
+    
+    private func createSubscriptionOption(title: String, price: String, subtitle: String, isSelected: Bool, index: Int) -> UIButton {
+        let button = UIButton(type: .custom)
+        button.backgroundColor = isSelected ? UIColor.black.withAlphaComponent(0.7) : UIColor(white: 0.1, alpha: 0.6) // 选中状态改为0.7透明度的黑色
+        button.layer.cornerRadius = 12
+        button.layer.borderWidth = isSelected ? 2 : 1
+        button.clipsToBounds = true // 确保子视图不会超出按钮边界
+        
+        // 使用偏粉色的边框颜色（类似start free trial按钮右边的渐变色）
+        if isSelected {
+            button.layer.borderColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0).cgColor // 偏粉的橙黄色边框
+        } else {
+            button.layer.borderColor = UIColor(white: 0.5, alpha: 0.8).cgColor // 改为灰调边框，从紫色改为灰色
+        }
+        
+        button.tag = index
+        button.addTarget(self, action: #selector(subscriptionOptionTapped(_:)), for: .touchUpInside)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 标题
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(titleLabel)
+        
+        // 价格 - 右对齐，使用渐变主题色
+        let priceLabel = UILabel()
+        priceLabel.text = price
+        priceLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0) // 橙黄色，匹配渐变主题
+        priceLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        priceLabel.textAlignment = .right
+        priceLabel.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(priceLabel)
+        
+        // 副标题
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = subtitle
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.7)
+        subtitleLabel.font = .systemFont(ofSize: 12)
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(subtitleLabel)
+        
+        // 右上角标签（周订阅和年订阅）- 确保在按钮内部
+        var cornerLabel: UILabel?
+        if index == 0 { // 周订阅 - 免费试用标签
+            cornerLabel = UILabel()
+            cornerLabel!.text = "freeTrial".localized
+            cornerLabel!.textColor = .white
+            cornerLabel!.backgroundColor = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0) // 橙色背景
+            cornerLabel!.font = .systemFont(ofSize: 10, weight: .bold)
+            cornerLabel!.textAlignment = .center
+            cornerLabel!.layer.cornerRadius = 8
+            cornerLabel!.layer.masksToBounds = true
+            cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
+            // 最后添加，确保在最上层
+            button.addSubview(cornerLabel!)
+        } else if index == 2 { // 年订阅 - 节省76%标签
+            cornerLabel = UILabel()
+            cornerLabel!.text = "save76Percent".localized
+            cornerLabel!.textColor = .white
+            cornerLabel!.backgroundColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0) // 红色背景
+            cornerLabel!.font = .systemFont(ofSize: 10, weight: .bold)
+            cornerLabel!.textAlignment = .center
+            cornerLabel!.layer.cornerRadius = 8
+            cornerLabel!.layer.masksToBounds = true
+            cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
+            // 最后添加，确保在最上层
+            button.addSubview(cornerLabel!)
+        }
+        
+        var constraints = [
+            button.heightAnchor.constraint(equalToConstant: 68), // 减少2pt，从70改为68
+            
+            titleLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
+            
+            // 价格垂直居中显示
+            priceLabel.centerYAnchor.constraint(equalTo: button.centerYAnchor),
+            priceLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
+            priceLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 60),
+            
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            subtitleLabel.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
+            subtitleLabel.trailingAnchor.constraint(equalTo: priceLabel.leadingAnchor, constant: -8)
+        ]
+        
+        // 添加右上角标签的约束 - 确保在按钮内部右上角，移动到更靠上的位置
+        if let cornerLabel = cornerLabel {
+            let labelWidth: CGFloat = index == 0 ? 80 : 60 // 周订阅标签宽度增大
+            constraints.append(contentsOf: [
+                // 标签距离按钮顶部0点，往上移动2pt
+                cornerLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 0),
+                cornerLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -12),
+                cornerLabel.widthAnchor.constraint(equalToConstant: labelWidth),
+                cornerLabel.heightAnchor.constraint(equalToConstant: 16),
+                // 额外约束确保不会超出按钮边界
+                cornerLabel.leadingAnchor.constraint(greaterThanOrEqualTo: button.leadingAnchor, constant: 12),
+                cornerLabel.bottomAnchor.constraint(lessThanOrEqualTo: button.bottomAnchor, constant: -12)
+            ])
+        }
+        
+        NSLayoutConstraint.activate(constraints)
+        
+        return button
+    }
+    
+    private func setupBottomButtons() {
+        bottomButtonsView.translatesAutoresizingMaskIntoConstraints = false
+        bottomButtonsView.isUserInteractionEnabled = true // 确保底部视图可以接收触摸事件
+        contentView.addSubview(bottomButtonsView)
+        
+        // 移除之前的子视图
+        bottomButtonsView.subviews.forEach { $0.removeFromSuperview() }
+        
+        // 开始订阅按钮
+        let subscribeButton = UIButton(type: .system)
+        subscribeButton.setTitle("startFreeTrial".localized, for: .normal)
+        subscribeButton.setTitleColor(.white, for: .normal)
+        subscribeButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
+        subscribeButton.layer.cornerRadius = 25
+        subscribeButton.layer.borderWidth = 0 // 确保没有描边
+        subscribeButton.addTarget(self, action: #selector(subscribeTapped), for: .touchUpInside)
+        subscribeButton.translatesAutoresizingMaskIntoConstraints = false
+        bottomButtonsView.addSubview(subscribeButton)
+        
+        // 支付免责声明（直接放在订阅按钮下面）
+        let disclaimerLabel = UILabel()
+        disclaimerLabel.text = "paymentDisclaimer".localized
+        disclaimerLabel.textColor = UIColor.white.withAlphaComponent(0.6)
+        disclaimerLabel.font = .systemFont(ofSize: 10)
+        disclaimerLabel.textAlignment = .center
+        disclaimerLabel.numberOfLines = 0
+        disclaimerLabel.translatesAutoresizingMaskIntoConstraints = false
+        bottomButtonsView.addSubview(disclaimerLabel)
+        
+        // 底部链接容器（恢复购买 | 服务条款 | 隐私政策）
+        let linksContainer = UIView()
+        linksContainer.translatesAutoresizingMaskIntoConstraints = false
+        linksContainer.isUserInteractionEnabled = true // 确保容器可以接收触摸事件
+        bottomButtonsView.addSubview(linksContainer)
+        
+        // 恢复购买按钮（小字体）
+        let restoreLinkButton = UIButton(type: .system)
+        restoreLinkButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 先设置target，再设置Configuration
+        restoreLinkButton.addTarget(self, action: #selector(restoreTapped), for: .touchUpInside)
+        
+        // 使用现代方式增加按钮的点击区域
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.title = "restorePurchases".localized
+            config.baseForegroundColor = UIColor.white.withAlphaComponent(0.5)
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+            // 设置字体大小
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = .systemFont(ofSize: 12)
+                return outgoing
+            }
+            restoreLinkButton.configuration = config
+        } else {
+            restoreLinkButton.setTitle("restorePurchases".localized, for: .normal)
+            restoreLinkButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
+            restoreLinkButton.titleLabel?.font = .systemFont(ofSize: 12)
+            restoreLinkButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        }
+        linksContainer.addSubview(restoreLinkButton)
+        
+        // 分隔符1
+        let separator1 = UILabel()
+        separator1.text = "|"
+        separator1.textColor = UIColor.white.withAlphaComponent(0.3)
+        separator1.font = .systemFont(ofSize: 12) // 调整为12pt字体
+        separator1.translatesAutoresizingMaskIntoConstraints = false
+        linksContainer.addSubview(separator1)
+        
+        // 服务条款按钮
+        let termsButton = UIButton(type: .system)
+        termsButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 先设置target，再设置Configuration
+        termsButton.addTarget(self, action: #selector(termsTapped), for: .touchUpInside)
+        // 添加触摸反馈以测试按钮是否响应
+        termsButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
+        termsButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        
+        // 使用现代方式增加按钮的点击区域
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.title = "termsOfService".localized
+            config.baseForegroundColor = UIColor.white.withAlphaComponent(0.5)
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+            // 设置字体大小
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = .systemFont(ofSize: 12)
+                return outgoing
+            }
+            termsButton.configuration = config
+        } else {
+            termsButton.setTitle("termsOfService".localized, for: .normal)
+            termsButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
+            termsButton.titleLabel?.font = .systemFont(ofSize: 12)
+            termsButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        }
+        linksContainer.addSubview(termsButton)
+        
+        // 分隔符2
+        let separator2 = UILabel()
+        separator2.text = "|"
+        separator2.textColor = UIColor.white.withAlphaComponent(0.3)
+        separator2.font = .systemFont(ofSize: 12) // 调整为12pt字体
+        separator2.translatesAutoresizingMaskIntoConstraints = false
+        linksContainer.addSubview(separator2)
+        
+        // 隐私政策按钮
+        let privacyButton = UIButton(type: .system)
+        privacyButton.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 先设置target，再设置Configuration
+        privacyButton.addTarget(self, action: #selector(privacyTapped), for: .touchUpInside)
+        // 添加触摸反馈以测试按钮是否响应
+        privacyButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
+        privacyButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
+        
+        // 使用现代方式增加按钮的点击区域
+        if #available(iOS 15.0, *) {
+            var config = UIButton.Configuration.plain()
+            config.title = "privacyPolicy".localized
+            config.baseForegroundColor = UIColor.white.withAlphaComponent(0.5)
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
+            // 设置字体大小
+            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
+                var outgoing = incoming
+                outgoing.font = .systemFont(ofSize: 12)
+                return outgoing
+            }
+            privacyButton.configuration = config
+        } else {
+            privacyButton.setTitle("privacyPolicy".localized, for: .normal)
+            privacyButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
+            privacyButton.titleLabel?.font = .systemFont(ofSize: 12)
+            privacyButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
+        }
+        linksContainer.addSubview(privacyButton)
+        
+        NSLayoutConstraint.activate([
+            bottomButtonsView.topAnchor.constraint(equalTo: subscriptionOptionsView.bottomAnchor, constant: 20), // 减少间距，从30改为20
+            bottomButtonsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
+            bottomButtonsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
+            bottomButtonsView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30),
+            bottomButtonsView.heightAnchor.constraint(equalToConstant: 120), // 减少高度，因为移除了中间的恢复购买按钮
+            
+            subscribeButton.topAnchor.constraint(equalTo: bottomButtonsView.topAnchor),
+            subscribeButton.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
+            subscribeButton.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
+            subscribeButton.heightAnchor.constraint(equalToConstant: 50),
+            
+            // 免责声明直接放在订阅按钮下面
+            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 12),
+            disclaimerLabel.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
+            disclaimerLabel.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
+            
+            // 底部链接容器
+            linksContainer.topAnchor.constraint(equalTo: disclaimerLabel.bottomAnchor, constant: 12),
+            linksContainer.centerXAnchor.constraint(equalTo: bottomButtonsView.centerXAnchor),
+            linksContainer.heightAnchor.constraint(equalToConstant: 32), // 增加高度以提供更大的点击区域
+            
+            // 恢复购买按钮
+            restoreLinkButton.leadingAnchor.constraint(equalTo: linksContainer.leadingAnchor),
+            restoreLinkButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            
+            // 分隔符1
+            separator1.leadingAnchor.constraint(equalTo: restoreLinkButton.trailingAnchor, constant: 8),
+            separator1.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            
+            // 服务条款
+            termsButton.leadingAnchor.constraint(equalTo: separator1.trailingAnchor, constant: 8),
+            termsButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            
+            // 分隔符2
+            separator2.leadingAnchor.constraint(equalTo: termsButton.trailingAnchor, constant: 8),
+            separator2.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            
+            // 隐私政策
+            privacyButton.leadingAnchor.constraint(equalTo: separator2.trailingAnchor, constant: 8),
+            privacyButton.trailingAnchor.constraint(equalTo: linksContainer.trailingAnchor),
+            privacyButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor)
+        ])
+        
+        // 在布局完成后应用渐变
+        DispatchQueue.main.async {
+            self.applyGradientToSubscribeButton(subscribeButton)
+        }
+    }
+    
+    // 为订阅按钮应用渐变背景
+    private func applyGradientToSubscribeButton(_ button: UIButton) {
+        // 移除之前的渐变层
+        button.layer.sublayers?.removeAll { $0 is CAGradientLayer }
+        
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0).cgColor,  // 橙色
+            UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1.0).cgColor   // 粉色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0)
+        gradientLayer.frame = button.bounds
+        gradientLayer.cornerRadius = 25
+        
+        button.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
+    // MARK: - Actions
+    
+    @objc private func closeTapped() {
+        print("🔍 关闭订阅界面")
+        
+        // 强制清理所有可能的遮罩和定时器
+        vipManager.forceResetPurchaseState()
+        
+        // 移除所有遮罩视图（包括VIP预览遮罩）
+        view.subviews.forEach { subview in
+            if subview is VIPPreviewOverlayView {
+                subview.removeFromSuperview()
+            }
+        }
+        
+        // 移除自定义alert遮罩
+        if let overlayView = view.viewWithTag(999) {
+            overlayView.removeFromSuperview()
+        }
+        
+        // 确保导航栏显示
+        navigationController?.setNavigationBarHidden(false, animated: false)
+        
+        // 关闭当前视图控制器
+        dismiss(animated: true) {
+            print("🔍 订阅界面已关闭")
+        }
+    }
+    
+    @objc private func subscriptionOptionTapped(_ sender: UIButton) {
+        // 更新选中状态
+        selectedSubscriptionIndex = sender.tag
+        
+        for (index, button) in subscriptionButtons.enumerated() {
+            let isSelected = index == selectedSubscriptionIndex
+            button.backgroundColor = isSelected ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.6) : UIColor(white: 0.1, alpha: 0.6) // 改为0.6透明度
+            button.layer.borderWidth = isSelected ? 2 : 1
+            
+            // 使用渐变边框颜色
+            if isSelected {
+                button.layer.borderColor = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0).cgColor // 橙色边框
+            } else {
+                button.layer.borderColor = UIColor(white: 0.5, alpha: 0.8).cgColor // 改为灰调边框，从紫色改为灰色
+            }
+        }
+    }
+    
+    @objc private func subscribeTapped() {
+        print("🔍 订阅按钮被点击，选择的索引: \(selectedSubscriptionIndex)")
+        
+        // 检查当前loading状态
+        if vipManager.isLoading {
+            print("⚠️ 当前正在处理其他购买操作，忽略订阅请求")
+            showAlert(title: "tip".localized, message: "请等待当前操作完成")
+            return
+        }
+        
+        // 如果选择的是周订阅且用户是免费用户，开始免费试用
+        if selectedSubscriptionIndex == 0 && !vipManager.isVIP() {
+            print("🔍 开始免费试用")
+            vipManager.startFreeTrial()
+            showSuccessAlert(message: "freeTrialStarted".localized, shouldDismiss: true)
+        } else {
+            // 其他情况进行购买
+            guard selectedSubscriptionIndex < vipManager.products.count else { 
+                print("⚠️ 产品列表未加载完成")
+                showAlert(title: "tip".localized, message: "loadingProducts".localized)
+                return 
+            }
+            let product = vipManager.products[selectedSubscriptionIndex]
+            print("🔍 开始购买产品: \(product.productIdentifier)")
+            vipManager.purchase(product: product)
+        }
+    }
+    
+    @objc private func restoreTapped() {
+        print("🔍 恢复购买按钮被点击")
+        
+        // 检查当前loading状态
+        if vipManager.isLoading {
+            print("⚠️ 当前正在处理其他购买操作，忽略恢复购买请求")
+            showAlert(title: "tip".localized, message: "请等待当前操作完成")
+            return
+        }
+        
+        // 显示加载状态，但不立即显示alert
+        print("🔍 开始恢复购买操作")
+        vipManager.restorePurchases()
+        print("🔍 已调用恢复购买方法")
+        // 移除立即显示的alert，等待恢复结果
+    }
+    
+    @objc private func buttonTouchDown(_ sender: UIButton) {
+        print("🔍 Button touch down: \(sender.titleLabel?.text ?? "unknown")")
+        sender.alpha = 0.5
+    }
+    
+    @objc private func buttonTouchUp(_ sender: UIButton) {
+        print("🔍 Button touch up: \(sender.titleLabel?.text ?? "unknown")")
+        sender.alpha = 1.0
+    }
+    
+    @objc private func termsTapped() {
+        print("🔍 Terms button tapped - method called")
+        print("🔍 Current view controller: \(self)")
+        print("🔍 View controller is presented: \(self.isBeingPresented)")
+        showDetailedAlert(title: "termsOfService".localized, message: "termsContent".localized)
+    }
+    
+    @objc private func privacyTapped() {
+        print("🔍 Privacy button tapped - method called")
+        print("🔍 Current view controller: \(self)")
+        print("🔍 View controller is presented: \(self.isBeingPresented)")
+        showDetailedAlert(title: "privacyPolicy".localized, message: "privacyContent".localized)
+    }
+    
+    private func showDetailedAlert(title: String, message: String) {
+        print("🔍 showDetailedAlert called with title: \(title)")
+        print("🔍 Message length: \(message.count)")
+        print("🔍 Message preview: \(String(message.prefix(100)))...")
+        
+        // 隐藏导航栏以避免左上角按钮显示
+        navigationController?.setNavigationBarHidden(true, animated: false)
+        
+        // 创建完全全屏弹窗视图
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor.systemBackground // 改为系统背景色，完全覆盖
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 添加暗紫色到黑色的上下渐变背景
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 0.2, green: 0.1, blue: 0.3, alpha: 1.0).cgColor,  // 暗紫色
+            UIColor.black.cgColor  // 黑色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)  // 从上开始
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)    // 到下结束
+        gradientLayer.frame = view.bounds
+        overlayView.layer.insertSublayer(gradientLayer, at: 0)
+        
+        // 状态栏区域标题 - 移动到更高位置
+        let titleLabel = UILabel()
+        titleLabel.text = title
+        titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold) // 增加2px字体大小
+        titleLabel.textColor = UIColor.label
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 0
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 只保留右上角关闭按钮
+        let closeButton = UIButton(type: .system)
+        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+        closeButton.tintColor = UIColor.label
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.addTarget(self, action: #selector(dismissCustomAlert), for: .touchUpInside)
+        
+        // 内容滚动视图
+        let scrollView = UIScrollView()
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.showsVerticalScrollIndicator = true
+        
+        // 内容标签 - 改进样式
+        let messageLabel = UILabel()
+        messageLabel.text = formatContentText(message)
+        messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
+        messageLabel.textColor = UIColor.label
+        messageLabel.numberOfLines = 0
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 设置行间距为1.4倍
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 16 * 0.4 // 1.4倍行间距
+        
+        let attributedText = NSMutableAttributedString(string: formatContentText(message))
+        attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributedText.length))
+        
+        // 为小标题（如"1. 接受条款"）设置加粗和增大字号
+        formatSubtitles(in: attributedText)
+        
+        messageLabel.attributedText = attributedText
+        
+        // 添加视图层次
+        view.addSubview(overlayView)
+        overlayView.addSubview(titleLabel)
+        overlayView.addSubview(closeButton)
+        overlayView.addSubview(scrollView)
+        scrollView.addSubview(messageLabel)
+        
+        // 设置约束 - 完全全屏布局，标题位置更高
+        NSLayoutConstraint.activate([
+            // 覆盖层完全全屏，包括状态栏
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            // 标题移动到更高位置 - 距离顶部60px（包含状态栏）
+            titleLabel.topAnchor.constraint(equalTo: overlayView.topAnchor, constant: 60),
+            titleLabel.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
+            titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: overlayView.leadingAnchor, constant: 60),
+            titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: overlayView.trailingAnchor, constant: -60),
+            
+            // 右上角关闭按钮 - 与标题同一水平线
+            closeButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
+            closeButton.trailingAnchor.constraint(equalTo: overlayView.trailingAnchor, constant: -20),
+            closeButton.widthAnchor.constraint(equalToConstant: 30),
+            closeButton.heightAnchor.constraint(equalToConstant: 30),
+            
+            // 滚动视图从标题下方开始，到底部结束
+            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
+            scrollView.leadingAnchor.constraint(equalTo: overlayView.leadingAnchor),
+            scrollView.trailingAnchor.constraint(equalTo: overlayView.trailingAnchor),
+            scrollView.bottomAnchor.constraint(equalTo: overlayView.bottomAnchor), // 直接到底部，不留空间给按钮
+            
+            // 内容标签
+            messageLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 20),
+            messageLabel.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 24),
+            messageLabel.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -24),
+            messageLabel.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -20),
+            messageLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -48)
+        ])
+        
+        // 存储引用以便关闭
+        overlayView.tag = 999
+        
+        // 动画显示
+        overlayView.alpha = 0
+        overlayView.transform = CGAffineTransform(translationX: 0, y: view.bounds.height)
+        
+        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [], animations: {
+            overlayView.alpha = 1
+            overlayView.transform = .identity
+        }) { _ in
+            print("🔍 Full-screen custom alert presented successfully")
+        }
+    }
+    
+    // 格式化内容文本
+    private func formatContentText(_ text: String) -> String {
+        return text
+    }
+    
+    // 为小标题设置加粗和增大字号
+    private func formatSubtitles(in attributedText: NSMutableAttributedString) {
+        let text = attributedText.string
+        let pattern = #"^\d+\.\s*[^\n]+"# // 匹配 "数字. 标题" 格式
+        
+        do {
+            let regex = try NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines])
+            let matches = regex.matches(in: text, options: [], range: NSRange(location: 0, length: text.count))
+            
+            for match in matches {
+                // 为小标题设置加粗字体和增大字号（+2px）
+                attributedText.addAttribute(.font, 
+                                          value: UIFont.systemFont(ofSize: 18, weight: .bold), 
+                                          range: match.range)
+                attributedText.addAttribute(.foregroundColor, 
+                                          value: UIColor.label, 
+                                          range: match.range)
+            }
+        } catch {
+            print("Regex error: \(error)")
+        }
+    }
+    
+    // 为按钮应用渐变背景
+    private func applyGradientToButton(_ button: UIButton) {
+        // 移除之前的渐变层
+        button.layer.sublayers?.removeAll { $0 is CAGradientLayer }
+        
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0).cgColor,  // 橙色
+            UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1.0).cgColor   // 粉色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0)
+        gradientLayer.frame = button.bounds
+        gradientLayer.cornerRadius = 12
+        
+        button.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
+    @objc private func dismissCustomAlert() {
+        if let overlayView = view.viewWithTag(999) {
+            UIView.animate(withDuration: 0.2, animations: {
+                overlayView.alpha = 0
+            }) { _ in
+                overlayView.removeFromSuperview()
+                // 恢复导航栏显示
+                self.navigationController?.setNavigationBarHidden(false, animated: true)
+                print("🔍 Custom alert dismissed")
+            }
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func showAlert(title: String, message: String) {
+        // 确保在主线程执行，并检查当前是否已有模态视图
+        DispatchQueue.main.async {
+            // 如果当前已经有模态视图在显示，先关闭它（关闭alert，不是整个view controller）
+            if let presentedAlert = self.presentedViewController {
+                presentedAlert.dismiss(animated: false) {
+                    self.presentAlertSafely(title: title, message: message)
+                }
+            } else {
+                self.presentAlertSafely(title: title, message: message)
+            }
+        }
+    }
+    
+    private func presentAlertSafely(title: String, message: String) {
+        let alert = UIAlertController(title: title, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "confirm".localized, style: .default))
+        present(alert, animated: true)
+    }
+    
+    private func showSuccessAlert(message: String, shouldDismiss: Bool = true) {
+        // 确保在主线程执行，并检查当前是否已有模态视图
+        DispatchQueue.main.async {
+            // 如果当前已经有模态视图在显示，先关闭它（关闭alert，不是整个view controller）
+            if let presentedAlert = self.presentedViewController {
+                presentedAlert.dismiss(animated: false) {
+                    self.presentSuccessAlertSafely(message: message, shouldDismiss: shouldDismiss)
+                }
+            } else {
+                self.presentSuccessAlertSafely(message: message, shouldDismiss: shouldDismiss)
+            }
+        }
+    }
+    
+    private func presentSuccessAlertSafely(message: String, shouldDismiss: Bool) {
+        let alert = UIAlertController(title: "success".localized, message: message, preferredStyle: .alert)
+        alert.addAction(UIAlertAction(title: "confirm".localized, style: .default) { _ in
+            if shouldDismiss {
+                self.dismiss(animated: true)
+            }
+        })
+        present(alert, animated: true)
+    }
+}
+
+// MARK: - StoreKit Extensions
+extension VIPManager: SKProductsRequestDelegate {
+    func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
+        DispatchQueue.main.async {
+            // 按价格排序：周 < 月 < 年
+            self.products = response.products.sorted { product1, product2 in
+                let order: [String] = [
+                    ProductID.weekly.rawValue,
+                    ProductID.monthly.rawValue,
+                    ProductID.yearly.rawValue
+                ]
+                
+                let index1 = order.firstIndex(of: product1.productIdentifier) ?? 0
+                let index2 = order.firstIndex(of: product2.productIdentifier) ?? 0
+                
+                return index1 < index2
+            }
+            
+            print("成功加载 \(self.products.count) 个产品")
+            
+            // 发送产品加载完成通知
+            NotificationCenter.default.post(name: NSNotification.Name("ProductsDidLoad"), object: self)
+        }
+    }
+    
+    func request(_ request: SKRequest, didFailWithError error: Error) {
+        DispatchQueue.main.async {
+            self.handleFailedPurchase(error: error)
+        }
+        print("产品请求失败: \(error.localizedDescription)")
+    }
+}
+
+extension VIPManager: SKPaymentTransactionObserver {
+    func paymentQueue(_ queue: SKPaymentQueue, updatedTransactions transactions: [SKPaymentTransaction]) {
+        print("🔍 收到 \(transactions.count) 个交易更新")
+        
+        for transaction in transactions {
+            print("🔍 处理交易: \(transaction.payment.productIdentifier), 状态: \(transaction.transactionState.rawValue)")
+            
+            switch transaction.transactionState {
+            case .purchased:
+                handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                SKPaymentQueue.default().finishTransaction(transaction)
+            case .restored:
+                handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                SKPaymentQueue.default().finishTransaction(transaction)
+            case .failed:
+                if let error = transaction.error as? SKError {
+                    if error.code != .paymentCancelled {
+                        handleFailedPurchase(error: error)
+                    } else {
+                        // 用户取消购买 - 确保重置loading状态并发送通知
+                        DispatchQueue.main.async {
+                            self.isLoading = false
+                            // 发送取消通知，让UI知道操作已完成
+                            NotificationCenter.default.post(
+                                name: VIPManager.purchaseDidFailNotification,
+                                object: self,
+                                userInfo: ["error": "用户取消了购买", "cancelled": true]
+                            )
+                        }
+                        print("用户取消了购买")
+                    }
+                } else {
+                    handleFailedPurchase(error: transaction.error)
+                }
+                SKPaymentQueue.default().finishTransaction(transaction)
+            case .deferred:
+                print("购买被延迟，等待批准")
+            case .purchasing:
+                print("正在购买...")
+            @unknown default:
+                print("未知的交易状态")
+                break
+            }
+        }
+    }
+    
+    func paymentQueueRestoreCompletedTransactionsFinished(_ queue: SKPaymentQueue) {
+        print("🔍 恢复购买完成回调被调用")
+        DispatchQueue.main.async {
+            // 清理定时器
+            self.restoreTimer?.invalidate()
+            self.restoreTimer = nil
+            
+            print("🔍 设置 isLoading = false")
+            self.isLoading = false
+            self.loadVIPStatus()
+            
+            // 检查是否有恢复的交易
+            let restoredTransactions = queue.transactions.filter { $0.transactionState == .restored }
+            print("🔍 恢复的交易数量: \(restoredTransactions.count)")
+            
+            if restoredTransactions.isEmpty {
+                print("🔍 没有可恢复的购买，发送失败通知")
+                // 没有可恢复的购买
+                NotificationCenter.default.post(
+                    name: VIPManager.purchaseDidFailNotification, 
+                    object: self, 
+                    userInfo: ["error": "noRestorablePurchases".localized]
+                )
+            } else {
+                print("🔍 有可恢复的购买，发送成功通知")
+                // 发送恢复成功通知
+                NotificationCenter.default.post(
+                    name: VIPManager.purchaseDidCompleteNotification, 
+                    object: self, 
+                    userInfo: ["restored": true]
+                )
+            }
+            
+            print("🔍 恢复购买完成，恢复了 \(restoredTransactions.count) 个交易")
+        }
+    }
+    
+    func paymentQueue(_ queue: SKPaymentQueue, restoreCompletedTransactionsFailedWithError error: Error) {
+        print("🔍 恢复购买失败回调被调用: \(error.localizedDescription)")
+        DispatchQueue.main.async {
+            // 清理定时器
+            self.restoreTimer?.invalidate()
+            self.restoreTimer = nil
+            
+            self.handleFailedPurchase(error: error)
+        }
+        print("恢复购买失败: \(error.localizedDescription)")
+    }
+}
 
 // 禁用点击动画的自定义 SegmentedControl
 class NoAnimationSegmentedControl: UISegmentedControl {
@@ -1300,6 +3152,9 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         cell.onItemTapped = { [weak self] item in
             self?.handleItemTap(item)
         }
+        cell.onVIPSubscriptionNeeded = { [weak self] in
+            self?.showVIPSubscription()
+        }
         return cell
     }
     
@@ -1420,6 +3275,12 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     private func handleItemTap(_ item: LEDItem) {
+        // 检查是否需要VIP且用户不是VIP
+        if item.isVIPRequired && !VIPManager.shared.isVIP() {
+            showVIPPreview(for: item)
+            return
+        }
+        
         // 特殊效果直接跳转
         if item.isHeartGrid {
             // 爱心格子：跳转到爱心格子全屏预览
@@ -1472,6 +3333,60 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             present(displayVC, animated: true)
         }
     }
+    
+    private func showVIPPreview(for item: LEDItem) {
+        // 先进入全屏预览
+        AppDelegate.orientationLock = .landscape
+        let displayVC = LEDFullScreenViewController(ledItem: item)
+        displayVC.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+        
+        present(displayVC, animated: true) {
+            // 预览页面显示后，添加VIP遮罩
+            let overlayView = VIPPreviewOverlayView()
+            overlayView.tag = 999 // 添加tag便于识别和移除
+            overlayView.onExitTapped = {
+                overlayView.hide {
+                    displayVC.dismiss(animated: true)
+                }
+            }
+            overlayView.onBecomeMemberTapped = {
+                overlayView.hide {
+                    displayVC.dismiss(animated: true) {
+                        self.showVIPSubscription()
+                    }
+                }
+            }
+            overlayView.show(in: displayVC.view)
+        }
+    }
+    
+    private func showVIPSubscription() {
+        // 确保在主线程执行，并清理可能存在的遮罩视图
+        DispatchQueue.main.async {
+            // 移除所有可能的遮罩视图
+            self.view.subviews.forEach { subview in
+                if subview is VIPPreviewOverlayView {
+                    subview.removeFromSuperview()
+                }
+            }
+            
+            // 如果当前有模态视图，先关闭
+            if self.presentedViewController != nil {
+                self.dismiss(animated: false) {
+                    self.presentVIPSubscriptionSafely()
+                }
+            } else {
+                self.presentVIPSubscriptionSafely()
+            }
+        }
+    }
+    
+    private func presentVIPSubscriptionSafely() {
+        let vipVC = VIPSubscriptionViewController()
+        let nav = UINavigationController(rootViewController: vipVC)
+        nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+        present(nav, animated: true)
+    }
 }
 
 // MARK: - 模版分类Cell
@@ -1481,6 +3396,7 @@ class TemplateCategoryCell: UITableViewCell {
     private var items: [LEDItem] = []
     private var currentTab: TemplateTab = .popular
     var onItemTapped: ((LEDItem) -> Void)?
+    var onVIPSubscriptionNeeded: (() -> Void)?
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
@@ -1546,7 +3462,8 @@ class TemplateCategoryCell: UITableViewCell {
                 fontSize: 80,
                 textColor: "#FF3366",
                 backgroundColor: "#1a1a2e",
-                glowIntensity: 5.0
+                glowIntensity: 5.0,
+                isVIPRequired: true // 需要VIP
             )
             // 标记为特殊的爱心格子动画
             heartGridItem.isHeartGrid = true
@@ -1559,7 +3476,8 @@ class TemplateCategoryCell: UITableViewCell {
                 fontSize: 80,
                 textColor: "#FF3366",
                 backgroundColor: "#1a1a2e",
-                glowIntensity: 5.0
+                glowIntensity: 5.0,
+                isVIPRequired: true // 需要VIP
             )
             // 标记为特殊的I LOVE U动画
             iLoveUItem.isILoveU = true
@@ -1572,24 +3490,28 @@ class TemplateCategoryCell: UITableViewCell {
                 fontSize: 80,
                 textColor: "#FF3366",
                 backgroundColor: "#1a1a2e",
-                glowIntensity: 5.0
+                glowIntensity: 5.0,
+                isVIPRequired: true // 需要VIP
             )
             // 标记为特殊的520动画
             item520.is520 = true
             items.append(item520)
             
             // 爱心雨
-            if let loveRainItem = allItems.first(where: { $0.isLoveRain }) {
+            if var loveRainItem = allItems.first(where: { $0.isLoveRain }) {
+                loveRainItem.isVIPRequired = true // 需要VIP
                 items.append(loveRainItem)
             }
             
             // 烟花
-            if let fireworksItem = allItems.first(where: { $0.isFireworks }) {
+            if var fireworksItem = allItems.first(where: { $0.isFireworks }) {
+                fireworksItem.isVIPRequired = true // 需要VIP
                 items.append(fireworksItem)
             }
             
             // 烟花绽放
-            if let fireworksBloomItem = allItems.first(where: { $0.isFireworksBloom }) {
+            if var fireworksBloomItem = allItems.first(where: { $0.isFireworksBloom }) {
+                fireworksBloomItem.isVIPRequired = true // 需要VIP
                 items.append(fireworksBloomItem)
             }
             
@@ -1668,6 +3590,23 @@ class TemplateCategoryCell: UITableViewCell {
         for i in 1...count {
             let text = i <= texts.count ? texts[i - 1] : "TEXT \(i)"
             let imageName = "\(category)_\(i)" // 例如：neon_1, idol_2, led_3
+            
+            // 根据需求设置VIP标识
+            var isVIPRequired = false
+            switch category {
+            case "neon":
+                // 霓虹灯屏幕模块的第1、2、3个需要VIP
+                isVIPRequired = (i <= 3)
+            case "idol":
+                // 偶像屏幕模块的第1、2个需要VIP
+                isVIPRequired = (i <= 2)
+            case "led":
+                // LED屏幕的全部卡片需要VIP
+                isVIPRequired = true
+            default:
+                isVIPRequired = false
+            }
+            
             let item = LEDItem(
                 id: "\(category)-\(i)",
                 text: text,
@@ -1678,7 +3617,8 @@ class TemplateCategoryCell: UITableViewCell {
                 glowIntensity: 3.0,
                 scrollType: scrollType,
                 speed: speed,
-                fontName: "PingFangSC-Semibold" // 设置为粗体字体
+                fontName: "PingFangSC-Semibold", // 设置为粗体字体
+                isVIPRequired: isVIPRequired
             )
             items.append(item)
         }
@@ -1701,6 +3641,12 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
         if currentTab == .popular {
             // 热门模版：只有试用按钮
             cell.onTryTapped = { [weak self] item in
+                // 检查是否需要VIP且用户不是VIP
+                if item.isVIPRequired && !VIPManager.shared.isVIP() {
+                    self?.onVIPSubscriptionNeeded?()
+                    return
+                }
+                
                 // 试用：进入编辑页面
                 guard let self = self else { return }
                 if let parentVC = self.parentViewController as? TemplateSquareViewController {
@@ -1751,6 +3697,7 @@ class TemplateItemCell: UICollectionViewCell {
     private let buttonStack = UIStackView() // 按钮容器
     private let tryButton = UIButton(type: .system) // 试用按钮
     private let previewButton = UIButton(type: .system) // 预览按钮
+    private let vipBadgeView = VIPBadgeView() // VIP标签
     private var currentItem: LEDItem?
     var onTryTapped: ((LEDItem) -> Void)?
     var onPreviewTapped: ((LEDItem) -> Void)?
@@ -1843,6 +3790,11 @@ class TemplateItemCell: UICollectionViewCell {
         previewButton.addTarget(self, action: #selector(previewButtonTapped), for: .touchUpInside)
         buttonStack.addArrangedSubview(previewButton)
         
+        // VIP标签（右上角）
+        vipBadgeView.translatesAutoresizingMaskIntoConstraints = false
+        vipBadgeView.isHidden = true // 默认隐藏
+        containerView.addSubview(vipBadgeView)
+        
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -1868,7 +3820,11 @@ class TemplateItemCell: UICollectionViewCell {
             buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
             buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -40),
             buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -18),
-            buttonStack.heightAnchor.constraint(equalToConstant: 14) // 高度14px
+            buttonStack.heightAnchor.constraint(equalToConstant: 14), // 高度14px
+            
+            // VIP标签约束
+            vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8)
         ])
     }
     
@@ -2128,6 +4084,14 @@ class TemplateItemCell: UICollectionViewCell {
                 imageView.image = nil
                 imageView.backgroundColor = UIColor(hex: item.backgroundColor)
             }
+        }
+        
+        // 显示或隐藏VIP标签
+        vipBadgeView.isHidden = !item.isVIPRequired
+        if item.isVIPRequired {
+            vipBadgeView.startShimmering()
+        } else {
+            vipBadgeView.stopShimmering()
         }
     }
 }

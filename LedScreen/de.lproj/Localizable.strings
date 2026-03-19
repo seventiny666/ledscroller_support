@@ -33,6 +33,15 @@
 "share" = "Teilen";
 "restorePurchase" = "Kauf Wiederherstellen";
 
+/* VIP Status Messages */
+"vipMember" = "VIP-Mitglied";
+"vipStatusFree" = "VIP Jetzt Aktivieren";
+"vipStatusTrial" = "Testversion: %d Tage verbleibend";
+"vipStatusSubscribed" = "Mein VIP: %d Tage verbleibend";
+"vipStatusLifetime" = "Mein VIP: Lebenslange Mitgliedschaft";
+"vipButtonFree" = "VIP Jetzt Aktivieren";
+"vipButtonManage" = "Abonnement Verwalten";
+
 /* Messages */
 "saved" = "Neue Seite in Meine Kreationen gespeichert";
 "deleted" = "Erfolgreich gelöscht";
@@ -101,12 +110,38 @@
 "fireworks" = "Feuerwerk";
 
 /* My Creations */
+"noLedScreenHere" = "Kein LED-Bildschirm hier";
 "createFirstLED" = "Beginnen Sie mit der Erstellung Ihres ersten LED-Bildschirms";
 "createLED" = "LED Erstellen";
 "confirmDelete" = "Löschen Bestätigen";
 "confirmDeleteMessage" = "Sind Sie sicher, dass Sie diesen LED-Bildschirm löschen möchten?";
 "addSuccess" = "Erfolgreich hinzugefügt!";
 "updateSuccess" = "Aktualisierung erfolgreich gespeichert!";
+
+/* VIP Subscription */
+"startFreeTrial" = "Kostenlose Testversion starten";
+"restorePurchases" = "Käufe wiederherstellen";
+"paymentDisclaimer" = "Die Zahlung wird bei Kaufbestätigung Ihrem iTunes-Konto belastet. Das Abonnement verlängert sich automatisch, es sei denn, es wird mindestens 24 Stunden vor Ende der aktuellen Periode gekündigt.";
+"termsOfService" = "Nutzungsbedingungen";
+"privacyPolicy" = "Datenschutzrichtlinie";
+"success" = "Erfolg";
+"purchaseSuccess" = "Kauf erfolgreich! Vielen Dank für Ihre Unterstützung.";
+"restoreSuccess" = "Kaufhistorie erfolgreich wiederhergestellt!";
+"purchaseFailed" = "Kauf fehlgeschlagen";
+"purchaseFailedMessage" = "Bitte versuchen Sie es später erneut";
+"restoreInProgress" = "Kaufhistorie wird wiederhergestellt...";
+"noRestorablePurchases" = "Keine wiederherstellbaren Käufe gefunden";
+"freeTrialStarted" = "Kostenlose Testversion gestartet! Sie können 3 Tage lang VIP-Funktionen nutzen.";
+"termsMessage" = "Vielen Dank für die Nutzung unserer App. Detaillierte Nutzungsbedingungen finden Sie auf unserer offiziellen Website.";
+"privacyMessage" = "Wir schätzen Ihre Privatsphäre. Detaillierte Datenschutzrichtlinien finden Sie auf unserer offiziellen Website.";
+"loadingProducts" = "Abonnementoptionen werden geladen, bitte versuchen Sie es später erneut";
+"termsContent" = "Nutzungsbedingungen\n\n1. Annahme der Bedingungen\nDurch das Herunterladen, Installieren oder Verwenden dieser Anwendung stimmen Sie diesen Nutzungsbedingungen zu.\n\n2. Anwendungsnutzung\nDiese Anwendung ist nur für den persönlichen, nicht-kommerziellen Gebrauch bestimmt.\n\n3. Abonnement-Services\n• VIP-Abonnement bietet Zugang zu Premium-Funktionen\n• Abonnementgebühren werden bei Kaufbestätigung von Ihrem iTunes-Konto abgebucht\n• Abonnements verlängern sich automatisch, es sei denn, die automatische Verlängerung wird mindestens 24 Stunden vor Ende der aktuellen Periode deaktiviert\n\n4. Geistiges Eigentum\nDiese Anwendung und ihr Inhalt sind urheberrechtlich geschützt.\n\n5. Haftungsausschluss\nDiese Anwendung wird ohne Gewährleistung bereitgestellt.\n\n6. Kontakt\nBei Fragen kontaktieren Sie uns: 784430005@qq.com";
+"privacyContent" = "Datenschutzrichtlinie\n\n1. Informationssammlung\nWir können folgende Informationen sammeln:\n• Geräteinformationen\n• App-Nutzungsstatistiken\n• Absturzberichte\n\n2. Informationsnutzung\nGesammelte Informationen werden verwendet für:\n• Verbesserung der App-Leistung\n• Technischen Support\n• Analyse von Nutzungsmustern\n\n3. Informationsfreigabe\nWir verkaufen oder übertragen Ihre persönlichen Informationen nicht an Dritte, außer wenn gesetzlich erforderlich.\n\n4. Datensicherheit\nWir implementieren angemessene Sicherheitsmaßnahmen zum Schutz Ihrer Informationen.\n\n5. Kontakt\nBei datenschutzbezogenen Fragen kontaktieren Sie: 784430005@qq.com";
+"subscriptionMember" = "Abonnement-Mitglied";
+"weeklyMember" = "Wöchentliches Mitglied";
+"monthlyMember" = "Monatliches Mitglied";
+"yearlyMember" = "Jährliches Mitglied";
+"lifetimeMember" = "Lebenslange Mitgliedschaft";
 
 /* Language Confirmation */
 "selectLanguage" = "Sprache wählen";
@@ -122,3 +157,7 @@
 "veryFast" = "Sehr Schnell";
 "superFast" = "Super Schnell";
 "ultraFast" = "Ultra Schnell";
+/* VIP Content Popup */
+"vipContentSelected" = "Sie haben Premium-Komponenten ausgewählt";
+"vipBenefitsMessage" = "Werden Sie Abonnent, um alle Vorteile freizuschalten, jederzeit kündbar falls nicht benötigt";
+"becomeVip" = "VIP werden";

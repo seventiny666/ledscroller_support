@@ -33,6 +33,15 @@
 "share" = "Condividi";
 "restorePurchase" = "Ripristina Acquisto";
 
+/* VIP Status Messages */
+"vipMember" = "Membro VIP";
+"vipStatusFree" = "Attiva VIP Ora";
+"vipStatusTrial" = "Prova: %d giorni rimanenti";
+"vipStatusSubscribed" = "Il Mio VIP: %d giorni rimanenti";
+"vipStatusLifetime" = "Il Mio VIP: Membro a Vita";
+"vipButtonFree" = "Attiva VIP Ora";
+"vipButtonManage" = "Gestisci Abbonamento";
+
 /* Messages */
 "saved" = "Nuova pagina salvata in Le Mie Creazioni";
 "deleted" = "Eliminato con successo";
@@ -101,12 +110,38 @@
 "fireworks" = "Fuochi d'Artificio";
 
 /* My Creations */
+"noLedScreenHere" = "Nessuno schermo LED qui";
 "createFirstLED" = "Inizia a creare il tuo primo schermo LED";
 "createLED" = "Crea LED";
 "confirmDelete" = "Conferma Eliminazione";
 "confirmDeleteMessage" = "Sei sicuro di voler eliminare questo schermo LED?";
 "addSuccess" = "Aggiunto con successo!";
 "updateSuccess" = "Aggiornamento salvato con successo!";
+
+/* VIP Subscription */
+"startFreeTrial" = "Inizia Prova Gratuita";
+"restorePurchases" = "Ripristina Acquisti";
+"paymentDisclaimer" = "Il pagamento verrà addebitato sul tuo account iTunes alla conferma dell'acquisto. L'abbonamento si rinnova automaticamente a meno che non venga annullato almeno 24 ore prima della fine del periodo corrente.";
+"termsOfService" = "Termini di Servizio";
+"privacyPolicy" = "Informativa sulla Privacy";
+"success" = "Successo";
+"purchaseSuccess" = "Acquisto riuscito! Grazie per il vostro supporto.";
+"restoreSuccess" = "Cronologia acquisti ripristinata con successo!";
+"purchaseFailed" = "Acquisto fallito";
+"purchaseFailedMessage" = "Riprova più tardi";
+"restoreInProgress" = "Ripristino della cronologia acquisti...";
+"noRestorablePurchases" = "Nessun acquisto ripristinabile trovato";
+"freeTrialStarted" = "Prova gratuita iniziata! Puoi godere delle funzionalità VIP per 3 giorni.";
+"termsMessage" = "Grazie per aver utilizzato la nostra app. Per i termini di servizio dettagliati, visita il nostro sito web ufficiale.";
+"privacyMessage" = "Apprezziamo la tua privacy. Per l'informativa sulla privacy dettagliata, visita il nostro sito web ufficiale.";
+"loadingProducts" = "Caricamento opzioni abbonamento, riprova più tardi";
+"termsContent" = "Termini di Servizio\n\nAccettando questi termini, accetti di utilizzare questa applicazione solo per scopi personali e non commerciali. L'abbonamento VIP fornisce accesso alle funzionalità premium e si rinnova automaticamente. Per domande, contatta: 784430005@qq.com";
+"privacyContent" = "Informativa sulla Privacy\n\nRaccogliamo informazioni sul dispositivo e statistiche di utilizzo per migliorare l'app. Non condividiamo le tue informazioni personali con terze parti senza il tuo consenso. Per domande sulla privacy, contatta: 784430005@qq.com";
+"subscriptionMember" = "Membro Abbonamento";
+"weeklyMember" = "Membro Settimanale";
+"monthlyMember" = "Membro Mensile";
+"yearlyMember" = "Membro Annuale";
+"lifetimeMember" = "Membro a Vita";
 
 /* Language Confirmation */
 "selectLanguage" = "Seleziona lingua";
@@ -122,3 +157,7 @@
 "veryFast" = "Molto Veloce";
 "superFast" = "Super Veloce";
 "ultraFast" = "Ultra Veloce";
+/* VIP Content Popup */
+"vipContentSelected" = "Hai selezionato componenti premium";
+"vipBenefitsMessage" = "Diventa abbonato per sbloccare tutti i vantaggi, annulla in qualsiasi momento se non necessario";
+"becomeVip" = "Diventa VIP";

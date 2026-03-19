@@ -32,6 +32,63 @@
 "share" = "Share";
 "restorePurchase" = "Restore Purchase";
 
+/* VIP Subscription */
+"vipTitle" = "Unlock VIP Membership";
+"vipSubtitle" = "Enjoy all premium features and content";
+"vipFeature1" = "Unlock all premium templates";
+"vipFeature2" = "Exclusive neon effects";
+"vipFeature3" = "Idol support templates";
+"vipFeature4" = "Advanced border styles";
+"vipFeature5" = "Priority access to new features";
+"vipFeature6" = "Unlimited creative content";
+"subscriptionOptions" = "Choose Subscription Plan";
+"weeklySubscription" = "Weekly";
+"monthlySubscription" = "Monthly";
+"yearlySubscription" = "Yearly";
+"lifetimeSubscription" = "Lifetime";
+"freeTrial" = "3-day free trial";
+"mostPopular" = "Most Popular";
+
+/* VIP Content Popup */
+"vipContentSelected" = "You selected premium components";
+"vipBenefitsMessage" = "Become a subscriber to unlock all benefits, cancel anytime if not needed";
+"becomeVip" = "Become VIP";
+"save67Percent" = "Save 67%";
+"save76Percent" = "Save 76%";
+"oneTimePurchase" = "One-time purchase, lifetime access";
+"startFreeTrial" = "Start Free Trial";
+"restorePurchases" = "Restore Purchases";
+"paymentDisclaimer" = "Payment will be charged to your iTunes account at confirmation of purchase. Subscription automatically renews unless canceled at least 24 hours before the end of the current period.";
+"termsOfService" = "Terms of Service";
+"privacyPolicy" = "Privacy Policy";
+"success" = "Success";
+"purchaseSuccess" = "Purchase successful! Thank you for your support.";
+"termsContent" = "Terms of Service\n\n1. Acceptance of Terms\nBy downloading, installing, or using this application, you agree to be bound by these Terms of Service.\n\n2. Application Use\nThis application is for personal, non-commercial use only. You may not use this application for any illegal or unauthorized purpose.\n\n3. Subscription Services\n• VIP subscription provides access to premium features\n• Subscription fees will be charged to your iTunes account upon confirmation of purchase\n• Subscriptions automatically renew unless auto-renewal is turned off at least 24 hours before the end of the current period\n• You can manage subscriptions in your iTunes account settings\n\n4. Intellectual Property\nThis application and its content are protected by copyright law. No copying, modification, or distribution without permission.\n\n5. Disclaimer\nThis application is provided 'as is' without any express or implied warranties.\n\n6. Contact Us\nFor questions, please contact: 784430005@qq.com";
+"privacyContent" = "Privacy Policy\n\n1. Information Collection\nWe may collect the following information:\n• Device information (model, OS version)\n• App usage statistics\n• Crash reports\n\n2. Information Use\nCollected information is used to:\n• Improve app performance\n• Provide technical support\n• Analyze usage patterns\n\n3. Information Sharing\nWe do not sell, trade, or transfer your personal information to third parties, except:\n• With your explicit consent\n• When required by law\n• To protect our rights\n\n4. Data Security\nWe implement appropriate security measures to protect your information from unauthorized access, alteration, disclosure, or destruction.\n\n5. iCloud Sync\nIf you choose to use iCloud sync, your creative content will be stored in your iCloud account.\n\n6. Third-Party Services\nThis app may contain links to third-party services. We are not responsible for their privacy practices.\n\n7. Policy Updates\nWe may update this privacy policy from time to time. Significant changes will be communicated through in-app notifications.\n\n8. Contact Us\nFor privacy-related questions, please contact: 784430005@qq.com";
+"restoreSuccess" = "Purchase history restored successfully!";
+"purchaseFailed" = "Purchase Failed";
+"purchaseFailedMessage" = "Please try again later";
+"restoreInProgress" = "Restoring your purchase history...";
+"noRestorablePurchases" = "No restorable purchases found";
+"freeTrialStarted" = "Free trial started! You can enjoy VIP features for 3 days.";
+"termsMessage" = "Thank you for using our app. For detailed terms of service, please visit our official website.";
+"privacyMessage" = "We value your privacy. For detailed privacy policy, please visit our official website.";
+"loadingProducts" = "Loading subscription options, please try again later";
+"subscriptionMember" = "Subscription Member";
+"weeklyMember" = "Weekly Member";
+"monthlyMember" = "Monthly Member";
+"yearlyMember" = "Yearly Member";
+"lifetimeMember" = "Lifetime Member";
+
+/* VIP Status Messages */
+"vipMember" = "VIP Member";
+"vipStatusFree" = "Activate VIP Now";
+"vipStatusTrial" = "Trial: %d days remaining";
+"vipStatusSubscribed" = "My VIP: %d days remaining";
+"vipStatusLifetime" = "My VIP: Lifetime Member";
+"vipButtonFree" = "Activate VIP Now";
+"vipButtonManage" = "Manage Subscription";
+
 /* Messages */
 "saved" = "New page saved to My Creations";
 "deleted" = "Deleted successfully";
@@ -42,7 +99,7 @@
 
 /* About Messages */
 "aboutMessage" = "LedScreen - Make Your Text Glow\n\nA professional LED display simulation app";
-"versionMessage" = "Current Version: 1.0\n\nThank you for using!";
+"versionMessage" = "Current Version: 1.0.0\n\nThank you for using!";
 "feedbackMessage" = "Please send email to:\n784430005@qq.com";
 "rateMessage" = "Thank you for your support!\nPlease rate us on the App Store";
 
@@ -113,6 +170,7 @@
 "confirmDeleteMessage" = "Are you sure you want to delete this LED screen?";
 "addSuccess" = "Added successfully!";
 "updateSuccess" = "Update saved successfully!";
+"noLedScreenHere" = "No LED Screen Here";
 
 /* Language Confirmation */
 "selectLanguage" = "Select Language";

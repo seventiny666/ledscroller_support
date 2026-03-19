@@ -232,7 +232,6 @@ class LinearBorderView: UIView {
         let outerInset: CGFloat
         let innerInset: CGFloat  // 内边框距离
         let outerCornerRadius: CGFloat  // 外边框的圆角
-        let outerLineWidth: CGFloat
         let dotCount: Int  // 圆点数量
         
         switch displayMode {
@@ -240,28 +239,24 @@ class LinearBorderView: UIView {
             outerInset = 4   // 外边框距离
             innerInset = 10  // 内边框距离
             outerCornerRadius = 5  // 外边框圆角
-            outerLineWidth = 2  // 外边框粗细
             dotCount = 16  // 圆点数量
             
         case .preview:
             outerInset = 10  // 外边框距离
             innerInset = 32  // 内边框距离再-4px (36-4=32)
             outerCornerRadius = 12  // 外边框圆角
-            outerLineWidth = 6  // 外边框粗细
             dotCount = 24  // 圆点数量
             
         case .fullscreen:
             outerInset = 24  // 外边框距离
             innerInset = 70  // 内边框距离
             outerCornerRadius = 34  // 外边框圆角
-            outerLineWidth = 8  // 外边框粗细
             dotCount = 48  // 圆点数量
             
         case .cardCover:
             outerInset = 8   // 外边框距离
             innerInset = 40  // 内边框距离
             outerCornerRadius = 12  // 外边框圆角
-            outerLineWidth = 2  // 外边框粗细
             dotCount = 24  // 圆点数量
         }
         

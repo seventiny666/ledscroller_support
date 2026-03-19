@@ -67,6 +67,9 @@ class LanguageManager {
             if let saved = UserDefaults.standard.string(forKey: userDefaultsKey) {
                 print("🔍 LanguageManager: Verified saved language: \(saved)")
             }
+            
+            // 发送语言变化通知
+            NotificationCenter.default.post(name: NSNotification.Name("LanguageDidChange"), object: nil)
         }
     }
     

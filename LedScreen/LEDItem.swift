@@ -23,6 +23,7 @@ struct LEDItem: Codable {
     var isILoveU: Bool // 标识是否为I LOVE U动画效果
     var is520: Bool // 标识是否为520动画效果
     var isDefaultPreset: Bool // 标识是否为预设卡片（HAPPY BIRTHDAY等）
+    var isVIPRequired: Bool // 标识是否需要VIP才能使用
     var createdAt: Date
     
     enum ScrollType: String, Codable {
@@ -55,6 +56,7 @@ struct LEDItem: Codable {
          isILoveU: Bool = false,
          is520: Bool = false,
          isDefaultPreset: Bool = false,
+         isVIPRequired: Bool = false,
          createdAt: Date = Date()) {
         self.id = id
         self.text = text
@@ -77,6 +79,7 @@ struct LEDItem: Codable {
         self.isILoveU = isILoveU
         self.is520 = is520
         self.isDefaultPreset = isDefaultPreset
+        self.isVIPRequired = isVIPRequired
         self.createdAt = createdAt
     }
 }

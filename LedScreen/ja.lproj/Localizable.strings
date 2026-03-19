@@ -33,6 +33,63 @@
 "share" = "共有";
 "restorePurchase" = "購入を復元";
 
+/* VIP Subscription */
+"vipTitle" = "VIPメンバーシップのロック解除";
+"vipSubtitle" = "すべてのプレミアム機能とコンテンツをお楽しみください";
+"vipFeature1" = "すべてのプレミアムテンプレートのロック解除";
+"vipFeature2" = "専用ネオンエフェクト";
+"vipFeature3" = "アイドル応援テンプレート";
+"vipFeature4" = "高度なボーダースタイル";
+"vipFeature5" = "新機能への優先アクセス";
+"vipFeature6" = "無制限のクリエイティブコンテンツ";
+"subscriptionOptions" = "サブスクリプションプランを選択";
+"weeklySubscription" = "週間";
+"monthlySubscription" = "月間";
+"yearlySubscription" = "年間";
+"lifetimeSubscription" = "生涯";
+"freeTrial" = "3日間無料トライアル";
+
+/* VIP Content Popup */
+"vipContentSelected" = "プレミアムコンポーネントを選択しました";
+"vipBenefitsMessage" = "サブスクライバーになってすべての特典をアンロック、不要な場合はいつでもキャンセル可能";
+"becomeVip" = "VIPになる";
+"mostPopular" = "最も人気";
+"save67Percent" = "67%節約";
+"save76Percent" = "76%節約";
+"oneTimePurchase" = "一回の購入で生涯アクセス";
+"startFreeTrial" = "無料トライアルを開始";
+"restorePurchases" = "購入を復元";
+"paymentDisclaimer" = "購入確認時にiTunesアカウントに課金されます。現在の期間終了の少なくとも24時間前にキャンセルしない限り、サブスクリプションは自動的に更新されます。";
+"termsOfService" = "利用規約";
+"privacyPolicy" = "プライバシーポリシー";
+"success" = "成功";
+"purchaseSuccess" = "購入が成功しました！サポートありがとうございます。";
+"termsContent" = "利用規約\n\n1. 規約の承諾\nこのアプリケーションをダウンロード、インストール、または使用することにより、本利用規約に同意したものとみなされます。\n\n2. アプリケーションの使用\nこのアプリケーションは個人的、非商業的な使用のみを目的としています。違法または許可されていない目的での使用は禁止されています。\n\n3. サブスクリプションサービス\n• VIPサブスクリプションはプレミアム機能へのアクセスを提供します\n• サブスクリプション料金は購入確認時にiTunesアカウントに請求されます\n• 現在の期間終了の少なくとも24時間前に自動更新をオフにしない限り、サブスクリプションは自動的に更新されます\n• iTunesアカウント設定でサブスクリプションを管理できます\n\n4. 知的財産\nこのアプリケーションとそのコンテンツは著作権法により保護されています。許可なく複製、変更、配布することはできません。\n\n5. 免責事項\nこのアプリケーションは「現状のまま」提供され、明示または黙示の保証はありません。\n\n6. お問い合わせ\nご質問がございましたら、784430005@qq.comまでご連絡ください。";
+"privacyContent" = "プライバシーポリシー\n\n1. 情報の収集\n以下の情報を収集する場合があります：\n• デバイス情報（モデル、OSバージョン）\n• アプリ使用統計\n• クラッシュレポート\n\n2. 情報の使用\n収集した情報は以下の目的で使用されます：\n• アプリのパフォーマンス向上\n• 技術サポートの提供\n• 使用パターンの分析\n\n3. 情報の共有\n以下の場合を除き、個人情報を第三者に販売、取引、または転送することはありません：\n• 明示的な同意がある場合\n• 法律で要求される場合\n• 当社の権利を保護する場合\n\n4. データセキュリティ\n不正アクセス、変更、開示、破壊から情報を保護するため、適切なセキュリティ対策を実施しています。\n\n5. iCloud同期\niCloud同期機能を使用する場合、作成したコンテンツはiCloudアカウントに保存されます。\n\n6. 第三者サービス\nこのアプリには第三者サービスへのリンクが含まれる場合があります。それらのプライバシー慣行については責任を負いません。\n\n7. ポリシーの更新\nこのプライバシーポリシーは随時更新される場合があります。重要な変更はアプリ内通知でお知らせします。\n\n8. お問い合わせ\nプライバシーに関するご質問は、784430005@qq.comまでご連絡ください。";
+"restoreSuccess" = "購入履歴が正常に復元されました！";
+"purchaseFailed" = "購入に失敗しました";
+"purchaseFailedMessage" = "後でもう一度お試しください";
+"restoreInProgress" = "購入履歴を復元しています...";
+"noRestorablePurchases" = "復元可能な購入が見つかりません";
+"freeTrialStarted" = "無料トライアルが開始されました！3日間VIP機能をお楽しみいただけます。";
+"termsMessage" = "アプリをご利用いただきありがとうございます。詳細な利用規約については、公式ウェブサイトをご覧ください。";
+"privacyMessage" = "お客様のプライバシーを大切にしています。詳細なプライバシーポリシーについては、公式ウェブサイトをご覧ください。";
+"loadingProducts" = "サブスクリプションオプションを読み込み中です。後でもう一度お試しください";
+"subscriptionMember" = "サブスクリプション会員";
+"weeklyMember" = "週間会員";
+"monthlyMember" = "月間会員";
+"yearlyMember" = "年間会員";
+"lifetimeMember" = "生涯会員";
+
+/* VIP Status Messages */
+"vipMember" = "VIPメンバー";
+"vipStatusFree" = "今すぐVIPを開始";
+"vipStatusTrial" = "試用期間：残り%d日";
+"vipStatusSubscribed" = "マイVIP：残り%d日";
+"vipStatusLifetime" = "マイVIP：生涯会員";
+"vipButtonFree" = "今すぐVIPを開始";
+"vipButtonManage" = "サブスクリプション管理";
+
 /* Messages */
 "saved" = "新しいページがマイ作品に保存されました";
 "deleted" = "削除に成功しました";
@@ -107,6 +164,7 @@
 "confirmDeleteMessage" = "このLEDスクリーンを削除してもよろしいですか？";
 "addSuccess" = "追加に成功しました！";
 "updateSuccess" = "更新が正常に保存されました！";
+"noLedScreenHere" = "LEDスクリーンがありません";
 
 /* Language Confirmation */
 "selectLanguage" = "言語を選択";

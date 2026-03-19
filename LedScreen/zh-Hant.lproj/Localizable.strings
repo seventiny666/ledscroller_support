@@ -33,6 +33,15 @@
 "share" = "分享";
 "restorePurchase" = "恢復購買";
 
+/* VIP Status Messages */
+"vipMember" = "VIP會員";
+"vipStatusFree" = "立即開通 VIP";
+"vipStatusTrial" = "試用期：剩餘 %d 天";
+"vipStatusSubscribed" = "我的 VIP：剩餘 %d 天";
+"vipStatusLifetime" = "我的 VIP：終身會員";
+"vipButtonFree" = "立即開通 VIP";
+"vipButtonManage" = "管理訂閱";
+
 /* Messages */
 "saved" = "新頁面已保存到我的創作頁面";
 "deleted" = "刪除成功";
@@ -112,6 +121,7 @@
 "fireworks" = "煙花";
 
 /* My Creations */
+"noLedScreenHere" = "暫無LED屏幕";
 "createFirstLED" = "開始創作您的第一個LED屏幕吧";
 "createLED" = "創建LED";
 "confirmDelete" = "確認刪除";
@@ -119,7 +129,33 @@
 "addSuccess" = "添加成功!";
 "updateSuccess" = "更新保存成功!";
 
+/* VIP Subscription */
+"startFreeTrial" = "開始免費試用";
+"restorePurchases" = "恢復購買";
+"paymentDisclaimer" = "確認購買時將向您的iTunes賬戶收費。除非在當前期間結束前至少24小時取消，否則訂閱會自動續訂。";
+"termsOfService" = "服務條款";
+"privacyPolicy" = "隱私政策";
+"success" = "成功";
+"purchaseSuccess" = "購買成功！感謝您的支持。";
+"restoreSuccess" = "購買記錄恢復成功！";
+"purchaseFailed" = "購買失敗";
+"purchaseFailedMessage" = "請稍後重試";
+"restoreInProgress" = "正在恢復您的購買記錄...";
+"noRestorablePurchases" = "沒有找到可恢復的購買記錄";
+"freeTrialStarted" = "免費試用已開始！您可以享受3天的VIP功能。";
+"termsContent" = "服務條款\n\n通過接受這些條款，您同意僅將此應用程序用於個人和非商業目的。VIP訂閱提供高級功能訪問權限並自動續訂。如有疑問，請聯繫：784430005@qq.com";
+"privacyContent" = "隱私政策\n\n我們收集設備信息和使用統計數據以改進應用程序。未經您的同意，我們不會與第三方共享您的個人信息。如有隱私問題，請聯繫：784430005@qq.com";
+"subscriptionMember" = "訂閱會員";
+"weeklyMember" = "週會員";
+"monthlyMember" = "月會員";
+"yearlyMember" = "年會員";
+"lifetimeMember" = "終身會員";
+
 /* Language Confirmation */
 "selectLanguage" = "選擇語言";
 "confirmLanguageTitle" = "您想將%@作為主要語言嗎？";
 "useLanguage" = "使用%@";
+/* VIP Content Popup */
+"vipContentSelected" = "您選擇了部分付費組件";
+"vipBenefitsMessage" = "成為訂閱用戶可解鎖全部權益，如果不需要可隨時取消";
+"becomeVip" = "成為vip";

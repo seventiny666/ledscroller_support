@@ -33,6 +33,63 @@
 "share" = "공유";
 "restorePurchase" = "구매 복원";
 
+/* VIP Subscription */
+"vipTitle" = "VIP 멤버십 잠금 해제";
+"vipSubtitle" = "모든 프리미엄 기능과 콘텐츠를 즐기세요";
+"vipFeature1" = "모든 프리미엄 템플릿 잠금 해제";
+"vipFeature2" = "독점 네온 효과";
+"vipFeature3" = "아이돌 응원 템플릿";
+"vipFeature4" = "고급 테두리 스타일";
+"vipFeature5" = "새 기능 우선 액세스";
+"vipFeature6" = "무제한 창작 콘텐츠";
+"subscriptionOptions" = "구독 플랜 선택";
+"weeklySubscription" = "주간";
+"monthlySubscription" = "월간";
+"yearlySubscription" = "연간";
+"lifetimeSubscription" = "평생";
+"freeTrial" = "3일 무료 체험";
+
+/* VIP Content Popup */
+"vipContentSelected" = "프리미엄 구성 요소를 선택했습니다";
+"vipBenefitsMessage" = "구독자가 되어 모든 혜택을 잠금 해제하세요. 필요하지 않으면 언제든지 취소할 수 있습니다";
+"becomeVip" = "VIP 되기";
+"mostPopular" = "가장 인기";
+"save67Percent" = "67% 절약";
+"save76Percent" = "76% 절약";
+"oneTimePurchase" = "한 번 구매로 평생 액세스";
+"startFreeTrial" = "무료 체험 시작";
+"restorePurchases" = "구매 복원";
+"paymentDisclaimer" = "구매 확인 시 iTunes 계정으로 결제됩니다. 현재 기간 종료 최소 24시간 전에 취소하지 않으면 구독이 자동으로 갱신됩니다.";
+"termsOfService" = "서비스 약관";
+"privacyPolicy" = "개인정보 보호정책";
+"success" = "성공";
+"purchaseSuccess" = "구매가 성공했습니다! 지원해 주셔서 감사합니다.";
+"termsContent" = "서비스 약관\n\n1. 약관 동의\n이 애플리케이션을 다운로드, 설치 또는 사용함으로써 본 서비스 약관에 동의하는 것으로 간주됩니다.\n\n2. 애플리케이션 사용\n이 애플리케이션은 개인적, 비상업적 용도로만 사용할 수 있습니다. 불법적이거나 승인되지 않은 목적으로 사용할 수 없습니다.\n\n3. 구독 서비스\n• VIP 구독은 프리미엄 기능에 대한 액세스를 제공합니다\n• 구독 요금은 구매 확인 시 iTunes 계정으로 청구됩니다\n• 현재 기간 종료 최소 24시간 전에 자동 갱신을 끄지 않으면 구독이 자동으로 갱신됩니다\n• iTunes 계정 설정에서 구독을 관리할 수 있습니다\n\n4. 지적 재산권\n이 애플리케이션과 그 콘텐츠는 저작권법으로 보호됩니다. 허가 없이 복사, 수정 또는 배포할 수 없습니다.\n\n5. 면책 조항\n이 애플리케이션은 명시적 또는 묵시적 보증 없이 '있는 그대로' 제공됩니다.\n\n6. 문의하기\n질문이 있으시면 784430005@qq.com으로 연락해 주세요.";
+"privacyContent" = "개인정보 보호정책\n\n1. 정보 수집\n다음 정보를 수집할 수 있습니다:\n• 기기 정보 (모델, OS 버전)\n• 앱 사용 통계\n• 충돌 보고서\n\n2. 정보 사용\n수집된 정보는 다음 용도로 사용됩니다:\n• 앱 성능 개선\n• 기술 지원 제공\n• 사용 패턴 분석\n\n3. 정보 공유\n다음의 경우를 제외하고는 개인정보를 제3자에게 판매, 거래 또는 전송하지 않습니다:\n• 명시적 동의가 있는 경우\n• 법률에서 요구하는 경우\n• 당사의 권리를 보호하는 경우\n\n4. 데이터 보안\n무단 액세스, 변경, 공개 또는 파괴로부터 정보를 보호하기 위해 적절한 보안 조치를 구현합니다.\n\n5. iCloud 동기화\niCloud 동기화 기능을 사용하는 경우, 생성한 콘텐츠가 iCloud 계정에 저장됩니다.\n\n6. 제3자 서비스\n이 앱에는 제3자 서비스에 대한 링크가 포함될 수 있습니다. 이들의 개인정보 보호 관행에 대해서는 책임지지 않습니다.\n\n7. 정책 업데이트\n이 개인정보 보호정책은 수시로 업데이트될 수 있습니다. 중요한 변경사항은 앱 내 알림을 통해 알려드립니다.\n\n8. 문의하기\n개인정보 보호 관련 질문은 784430005@qq.com으로 연락해 주세요.";
+"restoreSuccess" = "구매 기록이 성공적으로 복원되었습니다!";
+"purchaseFailed" = "구매 실패";
+"purchaseFailedMessage" = "나중에 다시 시도해 주세요";
+"restoreInProgress" = "구매 기록을 복원하는 중...";
+"noRestorablePurchases" = "복원 가능한 구매를 찾을 수 없습니다";
+"freeTrialStarted" = "무료 체험이 시작되었습니다! 3일 동안 VIP 기능을 즐기실 수 있습니다.";
+"termsMessage" = "저희 앱을 사용해 주셔서 감사합니다. 자세한 서비스 약관은 공식 웹사이트를 방문해 주세요.";
+"privacyMessage" = "고객님의 개인정보를 소중히 여깁니다. 자세한 개인정보 보호정책은 공식 웹사이트를 방문해 주세요.";
+"loadingProducts" = "구독 옵션을 로드하는 중입니다. 나중에 다시 시도해 주세요";
+"subscriptionMember" = "구독 회원";
+"weeklyMember" = "주간 회원";
+"monthlyMember" = "월간 회원";
+"yearlyMember" = "연간 회원";
+"lifetimeMember" = "평생 회원";
+
+/* VIP Status Messages */
+"vipMember" = "VIP 멤버";
+"vipStatusFree" = "지금 VIP 활성화";
+"vipStatusTrial" = "체험판: %d일 남음";
+"vipStatusSubscribed" = "내 VIP: %d일 남음";
+"vipStatusLifetime" = "내 VIP: 평생 멤버";
+"vipButtonFree" = "지금 VIP 활성화";
+"vipButtonManage" = "구독 관리";
+
 /* Messages */
 "saved" = "새 페이지가 내 작품에 저장되었습니다";
 "deleted" = "삭제되었습니다";
@@ -107,6 +164,7 @@
 "confirmDeleteMessage" = "이 LED 스크린을 삭제하시겠습니까?";
 "addSuccess" = "추가되었습니다!";
 "updateSuccess" = "업데이트가 저장되었습니다!";
+"noLedScreenHere" = "LED 스크린이 없습니다";
 
 /* Language Confirmation */
 "selectLanguage" = "언어 선택";

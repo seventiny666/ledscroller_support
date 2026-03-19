@@ -1,5 +1,187 @@
 import UIKit
 
+// VIP确认弹窗视图 - 用于创建页面
+@objc class VIPConfirmView: UIView {
+    
+    var onCancel: (() -> Void)?
+    var onOpenVIP: (() -> Void)?
+    
+    private let containerView = UIView()
+    private let titleLabel = UILabel()
+    private let messageLabel = UILabel()
+    private let cancelButton = UIButton(type: .system)
+    private let openVIPButton = UIButton(type: .system)
+    
+    init() {
+        super.init(frame: .zero)
+        setupUI()
+        
+        // 监听语言变化通知
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: NSNotification.Name("LanguageDidChange"),
+            object: nil
+        )
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func languageDidChange() {
+        // 更新文字内容
+        titleLabel.text = "vipContentSelected".localized
+        messageLabel.text = "vipBenefitsMessage".localized
+        cancelButton.setTitle("cancel".localized, for: .normal)
+        openVIPButton.setTitle("becomeVip".localized, for: .normal)
+    }
+    
+    // 设置彩色渐变描边
+    private func setupGradientBorder() {
+        // 创建渐变层
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: 340, height: 240)
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.4, blue: 0.7, alpha: 1.0).cgColor,  // 玫粉色
+            UIColor(red: 0.5, green: 0.2, blue: 0.8, alpha: 1.0).cgColor   // 蓝紫色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+        gradientLayer.cornerRadius = 20
+        
+        // 创建遮罩层来实现描边效果
+        let maskLayer = CAShapeLayer()
+        let path = UIBezierPath(roundedRect: gradientLayer.bounds, cornerRadius: 20)
+        let innerPath = UIBezierPath(roundedRect: gradientLayer.bounds.insetBy(dx: 3, dy: 3), cornerRadius: 17)
+        path.append(innerPath.reversing())
+        maskLayer.path = path.cgPath
+        maskLayer.fillRule = .evenOdd
+        
+        gradientLayer.mask = maskLayer
+        containerView.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
+    private func setupUI() {
+        backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        
+        containerView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
+        containerView.layer.cornerRadius = 20
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(containerView)
+        
+        // 添加彩色渐变描边
+        setupGradientBorder()
+        
+        titleLabel.text = "vipContentSelected".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 18, weight: .semibold)
+        titleLabel.textAlignment = .center
+        titleLabel.numberOfLines = 0 // 允许多行显示
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(titleLabel)
+        
+        messageLabel.text = "vipBenefitsMessage".localized
+        messageLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        messageLabel.font = .systemFont(ofSize: 14)
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0 // 允许多行显示
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(messageLabel)
+        
+        cancelButton.setTitle("cancel".localized, for: .normal)
+        cancelButton.setTitleColor(.white, for: .normal)
+        cancelButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
+        cancelButton.backgroundColor = UIColor(red: 0.25, green: 0.25, blue: 0.25, alpha: 1)
+        cancelButton.layer.cornerRadius = 25
+        cancelButton.addTarget(self, action: #selector(cancelTapped), for: .touchUpInside)
+        cancelButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(cancelButton)
+        
+        openVIPButton.setTitle("becomeVip".localized, for: .normal)
+        openVIPButton.setTitleColor(.black, for: .normal)
+        openVIPButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        openVIPButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        openVIPButton.layer.cornerRadius = 25
+        openVIPButton.addTarget(self, action: #selector(openVIPTapped), for: .touchUpInside)
+        openVIPButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(openVIPButton)
+        
+        NSLayoutConstraint.activate([
+            containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            containerView.widthAnchor.constraint(equalToConstant: 340), // 增加宽度从300到340
+            containerView.heightAnchor.constraint(equalToConstant: 240), // 增加高度以适应更多文字
+            
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24), // 增加左右边距
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            messageLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 24), // 增加左右边距
+            messageLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -24),
+            
+            cancelButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 24),
+            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34),
+            cancelButton.heightAnchor.constraint(equalToConstant: 50),
+            cancelButton.widthAnchor.constraint(equalToConstant: 140), // 增加按钮宽度
+            
+            openVIPButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 24),
+            openVIPButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            openVIPButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34),
+            openVIPButton.heightAnchor.constraint(equalToConstant: 50),
+            openVIPButton.widthAnchor.constraint(equalToConstant: 140) // 增加按钮宽度
+        ])
+    }
+    
+    @objc private func openVIPTapped() {
+        hide {
+            self.onOpenVIP?()
+        }
+    }
+    
+    @objc private func cancelTapped() {
+        hide {
+            self.onCancel?()
+        }
+    }
+    
+    @objc func show(in viewController: UIViewController) {
+        translatesAutoresizingMaskIntoConstraints = false
+        viewController.view.addSubview(self)
+        
+        NSLayoutConstraint.activate([
+            topAnchor.constraint(equalTo: viewController.view.topAnchor),
+            leadingAnchor.constraint(equalTo: viewController.view.leadingAnchor),
+            trailingAnchor.constraint(equalTo: viewController.view.trailingAnchor),
+            bottomAnchor.constraint(equalTo: viewController.view.bottomAnchor)
+        ])
+        
+        alpha = 0
+        containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        
+        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [], animations: {
+            self.alpha = 1
+            self.containerView.transform = .identity
+        })
+    }
+    
+    private func hide(completion: (() -> Void)? = nil) {
+        UIView.animate(withDuration: 0.25, animations: {
+            self.alpha = 0
+            self.containerView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        }) { _ in
+            self.removeFromSuperview()
+            completion?()
+        }
+    }
+}
+
 // LED屏幕卡片视图 - 用于创建页面的背景选择
 class LEDScreenCardView: UIView {
     
@@ -918,6 +1100,14 @@ class LEDCreateViewController: UIViewController {
                 borderView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
             ])
             
+            // 所有跑马灯边框都需要VIP标签
+            let vipBadge = createVIPBadge()
+            btn.addSubview(vipBadge)
+            NSLayoutConstraint.activate([
+                vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
+                vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
+            ])
+            
             return btn
         }
         
@@ -964,6 +1154,14 @@ class LEDCreateViewController: UIViewController {
                 borderView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
                 borderView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
                 borderView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
+            ])
+            
+            // 所有灯牌边框都需要VIP标签
+            let vipBadge = createVIPBadge()
+            btn.addSubview(vipBadge)
+            NSLayoutConstraint.activate([
+                vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
+                vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
             ])
             
             return btn
@@ -1115,6 +1313,14 @@ class LEDCreateViewController: UIViewController {
                 borderView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
                 borderView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
                 borderView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
+            ])
+            
+            // 所有线性边框都需要VIP标签
+            let vipBadge = createVIPBadge()
+            btn.addSubview(vipBadge)
+            NSLayoutConstraint.activate([
+                vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
+                vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
             ])
             
             return btn
@@ -1897,6 +2103,14 @@ class LEDCreateViewController: UIViewController {
                     ledCardView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
                 ])
                 
+                // LED屏幕全部需要VIP标签
+                let vipBadge = createVIPBadge()
+                btn.addSubview(vipBadge)
+                NSLayoutConstraint.activate([
+                    vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
+                    vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
+                ])
+                
                 btn.layer.cornerRadius = 8
                 btn.layer.borderWidth = 2
                 btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
@@ -1940,6 +2154,17 @@ class LEDCreateViewController: UIViewController {
                     ])
                 }
                 
+                // 根据需求添加VIP标签
+                let needsVIP = shouldShowVIPBadge(category: category, imageIndex: imageIndex)
+                if needsVIP {
+                    let vipBadge = createVIPBadge()
+                    btn.addSubview(vipBadge)
+                    NSLayoutConstraint.activate([
+                        vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
+                        vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
+                    ])
+                }
+                
                 btn.layer.cornerRadius = 8
                 btn.layer.borderWidth = 2
                 btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
@@ -1963,6 +2188,48 @@ class LEDCreateViewController: UIViewController {
         stack.translatesAutoresizingMaskIntoConstraints = false
         
         return stack
+    }
+    
+    // 创建VIP标签
+    private func createVIPBadge() -> UIView {
+        let containerView = UIView()
+        containerView.backgroundColor = UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // 金色
+        containerView.layer.cornerRadius = 8
+        containerView.layer.borderWidth = 1
+        containerView.layer.borderColor = UIColor(red: 0.8, green: 0.6, blue: 0.0, alpha: 1.0).cgColor
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        
+        let vipLabel = UILabel()
+        vipLabel.text = "VIP"
+        vipLabel.textColor = .black
+        vipLabel.font = .systemFont(ofSize: 10, weight: .bold)
+        vipLabel.textAlignment = .center
+        vipLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(vipLabel)
+        
+        NSLayoutConstraint.activate([
+            containerView.widthAnchor.constraint(equalToConstant: 28),
+            containerView.heightAnchor.constraint(equalToConstant: 16),
+            
+            vipLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            vipLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
+        ])
+        
+        return containerView
+    }
+    
+    // 判断是否需要显示VIP标签
+    private func shouldShowVIPBadge(category: String, imageIndex: Int) -> Bool {
+        switch category {
+        case "neon":
+            // 霓虹灯屏幕的前3个需要VIP
+            return imageIndex <= 3
+        case "idol":
+            // 偶像屏幕的后4个需要VIP（5-8）
+            return imageIndex >= 5
+        default:
+            return false
+        }
     }
     
     // 自动检测可用的图片数量（最多检测20张）
@@ -2917,6 +3184,12 @@ class LEDCreateViewController: UIViewController {
             return
         }
         
+        // 检查是否使用了VIP功能
+        if hasVIPContent() && !VIPManager.shared.isVIP() {
+            showVIPConfirmDialog()
+            return
+        }
+        
         var items = LEDDataManager.shared.loadItems()
         
         // 如果是模版编辑模式，总是创建新的item
@@ -2951,6 +3224,78 @@ class LEDCreateViewController: UIViewController {
         dismiss(animated: true) {
             self.onSave?()
         }
+    }
+    
+    // 检查是否使用了VIP功能
+    private func hasVIPContent() -> Bool {
+        // 检查背景：LED屏幕全部、霓虹灯屏幕前3个、偶像屏幕后4个
+        if let backgroundImageName = currentItem.backgroundImageName {
+            if backgroundImageName.hasPrefix("led_") {
+                // LED屏幕的全部需要VIP
+                return true
+            } else if backgroundImageName.hasPrefix("neon_") {
+                // 霓虹灯屏幕的前3个需要VIP
+                if let numberStr = backgroundImageName.split(separator: "_").last,
+                   let number = Int(numberStr) {
+                    return number <= 3
+                }
+            } else if backgroundImageName.hasPrefix("idol_") {
+                // 偶像屏幕的后4个需要VIP（5-8）
+                if let numberStr = backgroundImageName.split(separator: "_").last,
+                   let number = Int(numberStr) {
+                    return number >= 5
+                }
+            }
+        }
+        
+        // 检查边框：全部边框都需要VIP
+        if currentItem.borderStyle != nil || 
+           currentItem.lightBoardStyle != nil || 
+           currentItem.linearBorderStyle != nil {
+            return true
+        }
+        
+        return false
+    }
+    
+    private func showVIPConfirmDialog() {
+        let confirmView = VIPConfirmView()
+        confirmView.onCancel = {
+            // 取消，不保存
+        }
+        confirmView.onOpenVIP = { [weak self] in
+            // 开通VIP
+            self?.showVIPSubscription()
+        }
+        confirmView.show(in: self)
+    }
+    
+    private func showVIPSubscription() {
+        // 确保在主线程执行，并清理可能存在的遮罩视图
+        DispatchQueue.main.async {
+            // 移除所有可能的遮罩视图
+            self.view.subviews.forEach { subview in
+                if subview is VIPConfirmView {
+                    subview.removeFromSuperview()
+                }
+            }
+            
+            // 如果当前有模态视图，先关闭
+            if self.presentedViewController != nil {
+                self.dismiss(animated: false) {
+                    self.presentVIPSubscription()
+                }
+            } else {
+                self.presentVIPSubscription()
+            }
+        }
+    }
+    
+    private func presentVIPSubscription() {
+        let vipVC = VIPSubscriptionViewController()
+        let nav = UINavigationController(rootViewController: vipVC)
+        nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
+        present(nav, animated: true)
     }
     
     private func updateCurrentItem() {

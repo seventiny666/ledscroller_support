@@ -33,6 +33,63 @@
 "share" = "分享";
 "restorePurchase" = "恢复购买";
 
+/* VIP Subscription */
+"vipTitle" = "解锁 VIP 会员";
+"vipSubtitle" = "享受全部高级功能和内容";
+"vipFeature1" = "解锁全部高级模板";
+"vipFeature2" = "专属霓虹灯效果";
+"vipFeature3" = "偶像应援模板";
+"vipFeature4" = "高级边框样式";
+"vipFeature5" = "优先体验新功能";
+"vipFeature6" = "无限制创作内容";
+"subscriptionOptions" = "选择订阅方案";
+"weeklySubscription" = "周订阅";
+"monthlySubscription" = "月订阅";
+"yearlySubscription" = "年订阅";
+"lifetimeSubscription" = "终身买断";
+"freeTrial" = "免费试用3天";
+
+/* VIP Content Popup */
+"vipContentSelected" = "您选择了部分付费组件";
+"vipBenefitsMessage" = "成为订阅用户可解锁全部权益，如果不需要可随时取消";
+"becomeVip" = "成为vip";
+"mostPopular" = "最受欢迎";
+"save67Percent" = "节省67%";
+"save76Percent" = "节省76%";
+"oneTimePurchase" = "一次购买，永久使用";
+"startFreeTrial" = "开始免费试用";
+"restorePurchases" = "恢复购买";
+"paymentDisclaimer" = "确认购买时将向您的iTunes账户收费。除非在当前期间结束前至少24小时取消，否则订阅会自动续订。";
+"termsOfService" = "服务条款";
+"privacyPolicy" = "隐私政策";
+"success" = "成功";
+"purchaseSuccess" = "购买成功！感谢您的支持。";
+"restoreSuccess" = "购买记录恢复成功！";
+"purchaseFailed" = "购买失败";
+"purchaseFailedMessage" = "请稍后重试";
+"restoreInProgress" = "正在恢复您的购买记录...";
+"noRestorablePurchases" = "没有找到可恢复的购买记录";
+"freeTrialStarted" = "免费试用已开始！您可以享受3天的VIP功能。";
+"termsMessage" = "感谢您使用我们的应用。详细的服务条款请访问我们的官方网站。";
+"privacyMessage" = "我们重视您的隐私。详细的隐私政策请访问我们的官方网站。";
+"termsContent" = "服务条款\n\n1. 接受条款\n通过下载、安装或使用本应用程序，您同意受本服务条款的约束。\n\n2. 应用程序使用\n本应用程序仅供个人、非商业用途。您不得将本应用程序用于任何非法或未经授权的目的。\n\n3. 订阅服务\n• VIP订阅提供高级功能访问权限\n• 订阅费用将在确认购买时从您的iTunes账户中扣除\n• 订阅将自动续订，除非在当前期间结束前至少24小时关闭自动续订\n• 您可以在iTunes账户设置中管理订阅\n\n4. 知识产权\n本应用程序及其内容受版权法保护。未经许可，不得复制、修改或分发。\n\n5. 免责声明\n本应用程序按现状提供，不提供任何明示或暗示的保证。\n\n6. 联系我们\n如有疑问，请联系：784430005@qq.com";
+"privacyContent" = "隐私政策\n\n1. 信息收集\n我们可能收集以下信息：\n• 设备信息（型号、操作系统版本）\n• 应用使用统计\n• 崩溃报告\n\n2. 信息使用\n收集的信息用于：\n• 改善应用性能\n• 提供技术支持\n• 分析使用模式\n\n3. 信息共享\n我们不会向第三方出售、交易或转让您的个人信息，除非：\n• 获得您的明确同意\n• 法律要求\n• 保护我们的权利\n\n4. 数据安全\n我们采用适当的安全措施保护您的信息免受未经授权的访问、更改、披露或销毁。\n\n5. iCloud同步\n如果您选择使用iCloud同步功能，您的创作内容将存储在您的iCloud账户中。\n\n6. 第三方服务\n本应用可能包含第三方服务的链接。我们不对这些服务的隐私做法负责。\n\n7. 政策更新\n我们可能会不时更新此隐私政策。重大更改将通过应用内通知告知您。\n\n8. 联系我们\n如有隐私相关问题，请联系：784430005@qq.com";
+"loadingProducts" = "正在加载订阅选项，请稍后再试";
+"subscriptionMember" = "订阅会员";
+"weeklyMember" = "周会员";
+"monthlyMember" = "月会员";
+"yearlyMember" = "年会员";
+"lifetimeMember" = "终身会员";
+
+/* VIP Status Messages */
+"vipMember" = "VIP会员";
+"vipStatusFree" = "立即开通 VIP";
+"vipStatusTrial" = "试用期：剩余 %d 天";
+"vipStatusSubscribed" = "我的 VIP：剩余 %d 天";
+"vipStatusLifetime" = "我的 VIP：终身会员";
+"vipButtonFree" = "立即开通 VIP";
+"vipButtonManage" = "管理订阅";
+
 /* Messages */
 "saved" = "新页面已保存到我的创作页面";
 "deleted" = "删除成功";
@@ -43,7 +100,7 @@
 
 /* About Messages */
 "aboutMessage" = "LedScreen - 让你的文字发光\n\n一款专业的LED显示屏模拟应用";
-"versionMessage" = "当前版本：1.0\n\n感谢您的使用！";
+"versionMessage" = "当前版本：1.0.0\n\n感谢您的使用！";
 "feedbackMessage" = "请发送邮件至：\n784430005@qq.com";
 "rateMessage" = "感谢您的支持！\n请前往App Store为我们评分";
 
@@ -118,6 +175,7 @@
 "confirmDeleteMessage" = "确定要删除这个LED屏幕吗？";
 "addSuccess" = "添加成功!";
 "updateSuccess" = "更新保存成功!";
+"noLedScreenHere" = "暂无LED屏幕";
 
 /* Language Confirmation */
 "selectLanguage" = "选择语言";
