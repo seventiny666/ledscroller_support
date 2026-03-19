@@ -213,17 +213,17 @@ class SettingsViewController: UIViewController {
                 }
             )
         } else {
-            // 非VIP用户，显示开通VIP
+            // 非VIP用户，显示开通VIP - 交换按钮位置，恢复购买在上面，开通VIP在下面
             showCustomVIPAlert(
                 title: "vipMember".localized,
-                message: vipManager.getVIPStatusText(),
-                primaryButtonTitle: vipManager.getVIPButtonText(),
+                message: "开通订阅后您可解锁全部权益\n也可随时退订订阅", // 修改为2行文字，去掉逗号，在逗号位置换行
+                primaryButtonTitle: "restorePurchases".localized, // 交换：恢复购买作为主按钮
                 primaryAction: {
-                    self.showVIPSubscription()
+                    VIPManager.shared.restorePurchases()
                 },
-                secondaryButtonTitle: "restorePurchases".localized,
+                secondaryButtonTitle: VIPManager.shared.getVIPButtonText(), // 交换：开通VIP作为次要按钮
                 secondaryAction: {
-                    vipManager.restorePurchases()
+                    self.showVIPSubscription()
                 }
             )
         }
@@ -232,8 +232,12 @@ class SettingsViewController: UIViewController {
     private func showVIPSubscription() {
         let vipVC = VIPSubscriptionViewController()
         let nav = UINavigationController(rootViewController: vipVC)
-        nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
-        present(nav, animated: true)
+        nav.modalPresentationStyle = .fullScreen
+        
+        // 确保在主线程上执行，并添加延迟以确保弹窗完全关闭
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.present(nav, animated: true)
+        }
     }
     
     private func showCustomVIPAlert(
@@ -266,36 +270,46 @@ class SettingsViewController: UIViewController {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.textColor = .white
-        titleLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        titleLabel.font = .systemFont(ofSize: 20, weight: .bold) // 增加2pt，从18改为20
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
         // 消息
         let messageLabel = UILabel()
-        messageLabel.text = message
         messageLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         messageLabel.font = .systemFont(ofSize: 16)
         messageLabel.textAlignment = .center
         messageLabel.numberOfLines = 0
+        
+        // 设置1.5倍行间距
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 16 * 0.5 // 字体大小 * 0.5 = 1.5倍行高
+        paragraphStyle.alignment = .center
+        
+        let attributedText = NSAttributedString(
+            string: message,
+            attributes: [
+                .font: UIFont.systemFont(ofSize: 16),
+                .foregroundColor: UIColor.white.withAlphaComponent(0.8),
+                .paragraphStyle: paragraphStyle
+            ]
+        )
+        messageLabel.attributedText = attributedText
+        
         messageLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // 主按钮
+        // 主按钮（现在是恢复购买）
         let primaryButton = UIButton(type: .system)
         primaryButton.setTitle(primaryButtonTitle, for: .normal)
-        primaryButton.setTitleColor(.white, for: .normal) // 改为白色文字
+        primaryButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .normal) // 改为半透明白色文字
         primaryButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        primaryButton.backgroundColor = .clear // 设为透明，使用渐变背景
-        primaryButton.layer.cornerRadius = 8
+        primaryButton.backgroundColor = UIColor.white.withAlphaComponent(0.1) // 改为半透明背景，不使用渐变
+        primaryButton.layer.cornerRadius = 22 // 改为胶囊形状，高度44的一半
         primaryButton.translatesAutoresizingMaskIntoConstraints = false
         primaryButton.addAction(UIAction { _ in
             self.dismissCustomAlert()
             primaryAction()
         }, for: .touchUpInside)
-        
-        // 应用渐变背景
-        DispatchQueue.main.async {
-            self.applyGradientToVIPButton(primaryButton)
-        }
         
         // 添加视图到层次结构
         view.addSubview(overlayView)
@@ -316,10 +330,10 @@ class SettingsViewController: UIViewController {
             
             alertView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
             alertView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
-            alertView.widthAnchor.constraint(equalToConstant: 316), // 宽度再增加8pt (308->316)
+            alertView.widthAnchor.constraint(equalToConstant: 320), // 宽度再增加4pt (316->320)
             
-            closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 12),
-            closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -12),
+            closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 16), // 往下移动4pt，从12改为16
+            closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -16), // 往左移动4pt，从-12改为-16
             closeButton.widthAnchor.constraint(equalToConstant: 24),
             closeButton.heightAnchor.constraint(equalToConstant: 24),
             
@@ -327,36 +341,42 @@ class SettingsViewController: UIViewController {
             titleLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             titleLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
             
-            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20), // 往下移动4pt，从16改为20
             messageLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             messageLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
             
-            primaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
-            primaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
-            primaryButton.heightAnchor.constraint(equalToConstant: 48) // 按钮高度增加4pt (44->48)
+            primaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 32), // 宽度再减少12pt，左右各减少6pt (26->32)
+            primaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -32), // 宽度再减少12pt，左右各减少6pt (-26->-32)
+            primaryButton.heightAnchor.constraint(equalToConstant: 44) // 按钮高度减少4pt (48->44)
         ]
         
         // 如果有次要按钮，添加它
         if let secondaryButtonTitle = secondaryButtonTitle, let secondaryAction = secondaryAction {
             let secondaryButton = UIButton(type: .system)
             secondaryButton.setTitle(secondaryButtonTitle, for: .normal)
-            secondaryButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .normal)
+            secondaryButton.setTitleColor(.white, for: .normal) // 改为白色文字
             secondaryButton.titleLabel?.font = .systemFont(ofSize: 16)
-            secondaryButton.backgroundColor = UIColor.white.withAlphaComponent(0.1)
-            secondaryButton.layer.cornerRadius = 8
+            secondaryButton.backgroundColor = .clear // 改为透明背景，使用渐变
+            secondaryButton.layer.cornerRadius = 22 // 改为胶囊形状，高度44的一半
             secondaryButton.translatesAutoresizingMaskIntoConstraints = false
             secondaryButton.addAction(UIAction { _ in
-                self.dismissCustomAlert()
-                secondaryAction()
+                self.dismissCustomAlertWithCompletion {
+                    secondaryAction()
+                }
             }, for: .touchUpInside)
             
             alertView.addSubview(secondaryButton)
             
+            // 为次要按钮应用渐变背景
+            DispatchQueue.main.async {
+                self.applyGradientToVIPButton(secondaryButton)
+            }
+            
             constraints.append(contentsOf: [
                 secondaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
-                secondaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
-                secondaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
-                secondaryButton.heightAnchor.constraint(equalToConstant: 48), // 按钮高度增加4pt (44->48)
+                secondaryButton.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 32), // 宽度再减少12pt，左右各减少6pt (26->32)
+                secondaryButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -32), // 宽度再减少12pt，左右各减少6pt (-26->-32)
+                secondaryButton.heightAnchor.constraint(equalToConstant: 44), // 按钮高度减少4pt (48->44)
                 
                 primaryButton.topAnchor.constraint(equalTo: secondaryButton.bottomAnchor, constant: 16), // 增加间距从12到16
                 primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -44) // 背景高度再增加10pt (从-34到-44)
@@ -378,9 +398,9 @@ class SettingsViewController: UIViewController {
             overlayView.alpha = 1
             alertView.transform = .identity
         } completion: { _ in
-            // 在动画完成后应用渐变，确保按钮已经有正确的frame
-            if let primaryButton = alertView.subviews.first(where: { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == primaryButtonTitle }) as? UIButton {
-                self.applyGradientToVIPButton(primaryButton)
+            // 在动画完成后为次要按钮应用渐变（如果存在）
+            if let secondaryButton = alertView.subviews.first(where: { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == secondaryButtonTitle }) as? UIButton {
+                self.applyGradientToVIPButton(secondaryButton)
             }
         }
     }
@@ -392,6 +412,22 @@ class SettingsViewController: UIViewController {
             overlayView.alpha = 0
         } completion: { _ in
             overlayView.removeFromSuperview()
+        }
+    }
+    
+    private func dismissCustomAlertWithCompletion(_ completion: @escaping () -> Void) {
+        guard let overlayView = view.viewWithTag(9999) else {
+            completion()
+            return
+        }
+        
+        UIView.animate(withDuration: 0.2) {
+            overlayView.alpha = 0
+        } completion: { _ in
+            overlayView.removeFromSuperview()
+            DispatchQueue.main.async {
+                completion()
+            }
         }
     }
     
@@ -408,7 +444,7 @@ class SettingsViewController: UIViewController {
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 0)
         gradientLayer.frame = button.bounds
-        gradientLayer.cornerRadius = 8
+        gradientLayer.cornerRadius = 22 // 改为胶囊形状圆角，匹配按钮
         
         button.layer.insertSublayer(gradientLayer, at: 0)
     }
@@ -540,7 +576,7 @@ class LanguageSelectorView: UIView {
         NSLayoutConstraint.activate([
             containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 300),
+            containerView.widthAnchor.constraint(equalToConstant: 314),
             containerView.heightAnchor.constraint(lessThanOrEqualToConstant: 620),
             
             titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
@@ -573,21 +609,31 @@ class LanguageSelectorView: UIView {
     
     private func createLanguageButton(language: LanguageManager.Language, isSelected: Bool) -> UIButton {
         let button = UIButton(type: .system)
-        button.setTitle(language.displayName, for: .normal)
         button.setTitleColor(.white, for: .normal)
         button.titleLabel?.font = .systemFont(ofSize: 16, weight: isSelected ? .semibold : .regular)
         button.contentHorizontalAlignment = .left
         
-        // 使用iOS 15+的新方式设置内边距
+        // 使用iOS 15+的新方式设置内边距和间隔
         if #available(iOS 15.0, *) {
             var config = UIButton.Configuration.plain()
             config.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 16, bottom: 12, trailing: 16)
             config.title = language.displayName
             config.baseForegroundColor = .white
+            
+            // 创建国旗emoji图片
+            let flagImage = createEmojiImage(from: language.flagEmoji, size: CGSize(width: 20, height: 20))
+            config.image = flagImage
+            config.imagePlacement = .leading
+            config.imagePadding = 8 // 图标和文字间隔增加4pt (原来是4pt，现在是8pt)
+            
             button.configuration = config
         } else {
+            // iOS 15以下的兼容处理，使用字符串方式但增加间隔
+            let flagAndName = "\(language.flagEmoji)    \(language.displayName)" // 增加更多空格
+            button.setTitle(flagAndName, for: .normal)
             button.contentEdgeInsets = UIEdgeInsets(top: 12, left: 16, bottom: 12, right: 16)
         }
+        
         button.backgroundColor = isSelected ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.2) : .clear
         button.layer.cornerRadius = 8
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -612,6 +658,18 @@ class LanguageSelectorView: UIView {
         button.addTarget(self, action: #selector(languageButtonTapped(_:)), for: .touchUpInside)
         
         return button
+    }
+    
+    // 创建emoji图片的辅助方法
+    private func createEmojiImage(from emoji: String, size: CGSize) -> UIImage? {
+        let font = UIFont.systemFont(ofSize: 16)
+        let attributes = [NSAttributedString.Key.font: font]
+        let attributedString = NSAttributedString(string: emoji, attributes: attributes)
+        
+        let renderer = UIGraphicsImageRenderer(size: size)
+        return renderer.image { context in
+            attributedString.draw(in: CGRect(origin: .zero, size: size))
+        }
     }
     
     func show(in viewController: UIViewController) {

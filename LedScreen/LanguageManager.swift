@@ -32,6 +32,21 @@ class LanguageManager {
             case .italian: return "Italiano"
             }
         }
+        
+        var flagEmoji: String {
+            switch self {
+            case .english: return "🇺🇸"
+            case .spanish: return "🇪🇸"
+            case .german: return "🇩🇪"
+            case .french: return "🇫🇷"
+            case .simplifiedChinese: return "🇨🇳"
+            case .traditionalChinese: return "🇭🇰"
+            case .japanese: return "🇯🇵"
+            case .korean: return "🇰🇷"
+            case .portuguese: return "🇵🇹"
+            case .italian: return "🇮🇹"
+            }
+        }
     }
     
     private let userDefaultsKey = "AppLanguage"

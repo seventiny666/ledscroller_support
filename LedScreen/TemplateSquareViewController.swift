@@ -1107,7 +1107,7 @@ import StoreKit
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         button.addSubview(subtitleLabel)
         
-        // 右上角标签（周订阅和年订阅）- 添加到按钮的父视图中，确保在最上层
+        // 右上角标签（周订阅和年订阅）- 直接添加到按钮
         var cornerLabel: UILabel?
         if index == 0 { // 周订阅 - 免费试用标签
             cornerLabel = UILabel()
@@ -1118,9 +1118,8 @@ import StoreKit
             cornerLabel!.textAlignment = .center
             cornerLabel!.layer.cornerRadius = 9 // 圆角调整为高度的一半 (18/2=9)
             cornerLabel!.layer.masksToBounds = true
-            cornerLabel!.layer.zPosition = 10 // 设置更高的z层级，确保在最上层
+            cornerLabel!.layer.zPosition = 100 // 设置非常高的z层级，确保在最上层
             cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
-            // 先添加到按钮，稍后会移动到父视图
             button.addSubview(cornerLabel!)
         } else if index == 2 { // 年订阅 - 节省76%标签
             cornerLabel = UILabel()
@@ -1131,9 +1130,8 @@ import StoreKit
             cornerLabel!.textAlignment = .center
             cornerLabel!.layer.cornerRadius = 9 // 圆角调整为高度的一半 (18/2=9)
             cornerLabel!.layer.masksToBounds = true
-            cornerLabel!.layer.zPosition = 10 // 设置更高的z层级，确保在最上层
+            cornerLabel!.layer.zPosition = 100 // 设置非常高的z层级，确保在最上层
             cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
-            // 先添加到按钮，稍后会移动到父视图
             button.addSubview(cornerLabel!)
         }
         
@@ -1153,16 +1151,14 @@ import StoreKit
             subtitleLabel.trailingAnchor.constraint(equalTo: priceLabel.leadingAnchor, constant: -8)
         ]
         
-        // 添加右上角标签的约束 - 标签可以超出按钮边界显示
+        // 添加右上角标签的约束
         if let cornerLabel = cornerLabel {
             let labelWidth: CGFloat = index == 0 ? 80 : 60 // 周订阅标签宽度增大
             constraints.append(contentsOf: [
-                // 标签往上移动4pt，从0改为-4，允许超出按钮顶部
-                cornerLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: -4),
+                cornerLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: -6),
                 cornerLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -12),
                 cornerLabel.widthAnchor.constraint(equalToConstant: labelWidth),
-                cornerLabel.heightAnchor.constraint(equalToConstant: 18) // 高度增加2pt，从16改为18
-                // 移除边界限制约束，允许标签超出按钮边界
+                cornerLabel.heightAnchor.constraint(equalToConstant: 18)
             ])
         }
         
@@ -1415,7 +1411,7 @@ import StoreKit
         
         for (index, button) in subscriptionButtons.enumerated() {
             let isSelected = index == selectedSubscriptionIndex
-            button.backgroundColor = isSelected ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.6) : UIColor(white: 0.1, alpha: 0.6) // 改为0.6透明度
+            button.backgroundColor = isSelected ? UIColor.black.withAlphaComponent(0.7) : UIColor(white: 0.1, alpha: 0.6) // 选中状态改为0.7透明度的黑色
             button.layer.borderWidth = isSelected ? 2 : 1
             
             // 使用渐变边框颜色
