@@ -7,11 +7,13 @@ class MyCreationsViewController: UIViewController {
     private var creations: [LEDItem] = []
     private var emptyStateView: UIView!
     private var createButton: UIButton!
+    private var titleLabel: UILabel! // 添加引用以便更新
     
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
         loadCreations()
+        setupLanguageChangeNotification()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -72,13 +74,31 @@ class MyCreationsViewController: UIViewController {
         emptyStateView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(emptyStateView)
         
-        // 图标（邮件堆叠图标）
-        let iconImageView = UIImageView()
-        iconImageView.image = UIImage(systemName: "mail.stack.fill")
-        iconImageView.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
-        iconImageView.contentMode = .scaleAspectFit
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        emptyStateView.addSubview(iconImageView)
+        // 创建自定义渐变图标视图 - 使用自定义绘制的图标
+        let gradientIconView = GradientIconView(
+            systemName: "custom.tray", // 使用自定义绘制
+            size: CGSize(width: 80, height: 80)
+        )
+        gradientIconView.translatesAutoresizingMaskIntoConstraints = false
+        emptyStateView.addSubview(gradientIconView)
+        
+        // 主标题文字（No LedScreen Here）
+        titleLabel = UILabel()
+        titleLabel.text = "noLedScreenHere".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 24, weight: .bold) // 大一点加粗
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyStateView.addSubview(titleLabel)
+        
+        // 提示文字（开始创建您的第一个led屏幕吧）
+        let hintLabel = UILabel()
+        hintLabel.text = "createFirstLED".localized
+        hintLabel.textColor = .systemGray
+        hintLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        hintLabel.textAlignment = .center
+        hintLabel.translatesAutoresizingMaskIntoConstraints = false
+        emptyStateView.addSubview(hintLabel)
         
         // 创建按钮（胶囊形状）
         createButton = UIButton(type: .system)
@@ -91,34 +111,32 @@ class MyCreationsViewController: UIViewController {
         createButton.translatesAutoresizingMaskIntoConstraints = false
         emptyStateView.addSubview(createButton)
         
-        // 提示文字（放在按钮下面）
-        let hintLabel = UILabel()
-        hintLabel.text = "createFirstLED".localized
-        hintLabel.textColor = .systemGray
-        hintLabel.font = .systemFont(ofSize: 14, weight: .regular)
-        hintLabel.textAlignment = .center
-        hintLabel.translatesAutoresizingMaskIntoConstraints = false
-        emptyStateView.addSubview(hintLabel)
-        
         NSLayoutConstraint.activate([
             emptyStateView.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             emptyStateView.centerYAnchor.constraint(equalTo: view.centerYAnchor), // 居中显示
             emptyStateView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 40),
             emptyStateView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -40),
             
-            iconImageView.topAnchor.constraint(equalTo: emptyStateView.topAnchor),
-            iconImageView.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 80),
-            iconImageView.heightAnchor.constraint(equalToConstant: 80),
+            gradientIconView.topAnchor.constraint(equalTo: emptyStateView.topAnchor),
+            gradientIconView.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            gradientIconView.widthAnchor.constraint(equalToConstant: 80),
+            gradientIconView.heightAnchor.constraint(equalToConstant: 80),
             
-            createButton.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 32),
+            titleLabel.topAnchor.constraint(equalTo: gradientIconView.bottomAnchor, constant: 24),
+            titleLabel.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            titleLabel.leadingAnchor.constraint(equalTo: emptyStateView.leadingAnchor),
+            titleLabel.trailingAnchor.constraint(equalTo: emptyStateView.trailingAnchor),
+            
+            hintLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
+            hintLabel.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
+            hintLabel.leadingAnchor.constraint(equalTo: emptyStateView.leadingAnchor),
+            hintLabel.trailingAnchor.constraint(equalTo: emptyStateView.trailingAnchor),
+            
+            createButton.topAnchor.constraint(equalTo: hintLabel.bottomAnchor, constant: 32), // 间距稍微大一点
             createButton.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
             createButton.widthAnchor.constraint(equalToConstant: 200),
             createButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            hintLabel.topAnchor.constraint(equalTo: createButton.bottomAnchor, constant: 16),
-            hintLabel.centerXAnchor.constraint(equalTo: emptyStateView.centerXAnchor),
-            hintLabel.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor)
+            createButton.bottomAnchor.constraint(equalTo: emptyStateView.bottomAnchor)
         ])
     }
     
@@ -190,6 +208,34 @@ class MyCreationsViewController: UIViewController {
                 toast.removeFromSuperview()
             }
         }
+    }
+    
+    // MARK: - Language Change Support
+    private func setupLanguageChangeNotification() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(languageDidChange),
+            name: NSNotification.Name("LanguageDidChange"),
+            object: nil
+        )
+    }
+    
+    @objc private func languageDidChange() {
+        // 更新导航栏标题
+        title = "creations".localized
+        
+        // 更新空状态视图的文字
+        titleLabel?.text = "noLedScreenHere".localized
+        
+        // 更新按钮文字
+        createButton?.setTitle("createLED".localized, for: .normal)
+        
+        // 重新加载表格以更新所有文字
+        tableView.reloadData()
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
@@ -803,5 +849,174 @@ class DeleteConfirmView: UIView {
 extension DeleteConfirmView: UIGestureRecognizerDelegate {
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
         return touch.view == self
+    }
+}
+
+// MARK: - 渐变图标视图
+class GradientIconView: UIView {
+    
+    private let iconImageView = UIImageView()
+    private let fallbackLabel = UILabel()
+    
+    init(systemName: String, size: CGSize) {
+        super.init(frame: CGRect(origin: .zero, size: size))
+        setupView(systemName: systemName, size: size)
+    }
+    
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+    
+    private func setupView(systemName: String, size: CGSize) {
+        backgroundColor = .clear
+        
+        // 如果是自定义图标，直接绘制
+        if systemName == "custom.tray" {
+            setupCustomTrayIcon()
+            return
+        }
+        
+        // 调试：打印尝试加载的图标名称
+        print("🔍 尝试加载系统图标: \(systemName)")
+        
+        // 尝试创建系统图标，使用更大的尺寸配置
+        let iconConfig = UIImage.SymbolConfiguration(pointSize: 50, weight: .medium, scale: .large)
+        let image = UIImage(systemName: systemName, withConfiguration: iconConfig)
+        
+        print("🔍 图标加载结果: \(image != nil ? "成功" : "失败")")
+        
+        if let image = image {
+            // 成功创建图标
+            iconImageView.image = image
+            iconImageView.tintColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 1.0) // 玫红色
+            iconImageView.contentMode = .scaleAspectFit
+            iconImageView.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(iconImageView)
+            
+            // 玫红色发光效果
+            iconImageView.layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 1.0).cgColor
+            iconImageView.layer.shadowRadius = 20
+            iconImageView.layer.shadowOpacity = 0.8
+            iconImageView.layer.shadowOffset = .zero
+            
+            // 浅浅的玫红色透明度.3的y轴4px阴影
+            layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 0.3).cgColor
+            layer.shadowOffset = CGSize(width: 0, height: 4)
+            layer.shadowRadius = 8
+            layer.shadowOpacity = 1.0
+            
+            NSLayoutConstraint.activate([
+                iconImageView.centerXAnchor.constraint(equalTo: centerXAnchor),
+                iconImageView.centerYAnchor.constraint(equalTo: centerYAnchor),
+                iconImageView.widthAnchor.constraint(equalToConstant: 60),
+                iconImageView.heightAnchor.constraint(equalToConstant: 60)
+            ])
+            
+            print("✅ 系统图标设置完成")
+        } else {
+            // 图标创建失败，使用备用emoji
+            fallbackLabel.text = "📱"
+            fallbackLabel.font = .systemFont(ofSize: 50)
+            fallbackLabel.textAlignment = .center
+            fallbackLabel.translatesAutoresizingMaskIntoConstraints = false
+            addSubview(fallbackLabel)
+            
+            // 给emoji添加发光效果
+            fallbackLabel.layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 1.0).cgColor
+            fallbackLabel.layer.shadowRadius = 20
+            fallbackLabel.layer.shadowOpacity = 0.8
+            fallbackLabel.layer.shadowOffset = .zero
+            
+            // 浅浅的玫红色透明度.3的y轴4px阴影
+            layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 0.3).cgColor
+            layer.shadowOffset = CGSize(width: 0, height: 4)
+            layer.shadowRadius = 8
+            layer.shadowOpacity = 1.0
+            
+            NSLayoutConstraint.activate([
+                fallbackLabel.centerXAnchor.constraint(equalTo: centerXAnchor),
+                fallbackLabel.centerYAnchor.constraint(equalTo: centerYAnchor)
+            ])
+            
+            print("⚠️ 使用备用emoji图标")
+        }
+    }
+    
+    private func setupCustomTrayIcon() {
+        // 创建自定义绘制的托盘图标
+        let customIconView = UIView()
+        customIconView.backgroundColor = .clear
+        customIconView.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(customIconView)
+        
+        // 绘制托盘形状
+        let trayLayer = CAShapeLayer()
+        let trayPath = UIBezierPath()
+        
+        // 绘制一个简单的托盘形状（矩形底部 + 两侧边框）
+        let rect = CGRect(x: 10, y: 20, width: 40, height: 25)
+        trayPath.move(to: CGPoint(x: rect.minX, y: rect.maxY))
+        trayPath.addLine(to: CGPoint(x: rect.minX, y: rect.minY + 5))
+        trayPath.addLine(to: CGPoint(x: rect.maxX, y: rect.minY + 5))
+        trayPath.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        trayPath.addLine(to: CGPoint(x: rect.minX + 35, y: rect.maxY))
+        trayPath.addLine(to: CGPoint(x: rect.minX + 5, y: rect.maxY))
+        trayPath.close()
+        
+        trayLayer.path = trayPath.cgPath
+        trayLayer.strokeColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 1.0).cgColor
+        trayLayer.fillColor = UIColor.clear.cgColor
+        trayLayer.lineWidth = 3
+        trayLayer.lineCap = .round
+        trayLayer.lineJoin = .round
+        
+        // 添加闪烁效果
+        let sparkleLayer = CAShapeLayer()
+        let sparklePath = UIBezierPath()
+        
+        // 绘制几个小星星
+        let sparklePoints = [
+            CGPoint(x: 45, y: 15),
+            CGPoint(x: 35, y: 10),
+            CGPoint(x: 25, y: 12)
+        ]
+        
+        for point in sparklePoints {
+            let sparkle = UIBezierPath()
+            sparkle.move(to: CGPoint(x: point.x - 3, y: point.y))
+            sparkle.addLine(to: CGPoint(x: point.x + 3, y: point.y))
+            sparkle.move(to: CGPoint(x: point.x, y: point.y - 3))
+            sparkle.addLine(to: CGPoint(x: point.x, y: point.y + 3))
+            sparklePath.append(sparkle)
+        }
+        
+        sparkleLayer.path = sparklePath.cgPath
+        sparkleLayer.strokeColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 1.0).cgColor
+        sparkleLayer.lineWidth = 2
+        sparkleLayer.lineCap = .round
+        
+        customIconView.layer.addSublayer(trayLayer)
+        customIconView.layer.addSublayer(sparkleLayer)
+        
+        // 发光效果
+        customIconView.layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 1.0).cgColor
+        customIconView.layer.shadowRadius = 20
+        customIconView.layer.shadowOpacity = 0.8
+        customIconView.layer.shadowOffset = .zero
+        
+        // 浅浅的玫红色透明度.3的y轴4px阴影
+        layer.shadowColor = UIColor(red: 0xFF/255.0, green: 0x14/255.0, blue: 0x93/255.0, alpha: 0.3).cgColor
+        layer.shadowOffset = CGSize(width: 0, height: 4)
+        layer.shadowRadius = 8
+        layer.shadowOpacity = 1.0
+        
+        NSLayoutConstraint.activate([
+            customIconView.centerXAnchor.constraint(equalTo: centerXAnchor),
+            customIconView.centerYAnchor.constraint(equalTo: centerYAnchor),
+            customIconView.widthAnchor.constraint(equalToConstant: 60),
+            customIconView.heightAnchor.constraint(equalToConstant: 60)
+        ])
+        
+        print("✅ 自定义托盘图标设置完成")
     }
 }
