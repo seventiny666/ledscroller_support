@@ -1,0 +1,173 @@
+{
+  "identifier" : "StoreKitConfiguration",
+  "nonRenewingSubscriptions" : [
+
+  ],
+  "products" : [
+
+  ],
+  "settings" : {
+    "_applicationInternalID" : "6738924601",
+    "_developerTeamID" : "YOUR_TEAM_ID",
+    "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 745372800.0,
+    "_locale" : "en_US",
+    "_storefront" : "USA",
+    "_storeKitErrors" : [
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Load Products"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Purchase"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Verification"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Store Sync"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Subscription Status"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "App Transaction"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Manage Subscriptions Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Refund Request Sheet"
+      },
+      {
+        "current" : null,
+        "enabled" : false,
+        "name" : "Offer Code Redeem Sheet"
+      }
+    ]
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "21510260",
+      "localizations" : [
+
+      ],
+      "name" : "VIP Subscription",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "2.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "6738924602",
+          "introductoryOffer" : {
+            "internalID" : "6738924603",
+            "paymentMode" : "free",
+            "subscriptionPeriod" : "P3D"
+          },
+          "localizations" : [
+            {
+              "description" : "Weekly VIP subscription with 3-day free trial",
+              "displayName" : "Weekly VIP",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "週訂閱VIP會員，含3天免費試用",
+              "displayName" : "週訂閱",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.ledscreen.vip.weekly",
+          "recurringSubscriptionPeriod" : "P1W",
+          "referenceName" : "Weekly VIP Subscription",
+          "subscriptionGroupID" : "21510260",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "7.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "6738924604",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Monthly VIP subscription - Most Popular",
+              "displayName" : "Monthly VIP",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "月訂閱VIP會員 - 最受歡迎",
+              "displayName" : "月訂閱",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.ledscreen.vip.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Monthly VIP Subscription",
+          "subscriptionGroupID" : "21510260",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+
+          ],
+          "codeOffers" : [
+
+          ],
+          "displayPrice" : "29.99",
+          "familyShareable" : false,
+          "groupNumber" : 3,
+          "internalID" : "6738924605",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Yearly VIP subscription - Save 76%",
+              "displayName" : "Yearly VIP",
+              "locale" : "en_US"
+            },
+            {
+              "description" : "年訂閱VIP會員 - 節省76%",
+              "displayName" : "年訂閱",
+              "locale" : "zh_CN"
+            }
+          ],
+          "productID" : "com.ledscreen.vip.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Yearly VIP Subscription",
+          "subscriptionGroupID" : "21510260",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

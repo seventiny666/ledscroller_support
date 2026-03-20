@@ -105,6 +105,15 @@ import StoreKit
     }
     
     @objc func isVIP() -> Bool {
+        // 优先使用 StoreKit 2 (iOS 15+)
+        if #available(iOS 15.0, *) {
+            let storeKit2Manager = StoreKitManager.shared
+            if storeKit2Manager.isVIP() {
+                return true
+            }
+        }
+        
+        // 回退到 StoreKit 1 状态检查
         switch vipStatus {
         case .free:
             return false
@@ -114,6 +123,15 @@ import StoreKit
     }
     
     @objc func getVIPStatusText() -> String {
+        // 优先使用 StoreKit 2 (iOS 15+)
+        if #available(iOS 15.0, *) {
+            let storeKit2Manager = StoreKitManager.shared
+            if storeKit2Manager.isVIP() {
+                return storeKit2Manager.getStatusText()
+            }
+        }
+        
+        // 回退到 StoreKit 1 状态
         switch vipStatus {
         case .free:
             return "vipStatusFree".localized
@@ -606,6 +624,10 @@ class VIPScrollView: UIScrollView {
     private let contentView = UIView()
     private let vipManager = VIPManager.shared
     
+    // StoreKit 2 支持
+    @available(iOS 15.0, *)
+    private lazy var storeKitManager = StoreKitManager.shared
+    
     // UI组件
     private let headerView = UIView()
     private let titleLabel = UILabel()
@@ -627,6 +649,14 @@ class VIPScrollView: UIScrollView {
         print("🔍 服务条款本地化: \("termsOfService".localized)")
         print("🔍 隐私政策本地化: \("privacyPolicy".localized)")
         print("🔍 恢复购买本地化: \("restorePurchases".localized)")
+        
+        // 检查 StoreKit 版本支持
+        if #available(iOS 15.0, *) {
+            print("🔍 支持 StoreKit 2，使用新的购买流程")
+            // StoreKit 2 会自动初始化和加载产品
+        } else {
+            print("🔍 使用 StoreKit 1 兼容模式")
+        }
         
         setupUI()
         setupNotifications()
@@ -700,6 +730,14 @@ class VIPScrollView: UIScrollView {
             
             // 测试按钮触摸
             self.testButtonTouch()
+            
+            // 测试 StoreKit 2 集成（仅在调试模式下）
+            #if DEBUG
+            if #available(iOS 15.0, *) {
+                self.testStoreKit2Integration()
+            }
+            self.testUnifiedVIPStatus()
+            #endif
         }
     }
     
@@ -841,7 +879,7 @@ class VIPScrollView: UIScrollView {
     }
     
     private func setupNotifications() {
-        // 监听购买完成通知
+        // 监听购买完成通知 (StoreKit 1)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(purchaseDidComplete(_:)),
@@ -849,7 +887,7 @@ class VIPScrollView: UIScrollView {
             object: nil
         )
         
-        // 监听购买失败通知
+        // 监听购买失败通知 (StoreKit 1)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(purchaseDidFail(_:)),
@@ -864,6 +902,25 @@ class VIPScrollView: UIScrollView {
             name: NSNotification.Name("ProductsDidLoad"),
             object: nil
         )
+        
+        // StoreKit 2 通知 (iOS 15+)
+        if #available(iOS 15.0, *) {
+            // 监听 StoreKit 2 购买成功通知
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(storeKit2PurchaseSuccess(_:)),
+                name: NSNotification.Name("PurchaseSuccess"),
+                object: nil
+            )
+            
+            // 监听 StoreKit 2 恢复成功通知
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(storeKit2RestoreSuccess(_:)),
+                name: NSNotification.Name("RestoreSuccess"),
+                object: nil
+            )
+        }
     }
     
     @objc private func productsDidLoad() {
@@ -906,6 +963,98 @@ class VIPScrollView: UIScrollView {
                 print("🔍 显示通用购买失败提示")
                 self.showAlert(title: "purchaseFailed".localized, message: "purchaseFailedMessage".localized)
             }
+        }
+    }
+    
+    // MARK: - StoreKit 2 通知处理 (iOS 15+)
+    @available(iOS 15.0, *)
+    @objc private func storeKit2PurchaseSuccess(_ notification: Notification) {
+        print("🔍 收到 StoreKit 2 购买成功通知")
+        DispatchQueue.main.async {
+            self.showSuccessAlert(message: "purchaseSuccess".localized, shouldDismiss: true)
+        }
+    }
+    
+    @available(iOS 15.0, *)
+    @objc private func storeKit2RestoreSuccess(_ notification: Notification) {
+        print("🔍 收到 StoreKit 2 恢复成功通知")
+        DispatchQueue.main.async {
+            self.showSuccessAlert(message: "restoreSuccess".localized, shouldDismiss: false)
+        }
+    }
+    
+    // MARK: - 加载状态管理
+    private func showLoadingState(_ show: Bool) {
+        if show {
+            // 显示加载指示器
+            let loadingView = UIView()
+            loadingView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+            loadingView.tag = 9999 // 用于识别和移除
+            
+            let activityIndicator = UIActivityIndicatorView(style: .large)
+            activityIndicator.color = .white
+            activityIndicator.startAnimating()
+            
+            loadingView.addSubview(activityIndicator)
+            view.addSubview(loadingView)
+            
+            loadingView.translatesAutoresizingMaskIntoConstraints = false
+            activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+            
+            NSLayoutConstraint.activate([
+                loadingView.topAnchor.constraint(equalTo: view.topAnchor),
+                loadingView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                loadingView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                loadingView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+                
+                activityIndicator.centerXAnchor.constraint(equalTo: loadingView.centerXAnchor),
+                activityIndicator.centerYAnchor.constraint(equalTo: loadingView.centerYAnchor)
+            ])
+        } else {
+            // 移除加载指示器
+            view.subviews.first { $0.tag == 9999 }?.removeFromSuperview()
+        }
+    }
+    
+    // MARK: - 调试和测试方法
+    
+    /// 测试 StoreKit 2 功能（仅用于调试）
+    @available(iOS 15.0, *)
+    func testStoreKit2Integration() {
+        print("🧪 开始测试 StoreKit 2 集成...")
+        
+        Task {
+            // 测试产品加载
+            await storeKitManager.loadProducts()
+            print("🧪 产品数量: \(storeKitManager.products.count)")
+            
+            // 测试订阅状态
+            await storeKitManager.updateSubscriptionStatus()
+            print("🧪 当前订阅状态: \(storeKitManager.subscriptionStatus)")
+            print("🧪 是否VIP: \(storeKitManager.isVIP())")
+            
+            // 打印产品信息
+            for (index, product) in storeKitManager.products.enumerated() {
+                print("🧪 产品 \(index): \(product.displayName) - \(product.displayPrice)")
+            }
+        }
+    }
+    
+    /// 测试统一 VIP 状态检查
+    func testUnifiedVIPStatus() {
+        print("🧪 测试统一 VIP 状态检查...")
+        
+        let vipStatus = vipManager.isVIP()
+        let statusText = vipManager.getVIPStatusText()
+        
+        print("🧪 VIP 状态: \(vipStatus)")
+        print("🧪 状态文本: \(statusText)")
+        
+        if #available(iOS 15.0, *) {
+            let storeKit2Status = storeKitManager.isVIP()
+            let storeKit2Text = storeKitManager.getStatusText()
+            print("🧪 StoreKit 2 状态: \(storeKit2Status)")
+            print("🧪 StoreKit 2 文本: \(storeKit2Text)")
         }
     }
     
@@ -1171,48 +1320,15 @@ class VIPScrollView: UIScrollView {
         optionsContainer.translatesAutoresizingMaskIntoConstraints = false
         subscriptionOptionsView.addSubview(optionsContainer)
         
-        // 创建订阅选项 - 使用实际产品价格或回退价格
+        // 创建订阅选项 - 根据 iOS 版本使用不同的产品源
         var subscriptionOptions: [(String, String, String, Bool)] = []
         
-        if vipManager.products.count >= 3 { // 改为3个产品
-            // 使用实际产品价格
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            
-            for (index, product) in vipManager.products.enumerated() {
-                if index >= 3 { break } // 只处理前3个产品
-                
-                formatter.locale = product.priceLocale
-                let priceString = formatter.string(from: product.price) ?? "$0.00"
-                
-                let title: String
-                let subtitle: String
-                let isSelected = (index == 0)
-                
-                switch index {
-                case 0: // Weekly
-                    title = "weeklySubscription".localized
-                    subtitle = "freeTrial".localized
-                case 1: // Monthly
-                    title = "monthlySubscription".localized
-                    subtitle = "mostPopular".localized
-                case 2: // Yearly
-                    title = "🔥 " + "yearlySubscription".localized // 添加火的图标
-                    subtitle = "save76Percent".localized // 改为节省76%
-                default:
-                    title = product.localizedTitle
-                    subtitle = ""
-                }
-                
-                subscriptionOptions.append((title, priceString, subtitle, isSelected))
-            }
+        if #available(iOS 15.0, *) {
+            // iOS 15+ 使用 StoreKit 2
+            subscriptionOptions = getStoreKit2SubscriptionOptions()
         } else {
-            // 如果产品还没加载完成，使用新的回退价格
-            subscriptionOptions = [
-                ("weeklySubscription".localized, "$2.99", "freeTrial".localized, true),
-                ("monthlySubscription".localized, "$7.99", "mostPopular".localized, false),
-                ("🔥 " + "yearlySubscription".localized, "$29.99", "save76Percent".localized, false)
-            ]
+            // iOS 14- 使用 StoreKit 1
+            subscriptionOptions = getStoreKit1SubscriptionOptions()
         }
         
         let stackView = UIStackView()
@@ -1249,6 +1365,99 @@ class VIPScrollView: UIScrollView {
             stackView.trailingAnchor.constraint(equalTo: optionsContainer.trailingAnchor),
             stackView.bottomAnchor.constraint(equalTo: optionsContainer.bottomAnchor)
         ])
+    }
+    
+    // MARK: - StoreKit 2 订阅选项 (iOS 15+)
+    @available(iOS 15.0, *)
+    private func getStoreKit2SubscriptionOptions() -> [(String, String, String, Bool)] {
+        var options: [(String, String, String, Bool)] = []
+        
+        if storeKitManager.products.count >= 3 {
+            // 使用 StoreKit 2 产品价格
+            for (index, product) in storeKitManager.products.enumerated() {
+                if index >= 3 { break } // 只处理前3个产品
+                
+                let priceString = product.displayPrice
+                let title: String
+                let subtitle: String
+                let isSelected = (index == 0)
+                
+                switch index {
+                case 0: // Weekly
+                    title = "weeklySubscription".localized
+                    subtitle = "freeTrial".localized
+                case 1: // Monthly
+                    title = "monthlySubscription".localized
+                    subtitle = "mostPopular".localized
+                case 2: // Yearly
+                    title = "🔥 " + "yearlySubscription".localized
+                    subtitle = "save76Percent".localized
+                default:
+                    title = product.displayName
+                    subtitle = ""
+                }
+                
+                options.append((title, priceString, subtitle, isSelected))
+            }
+        } else {
+            // 回退价格
+            options = getDefaultSubscriptionOptions()
+        }
+        
+        return options
+    }
+    
+    // MARK: - StoreKit 1 订阅选项 (iOS 14-)
+    private func getStoreKit1SubscriptionOptions() -> [(String, String, String, Bool)] {
+        var options: [(String, String, String, Bool)] = []
+        
+        if vipManager.products.count >= 3 {
+            // 使用 StoreKit 1 产品价格
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            
+            for (index, product) in vipManager.products.enumerated() {
+                if index >= 3 { break } // 只处理前3个产品
+                
+                formatter.locale = product.priceLocale
+                let priceString = formatter.string(from: product.price) ?? "$0.00"
+                
+                let title: String
+                let subtitle: String
+                let isSelected = (index == 0)
+                
+                switch index {
+                case 0: // Weekly
+                    title = "weeklySubscription".localized
+                    subtitle = "freeTrial".localized
+                case 1: // Monthly
+                    title = "monthlySubscription".localized
+                    subtitle = "mostPopular".localized
+                case 2: // Yearly
+                    title = "🔥 " + "yearlySubscription".localized
+                    subtitle = "save76Percent".localized
+                default:
+                    title = product.localizedTitle
+                    subtitle = ""
+                }
+                
+                options.append((title, priceString, subtitle, isSelected))
+            }
+        } else {
+            // 回退价格
+            options = getDefaultSubscriptionOptions()
+        }
+        
+        return options
+    }
+    
+    // MARK: - 默认订阅选项（回退）
+    private func getDefaultSubscriptionOptions() -> [(String, String, String, Bool)] {
+        return [
+            ("weeklySubscription".localized, "$2.99", "freeTrial".localized, true),
+            ("monthlySubscription".localized, "$7.99", "mostPopular".localized, false),
+            ("🔥 " + "yearlySubscription".localized, "$29.99", "save76Percent".localized, false)
+        ]
     }
     
     private func createSubscriptionOption(title: String, price: String, subtitle: String, isSelected: Bool, index: Int) -> UIButton {
@@ -1710,6 +1919,73 @@ class VIPScrollView: UIScrollView {
             return
         }
         
+        // 使用 StoreKit 2 (iOS 15+) 或 StoreKit 1 (iOS 14-)
+        if #available(iOS 15.0, *) {
+            handleStoreKit2Purchase()
+        } else {
+            handleStoreKit1Purchase()
+        }
+    }
+    
+    // MARK: - StoreKit 2 购买流程 (iOS 15+)
+    @available(iOS 15.0, *)
+    private func handleStoreKit2Purchase() {
+        print("🔍 使用 StoreKit 2 进行购买")
+        
+        // 检查产品是否已加载
+        guard selectedSubscriptionIndex < storeKitManager.products.count else {
+            print("⚠️ StoreKit 2 产品列表未加载完成")
+            showAlert(title: "tip".localized, message: "loadingProducts".localized)
+            return
+        }
+        
+        let product = storeKitManager.products[selectedSubscriptionIndex]
+        print("🔍 开始购买 StoreKit 2 产品: \(product.id)")
+        
+        // 显示加载状态
+        showLoadingState(true)
+        
+        Task {
+            do {
+                let transaction = try await storeKitManager.purchase(product)
+                
+                await MainActor.run {
+                    self.showLoadingState(false)
+                    
+                    if transaction != nil {
+                        // 购买成功
+                        self.showSuccessAlert(message: "purchaseSuccess".localized, shouldDismiss: true)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.showLoadingState(false)
+                    
+                    // 处理购买错误
+                    let errorMessage: String
+                    if let storeError = error as? StoreError {
+                        switch storeError {
+                        case .userCancelled:
+                            return // 用户取消，不显示错误
+                        case .pending:
+                            errorMessage = "purchasePending".localized
+                        default:
+                            errorMessage = storeError.localizedDescription
+                        }
+                    } else {
+                        errorMessage = error.localizedDescription
+                    }
+                    
+                    self.showAlert(title: "purchaseError".localized, message: errorMessage)
+                }
+            }
+        }
+    }
+    
+    // MARK: - StoreKit 1 购买流程 (iOS 14-)
+    private func handleStoreKit1Purchase() {
+        print("🔍 使用 StoreKit 1 进行购买")
+        
         // 如果选择的是周订阅且用户是免费用户，开始免费试用
         if selectedSubscriptionIndex == 0 && !vipManager.isVIP() {
             print("🔍 开始免费试用")
@@ -1718,12 +1994,12 @@ class VIPScrollView: UIScrollView {
         } else {
             // 其他情况进行购买
             guard selectedSubscriptionIndex < vipManager.products.count else { 
-                print("⚠️ 产品列表未加载完成")
+                print("⚠️ StoreKit 1 产品列表未加载完成")
                 showAlert(title: "tip".localized, message: "loadingProducts".localized)
                 return 
             }
             let product = vipManager.products[selectedSubscriptionIndex]
-            print("🔍 开始购买产品: \(product.productIdentifier)")
+            print("🔍 开始购买 StoreKit 1 产品: \(product.productIdentifier)")
             vipManager.purchase(product: product)
         }
     }
@@ -1741,7 +2017,56 @@ class VIPScrollView: UIScrollView {
             return
         }
         
-        // 显示加载状态，但不立即显示alert
+        // 使用 StoreKit 2 (iOS 15+) 或 StoreKit 1 (iOS 14-)
+        if #available(iOS 15.0, *) {
+            handleStoreKit2Restore()
+        } else {
+            handleStoreKit1Restore()
+        }
+    }
+    
+    // MARK: - StoreKit 2 恢复购买 (iOS 15+)
+    @available(iOS 15.0, *)
+    private func handleStoreKit2Restore() {
+        print("🔍 使用 StoreKit 2 恢复购买")
+        
+        // 显示加载状态
+        showLoadingState(true)
+        
+        Task {
+            do {
+                try await storeKitManager.restorePurchases()
+                
+                await MainActor.run {
+                    self.showLoadingState(false)
+                    
+                    // 检查恢复结果
+                    if self.storeKitManager.isVIP() {
+                        self.showSuccessAlert(message: "restoreSuccess".localized, shouldDismiss: false)
+                    } else {
+                        self.showAlert(title: "tip".localized, message: "noRestorablePurchases".localized)
+                    }
+                }
+            } catch {
+                await MainActor.run {
+                    self.showLoadingState(false)
+                    
+                    let errorMessage: String
+                    if let storeError = error as? StoreError {
+                        errorMessage = storeError.localizedDescription
+                    } else {
+                        errorMessage = error.localizedDescription
+                    }
+                    
+                    self.showAlert(title: "restoreError".localized, message: errorMessage)
+                }
+            }
+        }
+    }
+    
+    // MARK: - StoreKit 1 恢复购买 (iOS 14-)
+    private func handleStoreKit1Restore() {
+        print("🔍 使用 StoreKit 1 恢复购买")
         print("🔍 开始恢复购买操作")
         vipManager.restorePurchases()
         print("🔍 已调用恢复购买方法")

@@ -155,12 +155,19 @@
 "privacyPolicy" = "隱私政策";
 "success" = "成功";
 "purchaseSuccess" = "購買成功！感謝您的支持。";
+"purchaseError" = "購買錯誤";
 "restoreSuccess" = "購買記錄恢復成功！";
 "purchaseFailed" = "購買失敗";
 "purchaseFailedMessage" = "請稍後重試";
+"purchasePending" = "購買等待批准中。";
+"restoreError" = "恢復錯誤";
 "restoreInProgress" = "正在恢復您的購買記錄...";
 "noRestorablePurchases" = "沒有找到可恢復的購買記錄";
 "freeTrialStarted" = "免費試用已開始！您可以享受3天的VIP功能。";
+
+/* VIP Status */
+"vipStatusFree" = "免費用戶";
+"vipStatusSubscribed" = "VIP會員（剩餘%d天）";
 "termsMessage" = "感謝您使用我們的應用。詳細的服務條款請訪問我們的官方網站。";
 "privacyMessage" = "我們重視您的隱私。詳細的隱私政策請訪問我們的官方網站。";
 "termsContent" = "服務條款\n\n1. 接受條款\n通過下載、安裝或使用本應用程序，您同意受本服務條款的約束。\n\n2. 應用程序使用\n本應用程序僅供個人、非商業用途。您不得將本應用程序用於任何非法或未經授權的目的。\n\n3. 訂閱服務\n• VIP訂閱提供高級功能訪問權限\n• 訂閱費用將在確認購買時從您的iTunes賬戶中扣除\n• 訂閱將自動續訂，除非在當前期間結束前至少24小時關閉自動續訂\n• 您可以在iTunes賬戶設置中管理訂閱\n\n4. 知識產權\n本應用程序及其內容受版權法保護。未經許可，不得複製、修改或分發。\n\n5. 免責聲明\n本應用程序按現狀提供，不提供任何明示或暗示的保證。\n\n6. 聯繫我們\n如有疑問，請聯繫：784430005@qq.com";

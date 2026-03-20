@@ -49,6 +49,25 @@
 "freeTrial" = "3-day free trial";
 "mostPopular" = "Most Popular";
 
+/* Purchase Messages */
+"purchaseSuccess" = "Purchase successful! Enjoy your VIP membership.";
+"purchaseError" = "Purchase Error";
+"purchaseFailed" = "Purchase Failed";
+"purchaseFailedMessage" = "Unable to complete purchase. Please try again.";
+"purchasePending" = "Purchase is pending approval.";
+"restoreSuccess" = "Purchase restored successfully!";
+"restoreError" = "Restore Error";
+"noRestorablePurchases" = "No restorable purchases found.";
+"loadingProducts" = "Loading products, please wait...";
+"freeTrialStarted" = "Free trial started! Enjoy 3 days of VIP access.";
+
+/* VIP Status */
+"vipStatusFree" = "Free User";
+"vipStatusSubscribed" = "VIP Member (%d days remaining)";
+
+/* Savings */
+"save76Percent" = "Save 76%";
+
 /* VIP Content Popup */
 "vipContentSelected" = "You selected premium components";
 "vipBenefitsMessage" = "Become a subscriber to unlock all benefits, cancel anytime if not needed";
