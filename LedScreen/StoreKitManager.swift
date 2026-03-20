@@ -351,6 +351,7 @@ class StoreKitManager: ObservableObject {
 }
 
 // MARK: - Store Errors
+@available(iOS 15.0, *)
 enum StoreError: LocalizedError {
     case failedVerification
     case userCancelled

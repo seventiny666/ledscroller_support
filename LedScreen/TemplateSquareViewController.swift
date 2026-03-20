@@ -107,8 +107,7 @@ import StoreKit
     @objc func isVIP() -> Bool {
         // 优先使用 StoreKit 2 (iOS 15+)
         if #available(iOS 15.0, *) {
-            // 检查 StoreKit 2 状态
-            if StoreKitManager.shared.isVIP() {
+            if checkStoreKit2VIPStatus() {
                 return true
             }
         }
@@ -122,12 +121,22 @@ import StoreKit
         }
     }
     
+    @available(iOS 15.0, *)
+    private func checkStoreKit2VIPStatus() -> Bool {
+        return StoreKitManager.shared.isVIP()
+    }
+    
+    @available(iOS 15.0, *)
+    private func getStoreKit2StatusInfo() -> (Bool, String) {
+        return (StoreKitManager.shared.isVIP(), StoreKitManager.shared.getStatusText())
+    }
+    
     @objc func getVIPStatusText() -> String {
         // 优先使用 StoreKit 2 (iOS 15+)
         if #available(iOS 15.0, *) {
-            // 检查 StoreKit 2 状态
-            if StoreKitManager.shared.isVIP() {
-                return StoreKitManager.shared.getStatusText()
+            let (isVIP, statusText) = getStoreKit2StatusInfo()
+            if isVIP {
+                return statusText
             }
         }
         
