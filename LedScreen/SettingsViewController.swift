@@ -52,7 +52,64 @@ class SettingsViewController: UIViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // 确保VIP管理器状态正常
+        VIPManager.shared.checkAndResetIfStuck()
+        
         setupUI()
+        
+        // 监听VIP状态变化
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(vipStatusDidChange),
+            name: VIPManager.vipStatusDidChangeNotification,
+            object: nil
+        )
+        
+        // 监听VIP状态重置
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(vipStateDidReset),
+            name: NSNotification.Name("VIPStateReset"),
+            object: nil
+        )
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+    
+    @objc private func vipStatusDidChange() {
+        print("🔍 设置界面：收到VIP状态变化通知")
+        DispatchQueue.main.async {
+            self.refreshSettingsDisplay()
+        }
+    }
+    
+    @objc private func vipStateDidReset() {
+        print("🔍 设置界面：收到VIP状态重置通知")
+        DispatchQueue.main.async {
+            // 确保界面可以正常交互
+            self.view.isUserInteractionEnabled = true
+            self.refreshSettingsDisplay()
+        }
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        
+        // 刷新设置项显示，特别是恢复购买项的标题
+        refreshSettingsDisplay()
+    }
+    
+    private func refreshSettingsDisplay() {
+        // 重新创建设置卡片以更新VIP状态显示
+        stackView.arrangedSubviews.forEach { $0.removeFromSuperview() }
+        
+        for setting in settings {
+            let card = createSettingCard(for: setting)
+            stackView.addArrangedSubview(card)
+        }
     }
     
     private func setupUI() {
@@ -219,7 +276,9 @@ class SettingsViewController: UIViewController {
                 message: "开通订阅后您可解锁全部权益\n也可随时退订订阅", // 修改为2行文字，去掉逗号，在逗号位置换行
                 primaryButtonTitle: "restorePurchases".localized, // 交换：恢复购买作为主按钮
                 primaryAction: {
-                    VIPManager.shared.restorePurchases()
+                    print("🔍 设置界面：恢复购买按钮被点击")
+                    // 不直接调用恢复购买，而是打开VIP订阅界面
+                    self.showVIPSubscription()
                 },
                 secondaryButtonTitle: VIPManager.shared.getVIPButtonText(), // 交换：开通VIP作为次要按钮
                 secondaryAction: {
@@ -230,13 +289,21 @@ class SettingsViewController: UIViewController {
     }
     
     private func showVIPSubscription() {
+        print("🔍 设置界面：准备显示VIP订阅界面")
+        
+        // 确保VIP管理器状态正常
+        VIPManager.shared.checkAndResetIfStuck()
+        
         let vipVC = VIPSubscriptionViewController()
         let nav = UINavigationController(rootViewController: vipVC)
         nav.modalPresentationStyle = .fullScreen
         
         // 确保在主线程上执行，并添加延迟以确保弹窗完全关闭
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.present(nav, animated: true)
+            print("🔍 设置界面：开始present VIP订阅界面")
+            self.present(nav, animated: true) {
+                print("🔍 设置界面：VIP订阅界面已显示")
+            }
         }
     }
     
@@ -490,6 +557,9 @@ class SettingsViewController: UIViewController {
         
         // 创建新的TabBarController
         let newTabBarController = MainTabBarController()
+        
+        // 设置选中设置页面（保持在当前页面）
+        newTabBarController.selectedIndex = 4 // 设置页面在第5个位置（index 4）
         
         // 使用动画切换根视图控制器
         UIView.transition(with: window, duration: 0.3, options: .transitionCrossDissolve, animations: {

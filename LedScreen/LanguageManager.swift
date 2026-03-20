@@ -59,10 +59,10 @@ class LanguageManager {
                 print("🔍 LanguageManager: Loading saved language: \(language.displayName) (\(languageCode))")
                 return language
             }
-            // 默认使用系统语言
-            let systemLang = detectSystemLanguage()
-            print("🔍 LanguageManager: Using system language: \(systemLang.displayName)")
-            return systemLang
+            
+            // 如果没有保存的语言设置，强制使用英语作为默认语言
+            print("🔍 LanguageManager: No saved language, using English as default")
+            return .english
         }
         set {
             print("🔍 LanguageManager: Setting language to: \(newValue.displayName) (\(newValue.rawValue))")
@@ -89,8 +89,8 @@ class LanguageManager {
     }
     
     private init() {
-        // 初始化时设置bundle
-        let language = currentLanguage
+        // 初始化时设置bundle - 强制使用英语作为默认语言
+        let language = currentLanguage // 这会触发getter，如果没有保存的语言会返回英语
         if let path = Bundle.main.path(forResource: language.rawValue, ofType: "lproj") {
             bundle = Bundle(path: path)
             print("🔍 LanguageManager init: Bundle loaded for \(language.rawValue)")
@@ -98,11 +98,19 @@ class LanguageManager {
             bundle = Bundle.main
             print("⚠️ LanguageManager init: Could not find bundle for \(language.rawValue), using main bundle")
         }
+        
+        // 如果是第一次启动且没有保存的语言设置，设置英语为默认语言
+        if UserDefaults.standard.string(forKey: userDefaultsKey) == nil {
+            print("🔍 LanguageManager init: First launch, setting English as default")
+            UserDefaults.standard.set(Language.english.rawValue, forKey: userDefaultsKey)
+            UserDefaults.standard.synchronize()
+        }
     }
     
     // 检测系统语言
     private func detectSystemLanguage() -> Language {
         let preferredLanguage = Locale.preferredLanguages.first ?? "en"
+        print("🔍 系统首选语言: \(preferredLanguage)")
         
         if preferredLanguage.hasPrefix("zh-Hans") {
             return .simplifiedChinese
@@ -124,6 +132,7 @@ class LanguageManager {
             return .italian
         }
         
+        print("🔍 使用默认语言: English")
         return .english
     }
     

@@ -130,6 +130,24 @@
 "updateSuccess" = "更新保存成功!";
 
 /* VIP Subscription */
+"vipTitle" = "解鎖 VIP 會員";
+"vipSubtitle" = "享受全部高級功能和內容";
+"vipFeature1" = "解鎖全部高級模板";
+"vipFeature2" = "專屬霓虹燈效果";
+"vipFeature3" = "偶像應援模板";
+"vipFeature4" = "高級邊框樣式";
+"vipFeature5" = "優先體驗新功能";
+"vipFeature6" = "無限制創作內容";
+"subscriptionOptions" = "選擇訂閱方案";
+"weeklySubscription" = "週訂閱";
+"monthlySubscription" = "月訂閱";
+"yearlySubscription" = "年訂閱";
+"lifetimeSubscription" = "終身買斷";
+"freeTrial" = "免費試用3天";
+"mostPopular" = "最受歡迎";
+"save67Percent" = "節省67%";
+"save76Percent" = "節省76%";
+"oneTimePurchase" = "一次購買，永久使用";
 "startFreeTrial" = "開始免費試用";
 "restorePurchases" = "恢復購買";
 "paymentDisclaimer" = "確認購買時將向您的iTunes賬戶收費。除非在當前期間結束前至少24小時取消，否則訂閱會自動續訂。";
@@ -143,8 +161,11 @@
 "restoreInProgress" = "正在恢復您的購買記錄...";
 "noRestorablePurchases" = "沒有找到可恢復的購買記錄";
 "freeTrialStarted" = "免費試用已開始！您可以享受3天的VIP功能。";
-"termsContent" = "服務條款\n\n通過接受這些條款，您同意僅將此應用程序用於個人和非商業目的。VIP訂閱提供高級功能訪問權限並自動續訂。如有疑問，請聯繫：784430005@qq.com";
-"privacyContent" = "隱私政策\n\n我們收集設備信息和使用統計數據以改進應用程序。未經您的同意，我們不會與第三方共享您的個人信息。如有隱私問題，請聯繫：784430005@qq.com";
+"termsMessage" = "感謝您使用我們的應用。詳細的服務條款請訪問我們的官方網站。";
+"privacyMessage" = "我們重視您的隱私。詳細的隱私政策請訪問我們的官方網站。";
+"termsContent" = "服務條款\n\n1. 接受條款\n通過下載、安裝或使用本應用程序，您同意受本服務條款的約束。\n\n2. 應用程序使用\n本應用程序僅供個人、非商業用途。您不得將本應用程序用於任何非法或未經授權的目的。\n\n3. 訂閱服務\n• VIP訂閱提供高級功能訪問權限\n• 訂閱費用將在確認購買時從您的iTunes賬戶中扣除\n• 訂閱將自動續訂，除非在當前期間結束前至少24小時關閉自動續訂\n• 您可以在iTunes賬戶設置中管理訂閱\n\n4. 知識產權\n本應用程序及其內容受版權法保護。未經許可，不得複製、修改或分發。\n\n5. 免責聲明\n本應用程序按現狀提供，不提供任何明示或暗示的保證。\n\n6. 聯繫我們\n如有疑問，請聯繫：784430005@qq.com";
+"privacyContent" = "隱私政策\n\n1. 信息收集\n我們可能收集以下信息：\n• 設備信息（型號、操作系統版本）\n• 應用使用統計\n• 崩潰報告\n\n2. 信息使用\n收集的信息用於：\n• 改善應用性能\n• 提供技術支持\n• 分析使用模式\n\n3. 信息共享\n我們不會向第三方出售、交易或轉讓您的個人信息，除非：\n• 獲得您的明確同意\n• 法律要求\n• 保護我們的權利\n\n4. 數據安全\n我們採用適當的安全措施保護您的信息免受未經授權的訪問、更改、披露或銷毀。\n\n5. iCloud同步\n如果您選擇使用iCloud同步功能，您的創作內容將存儲在您的iCloud賬戶中。\n\n6. 第三方服務\n本應用可能包含第三方服務的鏈接。我們不對這些服務的隱私做法負責。\n\n7. 政策更新\n我們可能會不時更新此隱私政策。重大更改將通過應用內通知告知您。\n\n8. 聯繫我們\n如有隱私相關問題，請聯繫：784430005@qq.com";
+"loadingProducts" = "正在加載訂閱選項，請稍後再試";
 "subscriptionMember" = "訂閱會員";
 "weeklyMember" = "週會員";
 "monthlyMember" = "月會員";

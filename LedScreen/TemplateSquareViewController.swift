@@ -96,6 +96,14 @@ import StoreKit
         }
     }
     
+    // 添加一个公共方法来检查和重置卡死状态
+    @objc func checkAndResetIfStuck() {
+        if isLoading {
+            print("🔍 检测到可能的卡死状态，强制重置")
+            forceResetPurchaseState()
+        }
+    }
+    
     @objc func isVIP() -> Bool {
         switch vipStatus {
         case .free:
@@ -251,20 +259,30 @@ import StoreKit
     
     @objc func restorePurchases() {
         print("🔍 VIPManager.restorePurchases() 被调用")
+        print("🔍 调用来源: \(Thread.callStackSymbols.prefix(3))")
         
         guard SKPaymentQueue.canMakePayments() else {
             print("⚠️ 设备不支持应用内购买")
-            NotificationCenter.default.post(
-                name: VIPManager.purchaseDidFailNotification, 
-                object: self, 
-                userInfo: ["error": "设备不支持应用内购买"]
-            )
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: VIPManager.purchaseDidFailNotification, 
+                    object: self, 
+                    userInfo: ["error": "设备不支持应用内购买"]
+                )
+            }
             return
         }
         
         // 如果已经在处理中，不要重复处理
         if isLoading {
             print("⚠️ 已经在处理购买操作中，忽略重复请求")
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(
+                    name: VIPManager.purchaseDidFailNotification,
+                    object: self,
+                    userInfo: ["error": "请等待当前操作完成"]
+                )
+            }
             return
         }
         
@@ -534,10 +552,57 @@ import StoreKit
     }
 }
 
+// MARK: - VIP订阅页面专用ScrollView
+class VIPScrollView: UIScrollView {
+    override func touchesShouldCancel(in view: UIView) -> Bool {
+        // 如果触摸的是按钮，允许取消滚动以便按钮能响应
+        if view is UIButton {
+            return true
+        }
+        return super.touchesShouldCancel(in: view)
+    }
+    
+    override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        // 首先检查是否有按钮在这个位置
+        func findButton(in view: UIView, point: CGPoint) -> UIButton? {
+            // 将点转换到view的坐标系
+            let convertedPoint = self.convert(point, to: view)
+            
+            // 检查这个view是否是按钮且包含这个点
+            if let button = view as? UIButton,
+               button.isUserInteractionEnabled,
+               button.isEnabled,
+               !button.isHidden,
+               button.alpha > 0.01,
+               button.bounds.contains(convertedPoint) {
+                return button
+            }
+            
+            // 递归检查子视图（从上到下）
+            for subview in view.subviews.reversed() {
+                if let button = findButton(in: subview, point: point) {
+                    return button
+                }
+            }
+            
+            return nil
+        }
+        
+        // 在所有子视图中查找按钮
+        if let button = findButton(in: self, point: point) {
+            print("🔍 hitTest找到按钮: \(button.titleLabel?.text ?? "unknown")")
+            return button
+        }
+        
+        // 如果没有找到按钮，使用默认的hitTest
+        return super.hitTest(point, with: event)
+    }
+}
+
 // MARK: - VIP订阅页面
 @objc class VIPSubscriptionViewController: UIViewController {
     
-    private let scrollView = UIScrollView()
+    private let scrollView = VIPScrollView() // 使用自定义ScrollView
     private let contentView = UIView()
     private let vipManager = VIPManager.shared
     
@@ -554,6 +619,15 @@ import StoreKit
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        // 添加调试日志
+        print("🔍 VIPSubscriptionViewController viewDidLoad")
+        print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        print("🔍 VIP标题本地化: \("vipTitle".localized)")
+        print("🔍 服务条款本地化: \("termsOfService".localized)")
+        print("🔍 隐私政策本地化: \("privacyPolicy".localized)")
+        print("🔍 恢复购买本地化: \("restorePurchases".localized)")
+        
         setupUI()
         setupNotifications()
         
@@ -605,6 +679,96 @@ import StoreKit
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         AppDelegate.orientationLock = .portrait
+        
+        // 强制刷新语言设置，确保本地化正确
+        print("🔍 VIP界面即将显示，当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        
+        // 强制重新加载语言bundle
+        let currentLang = LanguageManager.shared.currentLanguage
+        LanguageManager.shared.currentLanguage = currentLang
+        
+        // 更新UI文本
+        updateUITexts()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+        
+        // 延迟验证按钮设置，确保布局完成
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            self.verifyButtonSetup()
+            
+            // 测试按钮触摸
+            self.testButtonTouch()
+        }
+    }
+    
+    // 测试按钮触摸响应
+    private func testButtonTouch() {
+        print("🔍 ===== 测试按钮触摸响应 =====")
+        
+        // 查找所有按钮
+        func findButtons(in view: UIView) -> [UIButton] {
+            var buttons: [UIButton] = []
+            for subview in view.subviews {
+                if let button = subview as? UIButton {
+                    buttons.append(button)
+                } else {
+                    buttons.append(contentsOf: findButtons(in: subview))
+                }
+            }
+            return buttons
+        }
+        
+        let allButtons = findButtons(in: bottomButtonsView)
+        
+        for button in allButtons {
+            let title = button.titleLabel?.text ?? "无标题"
+            
+            // 获取按钮在window中的frame
+            if let window = button.window {
+                let buttonFrameInWindow = button.convert(button.bounds, to: window)
+                print("🔍 按钮 '\(title)' 在window中的frame: \(buttonFrameInWindow)")
+                
+                // 测试按钮中心点
+                let buttonCenter = CGPoint(x: buttonFrameInWindow.midX, y: buttonFrameInWindow.midY)
+                let hitView = window.hitTest(buttonCenter, with: nil)
+                
+                if hitView == button {
+                    print("✅ 按钮 '\(title)' 可以接收触摸")
+                } else {
+                    print("❌ 按钮 '\(title)' 被遮挡")
+                    print("   hitView类型: \(String(describing: type(of: hitView)))")
+                    print("   hitView: \(String(describing: hitView))")
+                    
+                    // 尝试找出遮挡的原因
+                    if let hitView = hitView {
+                        var current: UIView? = hitView
+                        var depth = 0
+                        print("   遮挡视图层级:")
+                        while let view = current, depth < 5 {
+                            let frame = view.frame
+                            let isUserInteractionEnabled = view.isUserInteractionEnabled
+                            print("   - \(depth): \(String(describing: type(of: view))), frame: \(frame), 可交互: \(isUserInteractionEnabled)")
+                            current = view.superview
+                            depth += 1
+                        }
+                        
+                        // 检查按钮的父视图链
+                        print("   按钮的父视图链:")
+                        var buttonParent: UIView? = button.superview
+                        var buttonDepth = 0
+                        while let view = buttonParent, buttonDepth < 5 {
+                            let frame = view.frame
+                            let isUserInteractionEnabled = view.isUserInteractionEnabled
+                            print("   - \(buttonDepth): \(String(describing: type(of: view))), frame: \(frame), 可交互: \(isUserInteractionEnabled)")
+                            buttonParent = view.superview
+                            buttonDepth += 1
+                        }
+                    }
+                }
+            }
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -642,18 +806,38 @@ import StoreKit
     }
     
     @objc private func languageDidChange() {
-        // 更新所有UI文本
-        updateUITexts()
+        print("🔍 VIP界面收到语言变化通知")
+        print("🔍 新语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        
+        // 延迟更新UI，确保语言bundle已经更新
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.updateUITexts()
+        }
     }
     
     private func updateUITexts() {
+        print("🔍 updateUITexts called")
+        print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        
         // 更新标题和副标题
         titleLabel.text = "vipTitle".localized
         subtitleLabel.text = "vipSubtitle".localized
         
+        print("🔍 更新后的标题: \(titleLabel.text ?? "nil")")
+        print("🔍 更新后的副标题: \(subtitleLabel.text ?? "nil")")
+        
+        // 重新设置功能列表
+        setupFeatures()
+        
         // 重新设置订阅选项（这会重新创建按钮）
         setupSubscriptionOptions()
+        
+        // 重新设置底部按钮
         setupBottomButtons()
+        
+        // 强制刷新视图
+        view.setNeedsLayout()
+        view.layoutIfNeeded()
     }
     
     private func setupNotifications() {
@@ -782,9 +966,12 @@ import StoreKit
         
         // 滚动视图
         scrollView.translatesAutoresizingMaskIntoConstraints = false
+        scrollView.delaysContentTouches = false // 关键：不延迟内容触摸，让按钮立即响应
+        scrollView.canCancelContentTouches = true
         view.addSubview(scrollView)
         
         contentView.translatesAutoresizingMaskIntoConstraints = false
+        contentView.isUserInteractionEnabled = true // 确保可以传递触摸事件
         scrollView.addSubview(contentView)
         
         NSLayoutConstraint.activate([
@@ -1170,14 +1357,22 @@ import StoreKit
     private func setupBottomButtons() {
         bottomButtonsView.translatesAutoresizingMaskIntoConstraints = false
         bottomButtonsView.isUserInteractionEnabled = true // 确保底部视图可以接收触摸事件
+        bottomButtonsView.backgroundColor = .clear // 确保背景透明
+        bottomButtonsView.layer.zPosition = 100 // 设置高z-index确保在最上层
         contentView.addSubview(bottomButtonsView)
+        
+        // 确保bottomButtonsView在最上层
+        contentView.bringSubviewToFront(bottomButtonsView)
+        
+        print("🔍 setupBottomButtons 被调用，当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
         
         // 移除之前的子视图
         bottomButtonsView.subviews.forEach { $0.removeFromSuperview() }
         
         // 开始订阅按钮
         let subscribeButton = UIButton(type: .system)
-        subscribeButton.setTitle("startFreeTrial".localized, for: .normal)
+        let subscribeTitle = "startFreeTrial".localized
+        subscribeButton.setTitle(subscribeTitle, for: .normal)
         subscribeButton.setTitleColor(.white, for: .normal)
         subscribeButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
         subscribeButton.layer.cornerRadius = 25
@@ -1185,6 +1380,8 @@ import StoreKit
         subscribeButton.addTarget(self, action: #selector(subscribeTapped), for: .touchUpInside)
         subscribeButton.translatesAutoresizingMaskIntoConstraints = false
         bottomButtonsView.addSubview(subscribeButton)
+        
+        print("🔍 设置订阅按钮: '\(subscribeTitle)'")
         
         // 支付免责声明（直接放在订阅按钮下面）
         let disclaimerLabel = UILabel()
@@ -1200,34 +1397,43 @@ import StoreKit
         let linksContainer = UIView()
         linksContainer.translatesAutoresizingMaskIntoConstraints = false
         linksContainer.isUserInteractionEnabled = true // 确保容器可以接收触摸事件
+        linksContainer.backgroundColor = .clear // 确保背景透明，不阻挡触摸
+        linksContainer.clipsToBounds = false // 确保不裁剪子视图
+        linksContainer.layer.zPosition = 200 // 设置更高的z-index
         bottomButtonsView.addSubview(linksContainer)
         
-        // 恢复购买按钮（小字体）
-        let restoreLinkButton = UIButton(type: .system)
-        restoreLinkButton.translatesAutoresizingMaskIntoConstraints = false
+        print("🔍 创建链接容器，父视图可交互: \(bottomButtonsView.isUserInteractionEnabled)")
         
-        // 先设置target，再设置Configuration
+        // 恢复购买按钮（小字体）
+        let restoreLinkButton = UIButton()
+        restoreLinkButton.translatesAutoresizingMaskIntoConstraints = false
+        restoreLinkButton.isUserInteractionEnabled = true
+        restoreLinkButton.isEnabled = true
+        restoreLinkButton.isExclusiveTouch = true // 防止多次点击
+        restoreLinkButton.layer.zPosition = 300 // 设置最高的z-index
+        
+        // 使用最基础的按钮设置方式
+        let restoreTitle = "restorePurchases".localized
+        restoreLinkButton.setTitle(restoreTitle, for: .normal)
+        restoreLinkButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
+        restoreLinkButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .highlighted)
+        restoreLinkButton.titleLabel?.font = .systemFont(ofSize: 12)
+        restoreLinkButton.backgroundColor = .clear
+        
+        // 增大点击区域
+        restoreLinkButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        
+        // 设置target - 使用最直接的方式
         restoreLinkButton.addTarget(self, action: #selector(restoreTapped), for: .touchUpInside)
         
-        // 使用现代方式增加按钮的点击区域
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
-            config.title = "restorePurchases".localized
-            config.baseForegroundColor = UIColor.white.withAlphaComponent(0.5)
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-            // 设置字体大小
-            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-                var outgoing = incoming
-                outgoing.font = .systemFont(ofSize: 12)
-                return outgoing
-            }
-            restoreLinkButton.configuration = config
-        } else {
-            restoreLinkButton.setTitle("restorePurchases".localized, for: .normal)
-            restoreLinkButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
-            restoreLinkButton.titleLabel?.font = .systemFont(ofSize: 12)
-            restoreLinkButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-        }
+        // 添加调试信息
+        print("🔍 设置恢复购买按钮: '\(restoreTitle)'")
+        print("🔍 按钮是否启用: \(restoreLinkButton.isEnabled)")
+        print("🔍 按钮是否可交互: \(restoreLinkButton.isUserInteractionEnabled)")
+        
+        // 添加一个测试用的触摸区域视图
+        restoreLinkButton.layer.borderWidth = 0 // 移除边框，避免视觉干扰
+        
         linksContainer.addSubview(restoreLinkButton)
         
         // 分隔符1
@@ -1239,34 +1445,32 @@ import StoreKit
         linksContainer.addSubview(separator1)
         
         // 服务条款按钮
-        let termsButton = UIButton(type: .system)
+        let termsButton = UIButton()
         termsButton.translatesAutoresizingMaskIntoConstraints = false
+        termsButton.isUserInteractionEnabled = true
+        termsButton.isEnabled = true
+        termsButton.isExclusiveTouch = true // 防止多次点击
+        termsButton.layer.zPosition = 300 // 设置最高的z-index
         
-        // 先设置target，再设置Configuration
+        // 使用最基础的按钮设置方式
+        let termsTitle = "termsOfService".localized
+        termsButton.setTitle(termsTitle, for: .normal)
+        termsButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
+        termsButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .highlighted)
+        termsButton.titleLabel?.font = .systemFont(ofSize: 12)
+        termsButton.backgroundColor = .clear
+        
+        // 增大点击区域
+        termsButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        
+        // 设置target - 使用最直接的方式
         termsButton.addTarget(self, action: #selector(termsTapped), for: .touchUpInside)
-        // 添加触摸反馈以测试按钮是否响应
-        termsButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
-        termsButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         
-        // 使用现代方式增加按钮的点击区域
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
-            config.title = "termsOfService".localized
-            config.baseForegroundColor = UIColor.white.withAlphaComponent(0.5)
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-            // 设置字体大小
-            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-                var outgoing = incoming
-                outgoing.font = .systemFont(ofSize: 12)
-                return outgoing
-            }
-            termsButton.configuration = config
-        } else {
-            termsButton.setTitle("termsOfService".localized, for: .normal)
-            termsButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
-            termsButton.titleLabel?.font = .systemFont(ofSize: 12)
-            termsButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-        }
+        // 添加调试信息
+        print("🔍 设置服务条款按钮: '\(termsTitle)'")
+        print("🔍 按钮是否启用: \(termsButton.isEnabled)")
+        print("🔍 按钮是否可交互: \(termsButton.isUserInteractionEnabled)")
+        
         linksContainer.addSubview(termsButton)
         
         // 分隔符2
@@ -1278,34 +1482,32 @@ import StoreKit
         linksContainer.addSubview(separator2)
         
         // 隐私政策按钮
-        let privacyButton = UIButton(type: .system)
+        let privacyButton = UIButton()
         privacyButton.translatesAutoresizingMaskIntoConstraints = false
+        privacyButton.isUserInteractionEnabled = true
+        privacyButton.isEnabled = true
+        privacyButton.isExclusiveTouch = true // 防止多次点击
+        privacyButton.layer.zPosition = 300 // 设置最高的z-index
         
-        // 先设置target，再设置Configuration
+        // 使用最基础的按钮设置方式
+        let privacyTitle = "privacyPolicy".localized
+        privacyButton.setTitle(privacyTitle, for: .normal)
+        privacyButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
+        privacyButton.setTitleColor(UIColor.white.withAlphaComponent(0.8), for: .highlighted)
+        privacyButton.titleLabel?.font = .systemFont(ofSize: 12)
+        privacyButton.backgroundColor = .clear
+        
+        // 增大点击区域
+        privacyButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        
+        // 设置target - 使用最直接的方式
         privacyButton.addTarget(self, action: #selector(privacyTapped), for: .touchUpInside)
-        // 添加触摸反馈以测试按钮是否响应
-        privacyButton.addTarget(self, action: #selector(buttonTouchDown(_:)), for: .touchDown)
-        privacyButton.addTarget(self, action: #selector(buttonTouchUp(_:)), for: [.touchUpInside, .touchUpOutside, .touchCancel])
         
-        // 使用现代方式增加按钮的点击区域
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
-            config.title = "privacyPolicy".localized
-            config.baseForegroundColor = UIColor.white.withAlphaComponent(0.5)
-            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 8, bottom: 8, trailing: 8)
-            // 设置字体大小
-            config.titleTextAttributesTransformer = UIConfigurationTextAttributesTransformer { incoming in
-                var outgoing = incoming
-                outgoing.font = .systemFont(ofSize: 12)
-                return outgoing
-            }
-            privacyButton.configuration = config
-        } else {
-            privacyButton.setTitle("privacyPolicy".localized, for: .normal)
-            privacyButton.setTitleColor(UIColor.white.withAlphaComponent(0.5), for: .normal)
-            privacyButton.titleLabel?.font = .systemFont(ofSize: 12)
-            privacyButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 8, bottom: 8, right: 8)
-        }
+        // 添加调试信息
+        print("🔍 设置隐私政策按钮: '\(privacyTitle)'")
+        print("🔍 按钮是否启用: \(privacyButton.isEnabled)")
+        print("🔍 按钮是否可交互: \(privacyButton.isUserInteractionEnabled)")
+        
         linksContainer.addSubview(privacyButton)
         
         NSLayoutConstraint.activate([
@@ -1325,36 +1527,44 @@ import StoreKit
             disclaimerLabel.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
             disclaimerLabel.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
             
-            // 底部链接容器
+            // 底部链接容器 - 增加高度和点击区域
             linksContainer.topAnchor.constraint(equalTo: disclaimerLabel.bottomAnchor, constant: 12),
             linksContainer.centerXAnchor.constraint(equalTo: bottomButtonsView.centerXAnchor),
-            linksContainer.heightAnchor.constraint(equalToConstant: 32), // 增加高度以提供更大的点击区域
+            linksContainer.heightAnchor.constraint(equalToConstant: 44), // 增加高度到44pt，提供更大的点击区域
+            linksContainer.leadingAnchor.constraint(greaterThanOrEqualTo: bottomButtonsView.leadingAnchor, constant: 20),
+            linksContainer.trailingAnchor.constraint(lessThanOrEqualTo: bottomButtonsView.trailingAnchor, constant: -20),
             
-            // 恢复购买按钮
+            // 恢复购买按钮 - 确保有足够的点击区域
             restoreLinkButton.leadingAnchor.constraint(equalTo: linksContainer.leadingAnchor),
             restoreLinkButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            restoreLinkButton.heightAnchor.constraint(equalTo: linksContainer.heightAnchor), // 占满容器高度
             
             // 分隔符1
             separator1.leadingAnchor.constraint(equalTo: restoreLinkButton.trailingAnchor, constant: 8),
             separator1.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
             
-            // 服务条款
+            // 服务条款 - 确保有足够的点击区域
             termsButton.leadingAnchor.constraint(equalTo: separator1.trailingAnchor, constant: 8),
             termsButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            termsButton.heightAnchor.constraint(equalTo: linksContainer.heightAnchor), // 占满容器高度
             
             // 分隔符2
             separator2.leadingAnchor.constraint(equalTo: termsButton.trailingAnchor, constant: 8),
             separator2.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
             
-            // 隐私政策
+            // 隐私政策 - 确保有足够的点击区域
             privacyButton.leadingAnchor.constraint(equalTo: separator2.trailingAnchor, constant: 8),
             privacyButton.trailingAnchor.constraint(equalTo: linksContainer.trailingAnchor),
-            privacyButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor)
+            privacyButton.centerYAnchor.constraint(equalTo: linksContainer.centerYAnchor),
+            privacyButton.heightAnchor.constraint(equalTo: linksContainer.heightAnchor) // 占满容器高度
         ])
         
         // 在布局完成后应用渐变
         DispatchQueue.main.async {
             self.applyGradientToSubscribeButton(subscribeButton)
+            
+            // 验证按钮设置
+            self.verifyButtonSetup()
         }
     }
     
@@ -1374,6 +1584,73 @@ import StoreKit
         gradientLayer.cornerRadius = 25
         
         button.layer.insertSublayer(gradientLayer, at: 0)
+    }
+    
+    // 验证按钮设置
+    private func verifyButtonSetup() {
+        print("🔍 ===== 验证按钮设置 =====")
+        print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        
+        // 查找底部按钮视图中的所有按钮
+        func findButtons(in view: UIView) -> [UIButton] {
+            var buttons: [UIButton] = []
+            for subview in view.subviews {
+                if let button = subview as? UIButton {
+                    buttons.append(button)
+                } else {
+                    buttons.append(contentsOf: findButtons(in: subview))
+                }
+            }
+            return buttons
+        }
+        
+        let allButtons = findButtons(in: bottomButtonsView)
+        print("🔍 找到 \(allButtons.count) 个按钮")
+        
+        for (index, button) in allButtons.enumerated() {
+            let title = button.titleLabel?.text ?? "无标题"
+            print("🔍 按钮 \(index): '\(title)'")
+            print("   - Frame: \(button.frame)")
+            print("   - 是否启用: \(button.isEnabled)")
+            print("   - 是否可交互: \(button.isUserInteractionEnabled)")
+            print("   - 父视图可交互: \(button.superview?.isUserInteractionEnabled ?? false)")
+            print("   - Target数量: \(button.allTargets.count)")
+            print("   - 是否隐藏: \(button.isHidden)")
+            print("   - Alpha: \(button.alpha)")
+            print("   - 是否独占触摸: \(button.isExclusiveTouch)")
+            
+            // 检查按钮的层级结构
+            var currentView: UIView? = button
+            var level = 0
+            while let view = currentView, level < 5 {
+                let className = String(describing: type(of: view))
+                let isScrollView = view is UIScrollView
+                print("   - 层级 \(level): \(className), 可交互: \(view.isUserInteractionEnabled), ScrollView: \(isScrollView)")
+                currentView = view.superview
+                level += 1
+            }
+            
+            // 检查是否有视图遮挡按钮
+            if let window = button.window {
+                let buttonCenter = button.convert(CGPoint(x: button.bounds.midX, y: button.bounds.midY), to: window)
+                if let hitView = window.hitTest(buttonCenter, with: nil) {
+                    let hitViewClass = String(describing: type(of: hitView))
+                    let isButton = hitView == button
+                    print("   - 点击测试: \(isButton ? "✅ 按钮可点击" : "❌ 被遮挡")")
+                    if !isButton {
+                        print("   - 遮挡视图: \(hitViewClass)")
+                    }
+                }
+            }
+            print("   ---")
+        }
+        
+        // 检查scrollView是否影响触摸
+        print("🔍 ScrollView状态:")
+        print("   - 是否可交互: \(scrollView.isUserInteractionEnabled)")
+        print("   - 是否可滚动: \(scrollView.isScrollEnabled)")
+        print("   - ContentSize: \(scrollView.contentSize)")
+        print("   - Frame: \(scrollView.frame)")
     }
     
     // MARK: - Actions
@@ -1452,7 +1729,10 @@ import StoreKit
     }
     
     @objc private func restoreTapped() {
-        print("🔍 恢复购买按钮被点击")
+        print("🔍 ===== 恢复购买按钮被点击 =====")
+        print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        print("🔍 本地化测试 - restorePurchases: \("restorePurchases".localized)")
+        print("🔍 调用线程: \(Thread.isMainThread ? "主线程" : "后台线程")")
         
         // 检查当前loading状态
         if vipManager.isLoading {
@@ -1479,17 +1759,33 @@ import StoreKit
     }
     
     @objc private func termsTapped() {
-        print("🔍 Terms button tapped - method called")
-        print("🔍 Current view controller: \(self)")
-        print("🔍 View controller is presented: \(self.isBeingPresented)")
-        showDetailedAlert(title: "termsOfService".localized, message: "termsContent".localized)
+        print("🔍 ===== 服务条款按钮被点击 =====")
+        print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        print("🔍 本地化标题: \("termsOfService".localized)")
+        print("🔍 本地化内容长度: \("termsContent".localized.count)")
+        print("🔍 本地化内容前100字符: \(String("termsContent".localized.prefix(100)))")
+        print("🔍 调用线程: \(Thread.isMainThread ? "主线程" : "后台线程")")
+        
+        // 确保在主线程执行
+        DispatchQueue.main.async {
+            print("🔍 准备显示服务条款弹窗")
+            self.showDetailedAlert(title: "termsOfService".localized, message: "termsContent".localized)
+        }
     }
     
     @objc private func privacyTapped() {
-        print("🔍 Privacy button tapped - method called")
-        print("🔍 Current view controller: \(self)")
-        print("🔍 View controller is presented: \(self.isBeingPresented)")
-        showDetailedAlert(title: "privacyPolicy".localized, message: "privacyContent".localized)
+        print("🔍 ===== 隐私政策按钮被点击 =====")
+        print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
+        print("🔍 本地化标题: \("privacyPolicy".localized)")
+        print("🔍 本地化内容长度: \("privacyContent".localized.count)")
+        print("🔍 本地化内容前100字符: \(String("privacyContent".localized.prefix(100)))")
+        print("🔍 调用线程: \(Thread.isMainThread ? "主线程" : "后台线程")")
+        
+        // 确保在主线程执行
+        DispatchQueue.main.async {
+            print("🔍 准备显示隐私政策弹窗")
+            self.showDetailedAlert(title: "privacyPolicy".localized, message: "privacyContent".localized)
+        }
     }
     
     private func showDetailedAlert(title: String, message: String) {
@@ -1502,7 +1798,7 @@ import StoreKit
         
         // 创建完全全屏弹窗视图
         let overlayView = UIView()
-        overlayView.backgroundColor = UIColor.systemBackground // 改为系统背景色，完全覆盖
+        overlayView.backgroundColor = UIColor.systemBackground
         overlayView.translatesAutoresizingMaskIntoConstraints = false
         
         // 添加暗紫色到黑色的上下渐变背景
@@ -1511,48 +1807,58 @@ import StoreKit
             UIColor(red: 0.2, green: 0.1, blue: 0.3, alpha: 1.0).cgColor,  // 暗紫色
             UIColor.black.cgColor  // 黑色
         ]
-        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)  // 从上开始
-        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)    // 到下结束
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
         gradientLayer.frame = view.bounds
         overlayView.layer.insertSublayer(gradientLayer, at: 0)
         
-        // 状态栏区域标题 - 移动到更高位置
+        // 状态栏区域标题
         let titleLabel = UILabel()
         titleLabel.text = title
-        titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold) // 增加2px字体大小
-        titleLabel.textColor = UIColor.label
+        titleLabel.font = UIFont.systemFont(ofSize: 22, weight: .bold)
+        titleLabel.textColor = UIColor.white
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 0
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // 只保留右上角关闭按钮
+        // 右上角关闭按钮
         let closeButton = UIButton(type: .system)
         closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
-        closeButton.tintColor = UIColor.label
+        closeButton.tintColor = UIColor.white
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         closeButton.addTarget(self, action: #selector(dismissCustomAlert), for: .touchUpInside)
         
-        // 内容滚动视图
+        // 内容滚动视图 - 重新设计
         let scrollView = UIScrollView()
         scrollView.translatesAutoresizingMaskIntoConstraints = false
         scrollView.showsVerticalScrollIndicator = true
+        scrollView.bounces = true
+        scrollView.alwaysBounceVertical = false
+        scrollView.contentInsetAdjustmentBehavior = .never
         
-        // 内容标签 - 改进样式
+        // 内容容器视图
+        let contentContainer = UIView()
+        contentContainer.translatesAutoresizingMaskIntoConstraints = false
+        contentContainer.backgroundColor = .clear
+        
+        // 内容标签
         let messageLabel = UILabel()
-        messageLabel.text = formatContentText(message)
+        messageLabel.text = message
         messageLabel.font = UIFont.systemFont(ofSize: 16, weight: .regular)
-        messageLabel.textColor = UIColor.label
+        messageLabel.textColor = UIColor.white
         messageLabel.numberOfLines = 0
         messageLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // 设置行间距为1.4倍
+        // 设置行间距
         let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 16 * 0.4 // 1.4倍行间距
+        paragraphStyle.lineSpacing = 6
+        paragraphStyle.paragraphSpacing = 12
         
-        let attributedText = NSMutableAttributedString(string: formatContentText(message))
+        let attributedText = NSMutableAttributedString(string: message)
         attributedText.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: attributedText.length))
+        attributedText.addAttribute(.foregroundColor, value: UIColor.white, range: NSRange(location: 0, length: attributedText.length))
         
-        // 为小标题（如"1. 接受条款"）设置加粗和增大字号
+        // 为小标题设置加粗
         formatSubtitles(in: attributedText)
         
         messageLabel.attributedText = attributedText
@@ -1562,40 +1868,47 @@ import StoreKit
         overlayView.addSubview(titleLabel)
         overlayView.addSubview(closeButton)
         overlayView.addSubview(scrollView)
-        scrollView.addSubview(messageLabel)
+        scrollView.addSubview(contentContainer)
+        contentContainer.addSubview(messageLabel)
         
-        // 设置约束 - 完全全屏布局，标题位置更高
+        // 设置约束
         NSLayoutConstraint.activate([
-            // 覆盖层完全全屏，包括状态栏
+            // 覆盖层完全全屏
             overlayView.topAnchor.constraint(equalTo: view.topAnchor),
             overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            // 标题移动到更高位置 - 距离顶部60px（包含状态栏）
-            titleLabel.topAnchor.constraint(equalTo: overlayView.topAnchor, constant: 60),
+            // 标题
+            titleLabel.topAnchor.constraint(equalTo: overlayView.safeAreaLayoutGuide.topAnchor, constant: 20),
             titleLabel.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
             titleLabel.leadingAnchor.constraint(greaterThanOrEqualTo: overlayView.leadingAnchor, constant: 60),
             titleLabel.trailingAnchor.constraint(lessThanOrEqualTo: overlayView.trailingAnchor, constant: -60),
             
-            // 右上角关闭按钮 - 与标题同一水平线
+            // 关闭按钮
             closeButton.centerYAnchor.constraint(equalTo: titleLabel.centerYAnchor),
             closeButton.trailingAnchor.constraint(equalTo: overlayView.trailingAnchor, constant: -20),
             closeButton.widthAnchor.constraint(equalToConstant: 30),
             closeButton.heightAnchor.constraint(equalToConstant: 30),
             
-            // 滚动视图从标题下方开始，到底部结束
+            // 滚动视图
             scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 20),
             scrollView.leadingAnchor.constraint(equalTo: overlayView.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: overlayView.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: overlayView.bottomAnchor), // 直接到底部，不留空间给按钮
+            scrollView.bottomAnchor.constraint(equalTo: overlayView.safeAreaLayoutGuide.bottomAnchor),
+            
+            // 内容容器
+            contentContainer.topAnchor.constraint(equalTo: scrollView.topAnchor),
+            contentContainer.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
+            contentContainer.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor),
+            contentContainer.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
+            contentContainer.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
             // 内容标签
-            messageLabel.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 20),
-            messageLabel.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 24),
-            messageLabel.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -24),
-            messageLabel.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -20),
-            messageLabel.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -48)
+            messageLabel.topAnchor.constraint(equalTo: contentContainer.topAnchor, constant: 20),
+            messageLabel.leadingAnchor.constraint(equalTo: contentContainer.leadingAnchor, constant: 24),
+            messageLabel.trailingAnchor.constraint(equalTo: contentContainer.trailingAnchor, constant: -24),
+            messageLabel.bottomAnchor.constraint(equalTo: contentContainer.bottomAnchor, constant: -60)
         ])
         
         // 存储引用以便关闭
@@ -1610,6 +1923,15 @@ import StoreKit
             overlayView.transform = .identity
         }) { _ in
             print("🔍 Full-screen custom alert presented successfully")
+            
+            // 强制更新布局并计算内容大小
+            DispatchQueue.main.async {
+                overlayView.layoutIfNeeded()
+                let contentHeight = messageLabel.intrinsicContentSize.height + 80 // 加上padding
+                print("🔍 Content height: \(contentHeight)")
+                print("🔍 ScrollView frame: \(scrollView.frame)")
+                print("🔍 MessageLabel frame: \(messageLabel.frame)")
+            }
         }
     }
     
@@ -1633,7 +1955,7 @@ import StoreKit
                                           value: UIFont.systemFont(ofSize: 18, weight: .bold), 
                                           range: match.range)
                 attributedText.addAttribute(.foregroundColor, 
-                                          value: UIColor.label, 
+                                          value: UIColor.white, // 确保使用白色
                                           range: match.range)
             }
         } catch {
