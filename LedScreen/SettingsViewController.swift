@@ -374,8 +374,9 @@ class SettingsViewController: UIViewController {
         primaryButton.layer.cornerRadius = 22 // 改为胶囊形状，高度44的一半
         primaryButton.translatesAutoresizingMaskIntoConstraints = false
         primaryButton.addAction(UIAction { _ in
-            self.dismissCustomAlert()
-            primaryAction()
+            self.dismissCustomAlertWithCompletion {
+                primaryAction()
+            }
         }, for: .touchUpInside)
         
         // 添加视图到层次结构
