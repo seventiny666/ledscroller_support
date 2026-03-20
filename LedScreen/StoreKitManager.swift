@@ -396,4 +396,62 @@ class StoreKitLegacyManager: NSObject {
             return VIPManager.shared
         }
     }
+    
+    // MARK: - 统一接口方法（无需可用性检查）
+    
+    /// 检查是否是VIP（统一接口）
+    func checkVIPStatus() -> Bool {
+        if #available(iOS 15.0, *) {
+            return StoreKitManager.shared.isVIP()
+        }
+        return false
+    }
+    
+    /// 获取VIP状态文本（统一接口）
+    func getVIPStatusText() -> String {
+        if #available(iOS 15.0, *) {
+            return StoreKitManager.shared.getStatusText()
+        }
+        return ""
+    }
+    
+    /// 获取产品数量（统一接口）
+    func getProductCount() -> Int {
+        if #available(iOS 15.0, *) {
+            return StoreKitManager.shared.products.count
+        }
+        return 0
+    }
+    
+    /// 获取产品列表（统一接口）
+    @available(iOS 15.0, *)
+    func getProducts() -> [Any] {
+        return StoreKitManager.shared.products
+    }
+    
+    /// 购买产品（统一接口）
+    @available(iOS 15.0, *)
+    func purchase(productIndex: Int) async throws -> Any? {
+        let products = StoreKitManager.shared.products
+        guard productIndex < products.count else { return nil }
+        return try await StoreKitManager.shared.purchase(products[productIndex])
+    }
+    
+    /// 恢复购买（统一接口）
+    @available(iOS 15.0, *)
+    func restorePurchases() async throws {
+        try await StoreKitManager.shared.restorePurchases()
+    }
+    
+    /// 加载产品（统一接口）
+    @available(iOS 15.0, *)
+    func loadProducts() async {
+        await StoreKitManager.shared.loadProducts()
+    }
+    
+    /// 更新订阅状态（统一接口）
+    @available(iOS 15.0, *)
+    func updateSubscriptionStatus() async {
+        await StoreKitManager.shared.updateSubscriptionStatus()
+    }
 }

@@ -105,9 +105,9 @@ import StoreKit
     }
     
     @objc func isVIP() -> Bool {
-        // 优先使用 StoreKit 2 (iOS 15+)
-        if #available(iOS 15.0, *) {
-            if checkStoreKit2VIPStatus() {
+        // 优先使用 StoreKit 2 (iOS 15+) 通过包装器
+        if StoreKitLegacyManager.isStoreKit2Available {
+            if StoreKitLegacyManager.shared.checkVIPStatus() {
                 return true
             }
         }
@@ -121,21 +121,11 @@ import StoreKit
         }
     }
     
-    @available(iOS 15.0, *)
-    private func checkStoreKit2VIPStatus() -> Bool {
-        return StoreKitManager.shared.isVIP()
-    }
-    
-    @available(iOS 15.0, *)
-    private func getStoreKit2StatusInfo() -> (Bool, String) {
-        return (StoreKitManager.shared.isVIP(), StoreKitManager.shared.getStatusText())
-    }
-    
     @objc func getVIPStatusText() -> String {
-        // 优先使用 StoreKit 2 (iOS 15+)
-        if #available(iOS 15.0, *) {
-            let (isVIP, statusText) = getStoreKit2StatusInfo()
-            if isVIP {
+        // 优先使用 StoreKit 2 (iOS 15+) 通过包装器
+        if StoreKitLegacyManager.isStoreKit2Available {
+            let statusText = StoreKitLegacyManager.shared.getVIPStatusText()
+            if !statusText.isEmpty && StoreKitLegacyManager.shared.checkVIPStatus() {
                 return statusText
             }
         }
@@ -1030,17 +1020,19 @@ class VIPScrollView: UIScrollView {
         
         Task {
             // 测试产品加载
-            await StoreKitManager.shared.loadProducts()
-            print("🧪 产品数量: \(StoreKitManager.shared.products.count)")
+            await StoreKitLegacyManager.shared.loadProducts()
+            print("🧪 产品数量: \(StoreKitLegacyManager.shared.getProductCount())")
             
             // 测试订阅状态
-            await StoreKitManager.shared.updateSubscriptionStatus()
-            print("🧪 当前订阅状态: \(StoreKitManager.shared.subscriptionStatus)")
-            print("🧪 是否VIP: \(StoreKitManager.shared.isVIP())")
+            await StoreKitLegacyManager.shared.updateSubscriptionStatus()
+            print("🧪 是否VIP: \(StoreKitLegacyManager.shared.checkVIPStatus())")
             
             // 打印产品信息
-            for (index, product) in StoreKitManager.shared.products.enumerated() {
-                print("🧪 产品 \(index): \(product.displayName) - \(product.displayPrice)")
+            let products = StoreKitLegacyManager.shared.getProducts()
+            for (index, product) in products.enumerated() {
+                if let storeProduct = product as? Product {
+                    print("🧪 产品 \(index): \(storeProduct.displayName) - \(storeProduct.displayPrice)")
+                }
             }
         }
     }
@@ -1055,9 +1047,9 @@ class VIPScrollView: UIScrollView {
         print("🧪 VIP 状态: \(vipStatus)")
         print("🧪 状态文本: \(statusText)")
         
-        if #available(iOS 15.0, *) {
-            let storeKit2Status = StoreKitManager.shared.isVIP()
-            let storeKit2Text = StoreKitManager.shared.getStatusText()
+        if StoreKitLegacyManager.isStoreKit2Available {
+            let storeKit2Status = StoreKitLegacyManager.shared.checkVIPStatus()
+            let storeKit2Text = StoreKitLegacyManager.shared.getVIPStatusText()
             print("🧪 StoreKit 2 状态: \(storeKit2Status)")
             print("🧪 StoreKit 2 文本: \(storeKit2Text)")
         }
@@ -1377,10 +1369,14 @@ class VIPScrollView: UIScrollView {
     private func getStoreKit2SubscriptionOptions() -> [(String, String, String, Bool)] {
         var options: [(String, String, String, Bool)] = []
         
-        if StoreKitManager.shared.products.count >= 3 {
+        let productCount = StoreKitLegacyManager.shared.getProductCount()
+        if productCount >= 3 {
             // 使用 StoreKit 2 产品价格
-            for (index, product) in StoreKitManager.shared.products.enumerated() {
+            let products = StoreKitLegacyManager.shared.getProducts()
+            for (index, productAny) in products.enumerated() {
                 if index >= 3 { break } // 只处理前3个产品
+                
+                guard let product = productAny as? Product else { continue }
                 
                 let priceString = product.displayPrice
                 let title: String
@@ -1950,21 +1946,21 @@ class VIPScrollView: UIScrollView {
         print("🔍 使用 StoreKit 2 进行购买")
         
         // 检查产品是否已加载
-        guard selectedSubscriptionIndex < StoreKitManager.shared.products.count else {
+        let productCount = StoreKitLegacyManager.shared.getProductCount()
+        guard selectedSubscriptionIndex < productCount else {
             print("⚠️ StoreKit 2 产品列表未加载完成")
             showAlert(title: "tip".localized, message: "loadingProducts".localized)
             return
         }
         
-        let product = StoreKitManager.shared.products[selectedSubscriptionIndex]
-        print("🔍 开始购买 StoreKit 2 产品: \(product.id)")
+        print("🔍 开始购买 StoreKit 2 产品，索引: \(selectedSubscriptionIndex)")
         
         // 显示加载状态
         showLoadingState(true)
         
         Task {
             do {
-                let transaction = try await StoreKitManager.shared.purchase(product)
+                let transaction = try await StoreKitLegacyManager.shared.purchase(productIndex: selectedSubscriptionIndex)
                 
                 await MainActor.run {
                     self.showLoadingState(false)
@@ -2052,13 +2048,13 @@ class VIPScrollView: UIScrollView {
         
         Task {
             do {
-                try await StoreKitManager.shared.restorePurchases()
+                try await StoreKitLegacyManager.shared.restorePurchases()
                 
                 await MainActor.run {
                     self.showLoadingState(false)
                     
                     // 检查恢复结果
-                    if StoreKitManager.shared.isVIP() {
+                    if StoreKitLegacyManager.shared.checkVIPStatus() {
                         self.showSuccessAlert(message: "restoreSuccess".localized, shouldDismiss: false)
                     } else {
                         self.showAlert(title: "tip".localized, message: "noRestorablePurchases".localized)
