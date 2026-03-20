@@ -107,8 +107,8 @@ import StoreKit
     @objc func isVIP() -> Bool {
         // 优先使用 StoreKit 2 (iOS 15+)
         if #available(iOS 15.0, *) {
-            let storeKit2Manager = StoreKitManager.shared
-            if storeKit2Manager.isVIP() {
+            // 检查 StoreKit 2 状态
+            if StoreKitManager.shared.isVIP() {
                 return true
             }
         }
@@ -125,9 +125,9 @@ import StoreKit
     @objc func getVIPStatusText() -> String {
         // 优先使用 StoreKit 2 (iOS 15+)
         if #available(iOS 15.0, *) {
-            let storeKit2Manager = StoreKitManager.shared
-            if storeKit2Manager.isVIP() {
-                return storeKit2Manager.getStatusText()
+            // 检查 StoreKit 2 状态
+            if StoreKitManager.shared.isVIP() {
+                return StoreKitManager.shared.getStatusText()
             }
         }
         
@@ -624,10 +624,6 @@ class VIPScrollView: UIScrollView {
     private let contentView = UIView()
     private let vipManager = VIPManager.shared
     
-    // StoreKit 2 支持
-    @available(iOS 15.0, *)
-    private lazy var storeKitManager = StoreKitManager.shared
-    
     // UI组件
     private let headerView = UIView()
     private let titleLabel = UILabel()
@@ -1025,16 +1021,16 @@ class VIPScrollView: UIScrollView {
         
         Task {
             // 测试产品加载
-            await storeKitManager.loadProducts()
-            print("🧪 产品数量: \(storeKitManager.products.count)")
+            await StoreKitManager.shared.loadProducts()
+            print("🧪 产品数量: \(StoreKitManager.shared.products.count)")
             
             // 测试订阅状态
-            await storeKitManager.updateSubscriptionStatus()
-            print("🧪 当前订阅状态: \(storeKitManager.subscriptionStatus)")
-            print("🧪 是否VIP: \(storeKitManager.isVIP())")
+            await StoreKitManager.shared.updateSubscriptionStatus()
+            print("🧪 当前订阅状态: \(StoreKitManager.shared.subscriptionStatus)")
+            print("🧪 是否VIP: \(StoreKitManager.shared.isVIP())")
             
             // 打印产品信息
-            for (index, product) in storeKitManager.products.enumerated() {
+            for (index, product) in StoreKitManager.shared.products.enumerated() {
                 print("🧪 产品 \(index): \(product.displayName) - \(product.displayPrice)")
             }
         }
@@ -1051,8 +1047,8 @@ class VIPScrollView: UIScrollView {
         print("🧪 状态文本: \(statusText)")
         
         if #available(iOS 15.0, *) {
-            let storeKit2Status = storeKitManager.isVIP()
-            let storeKit2Text = storeKitManager.getStatusText()
+            let storeKit2Status = StoreKitManager.shared.isVIP()
+            let storeKit2Text = StoreKitManager.shared.getStatusText()
             print("🧪 StoreKit 2 状态: \(storeKit2Status)")
             print("🧪 StoreKit 2 文本: \(storeKit2Text)")
         }
@@ -1372,9 +1368,9 @@ class VIPScrollView: UIScrollView {
     private func getStoreKit2SubscriptionOptions() -> [(String, String, String, Bool)] {
         var options: [(String, String, String, Bool)] = []
         
-        if storeKitManager.products.count >= 3 {
+        if StoreKitManager.shared.products.count >= 3 {
             // 使用 StoreKit 2 产品价格
-            for (index, product) in storeKitManager.products.enumerated() {
+            for (index, product) in StoreKitManager.shared.products.enumerated() {
                 if index >= 3 { break } // 只处理前3个产品
                 
                 let priceString = product.displayPrice
@@ -1629,7 +1625,11 @@ class VIPScrollView: UIScrollView {
         restoreLinkButton.titleLabel?.font = .systemFont(ofSize: 12)
         restoreLinkButton.backgroundColor = .clear
         
-        // 增大点击区域
+        // 增大点击区域 - 兼容不同iOS版本
+        if #available(iOS 15.0, *) {
+            // iOS 15+ 使用其他方式增大点击区域
+            restoreLinkButton.configuration = nil // 确保不使用UIButtonConfiguration
+        }
         restoreLinkButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         
         // 设置target - 使用最直接的方式
@@ -1669,7 +1669,11 @@ class VIPScrollView: UIScrollView {
         termsButton.titleLabel?.font = .systemFont(ofSize: 12)
         termsButton.backgroundColor = .clear
         
-        // 增大点击区域
+        // 增大点击区域 - 兼容不同iOS版本
+        if #available(iOS 15.0, *) {
+            // iOS 15+ 使用其他方式增大点击区域
+            termsButton.configuration = nil // 确保不使用UIButtonConfiguration
+        }
         termsButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         
         // 设置target - 使用最直接的方式
@@ -1706,7 +1710,11 @@ class VIPScrollView: UIScrollView {
         privacyButton.titleLabel?.font = .systemFont(ofSize: 12)
         privacyButton.backgroundColor = .clear
         
-        // 增大点击区域
+        // 增大点击区域 - 兼容不同iOS版本
+        if #available(iOS 15.0, *) {
+            // iOS 15+ 使用其他方式增大点击区域
+            privacyButton.configuration = nil // 确保不使用UIButtonConfiguration
+        }
         privacyButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
         
         // 设置target - 使用最直接的方式
@@ -1933,13 +1941,13 @@ class VIPScrollView: UIScrollView {
         print("🔍 使用 StoreKit 2 进行购买")
         
         // 检查产品是否已加载
-        guard selectedSubscriptionIndex < storeKitManager.products.count else {
+        guard selectedSubscriptionIndex < StoreKitManager.shared.products.count else {
             print("⚠️ StoreKit 2 产品列表未加载完成")
             showAlert(title: "tip".localized, message: "loadingProducts".localized)
             return
         }
         
-        let product = storeKitManager.products[selectedSubscriptionIndex]
+        let product = StoreKitManager.shared.products[selectedSubscriptionIndex]
         print("🔍 开始购买 StoreKit 2 产品: \(product.id)")
         
         // 显示加载状态
@@ -1947,7 +1955,7 @@ class VIPScrollView: UIScrollView {
         
         Task {
             do {
-                let transaction = try await storeKitManager.purchase(product)
+                let transaction = try await StoreKitManager.shared.purchase(product)
                 
                 await MainActor.run {
                     self.showLoadingState(false)
@@ -2035,13 +2043,13 @@ class VIPScrollView: UIScrollView {
         
         Task {
             do {
-                try await storeKitManager.restorePurchases()
+                try await StoreKitManager.shared.restorePurchases()
                 
                 await MainActor.run {
                     self.showLoadingState(false)
                     
                     // 检查恢复结果
-                    if self.storeKitManager.isVIP() {
+                    if StoreKitManager.shared.isVIP() {
                         self.showSuccessAlert(message: "restoreSuccess".localized, shouldDismiss: false)
                     } else {
                         self.showAlert(title: "tip".localized, message: "noRestorablePurchases".localized)
