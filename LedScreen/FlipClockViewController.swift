@@ -134,7 +134,7 @@ class FlipClockViewController: UIViewController {
         
         // 添加关闭按钮
         let closeButton = UIButton(type: .system)
-        closeButton.setTitle("完成", for: .normal)
+        closeButton.setTitle("done".localized, for: .normal)
         closeButton.setTitleColor(.white, for: .normal)
         closeButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
         closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)

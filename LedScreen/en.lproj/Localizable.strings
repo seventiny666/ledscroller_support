@@ -22,6 +22,10 @@
 "confirm" = "OK";
 "create" = "Create";
 "done" = "Done";
+"exit" = "Exit";
+"tryTemplate" = "Try Template";
+"previewTemplate" = "Preview Template";
+"becomeMember" = "Become Member";
 
 /* Settings */
 "language" = "Language";
@@ -60,6 +64,7 @@
 "noRestorablePurchases" = "No restorable purchases found.";
 "loadingProducts" = "Loading products, please wait...";
 "freeTrialStarted" = "Free trial started! Enjoy 3 days of VIP access.";
+"pleaseWait" = "Please wait for the current operation to complete";
 
 /* VIP Status */
 "vipStatusFree" = "Free User";
@@ -71,6 +76,7 @@
 /* VIP Content Popup */
 "vipContentSelected" = "You selected premium components";
 "vipBenefitsMessage" = "Become a subscriber to unlock all benefits, cancel anytime if not needed";
+"vipAlertMessage" = "Subscribe to unlock all premium features\nCancel anytime";
 "becomeVip" = "Become VIP";
 "save67Percent" = "Save 67%";
 "save76Percent" = "Save 76%";

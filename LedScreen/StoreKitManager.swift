@@ -3,7 +3,6 @@ import StoreKit
 
 // MARK: - StoreKit 2 订阅管理器
 @available(iOS 15.0, *)
-@MainActor
 class StoreKitManager: ObservableObject {
     
     static let shared = StoreKitManager()
@@ -24,7 +23,7 @@ class StoreKitManager: ObservableObject {
     }
     
     // MARK: - 订阅状态
-    enum SubscriptionStatus {
+    enum SubscriptionStatus: Equatable {
         case notSubscribed
         case subscribed(expirationDate: Date, productId: String)
         case expired
@@ -36,7 +35,14 @@ class StoreKitManager: ObservableObject {
     @Published private(set) var products: [Product] = []
     @Published private(set) var purchasedProductIDs: Set<String> = []
     @Published private(set) var subscriptionStatus: SubscriptionStatus = .notSubscribed
-    @Published private(set) var isLoading = false
+    // Keep product loading separate from purchase/restore so UI doesn't treat
+    // "loading products" as "purchase in progress".
+    @Published private(set) var isLoadingProducts = false
+    @Published private(set) var isPurchasing = false
+
+    // Expose products for UIKit callers without importing SwiftUI.
+    // UI code reads this when iOS 15+ to show accurate prices.
+    var availableProducts: [Product] { products }
     
     // MARK: - Private Properties
     private var updateListenerTask: Task<Void, Error>?
@@ -58,37 +64,58 @@ class StoreKitManager: ObservableObject {
         updateListenerTask?.cancel()
     }
     
+    // MARK: - Product Lookup
+
+    func product(for identifier: ProductIdentifier) -> Product? {
+        return products.first(where: { $0.id == identifier.rawValue })
+    }
+
     // MARK: - 加载产品
     func loadProducts() async {
         do {
             print("🛒 开始加载产品...")
-            isLoading = true
+            isLoadingProducts = true
             
             // 使用 StoreKit 2 API 获取产品
             let loadedProducts = try await Product.products(for: productIDs)
             
-            // 按价格排序（从低到高）
-            products = loadedProducts.sorted { $0.price < $1.price }
+            // Keep ordering stable and aligned with UI selection indices.
+            // Do NOT sort by price; promotional pricing can change the order.
+            let order = ProductIdentifier.allCases.map { $0.rawValue }
+            products = loadedProducts.sorted {
+                (order.firstIndex(of: $0.id) ?? Int.max) < (order.firstIndex(of: $1.id) ?? Int.max)
+            }
+
+            // Bridge to legacy UIKit observers (TemplateSquareViewController.swift listens for this).
+            NotificationCenter.default.post(name: NSNotification.Name("ProductsDidLoad"), object: self)
             
-            print("✅ 成功加载 \(products.count) 个产品")
+            if products.isEmpty {
+                #if targetEnvironment(simulator)
+                print("⚠️ 成功加载 0 个产品（模拟器未启用 StoreKit Configuration 时这是预期现象）")
+                #else
+                print("⚠️ 成功加载 0 个产品（请检查 App Store Connect 商品ID/网络/沙盒账号）")
+                #endif
+            } else {
+                print("✅ 成功加载 \(products.count) 个产品")
+            }
             for product in products {
                 print("   - \(product.displayName): \(product.displayPrice)")
             }
             
-            isLoading = false
+            isLoadingProducts = false
         } catch {
             print("❌ 加载产品失败: \(error.localizedDescription)")
-            isLoading = false
+            isLoadingProducts = false
         }
     }
     
     // MARK: - 购买产品
     func purchase(_ product: Product) async throws -> Transaction? {
         print("🛍️ 开始购买: \(product.displayName)")
-        isLoading = true
+        isPurchasing = true
         
         defer {
-            isLoading = false
+            isPurchasing = false
         }
         
         // 执行购买
@@ -133,10 +160,10 @@ class StoreKitManager: ObservableObject {
     // MARK: - 恢复购买
     func restorePurchases() async throws {
         print("🔄 开始恢复购买...")
-        isLoading = true
+        isPurchasing = true
         
         defer {
-            isLoading = false
+            isPurchasing = false
         }
         
         // StoreKit 2 会自动同步购买记录
@@ -162,81 +189,81 @@ class StoreKitManager: ObservableObject {
     // MARK: - 更新订阅状态
     func updateSubscriptionStatus() async {
         var highestStatus: SubscriptionStatus = .notSubscribed
-        var highestProduct: Product?
+        var highestProductId: String?
         var highestExpirationDate: Date?
-        
-        // 检查所有订阅产品的状态
+
+        // Note: `product.subscription?.status` can surface group-level statuses.
+        // Always trust the verified transaction's `productID` instead of the loop variable.
         for product in products {
             guard let statuses = try? await product.subscription?.status else {
                 continue
             }
-            
+
             for status in statuses {
                 switch status.state {
                 case .subscribed:
-                    // 验证交易
-                    if let transaction = try? checkVerified(status.transaction) {
-                        if let expirationDate = transaction.expirationDate {
-                            // 找到最晚过期的订阅
-                            if highestExpirationDate == nil || expirationDate > highestExpirationDate! {
-                                highestExpirationDate = expirationDate
-                                highestProduct = product
-                                highestStatus = .subscribed(
-                                    expirationDate: expirationDate,
-                                    productId: product.id
-                                )
-                            }
+                    if let transaction = try? checkVerified(status.transaction),
+                       let expirationDate = transaction.expirationDate {
+                        if highestExpirationDate == nil || expirationDate > highestExpirationDate! {
+                            highestExpirationDate = expirationDate
+                            highestProductId = transaction.productID
+                            highestStatus = .subscribed(
+                                expirationDate: expirationDate,
+                                productId: transaction.productID
+                            )
                         }
                     }
-                    
+
                 case .expired:
                     if highestStatus == .notSubscribed {
                         highestStatus = .expired
                     }
-                    
+
                 case .inGracePeriod:
                     if let transaction = try? checkVerified(status.transaction),
                        let expirationDate = transaction.expirationDate {
+                        // Keep the most recent known expiration for display, even in grace.
+                        if highestExpirationDate == nil || expirationDate > highestExpirationDate! {
+                            highestExpirationDate = expirationDate
+                            highestProductId = transaction.productID
+                        }
                         highestStatus = .inGracePeriod(expirationDate: expirationDate)
                     }
-                    
+
                 case .inBillingRetryPeriod:
                     highestStatus = .inBillingRetry
-                    
+
                 case .revoked:
                     print("⚠️ 订阅已被撤销")
-                    
-                @unknown default:
+
+                default:
                     break
                 }
             }
         }
-        
+
         subscriptionStatus = highestStatus
-        
-        // 更新已购买的产品ID集合
-        if let productId = highestProduct?.id {
+
+        NotificationCenter.default.post(name: VIPManager.vipStatusDidChangeNotification, object: self)
+
+        if let productId = highestProductId {
             purchasedProductIDs.insert(productId)
         }
-        
-        // 打印当前订阅状态
+
         printSubscriptionStatus()
     }
     
     // MARK: - 监听交易更新
     private func listenForTransactions() -> Task<Void, Error> {
-        return Task.detached {
-            // 监听所有交易更新
+        // Keep this work on the main actor to avoid crossing isolation boundaries.
+        return Task {
             for await result in Transaction.updates {
                 do {
-                    let transaction = try self.checkVerified(result)
-                    
-                    // 更新订阅状态
-                    await self.updateSubscriptionStatus()
-                    
-                    // 完成交易
+                    let transaction = try checkVerified(result)
+
+                    await updateSubscriptionStatus()
                     await transaction.finish()
-                    
+
                     print("🔔 交易更新: \(transaction.productID)")
                 } catch {
                     print("❌ 交易验证失败: \(error)")
@@ -246,7 +273,7 @@ class StoreKitManager: ObservableObject {
     }
     
     // MARK: - 验证交易
-    private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
+    nonisolated private func checkVerified<T>(_ result: VerificationResult<T>) throws -> T {
         switch result {
         case .unverified:
             // 交易验证失败
@@ -307,7 +334,7 @@ class StoreKitManager: ObservableObject {
         switch subscriptionStatus {
         case .notSubscribed:
             return "vipStatusFree".localized
-        case .subscribed(let expirationDate, _):
+        case .subscribed(_, _):
             let days = getRemainingDays() ?? 0
             return String(format: "vipStatusSubscribed".localized, days)
         case .expired:
@@ -404,7 +431,7 @@ class StoreKitLegacyManager: NSObject {
         if #available(iOS 15.0, *) {
             return StoreKitManager.shared.isVIP()
         }
-        return false
+        return VIPManager.shared.isVIP()
     }
     
     /// 获取VIP状态文本（统一接口）

@@ -34,17 +34,18 @@
 		A1000044000000000000001 /* MyCreationsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000045000000000000001 /* MyCreationsViewController.swift */; };
 		A1000046000000000000001 /* MarqueeBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000047000000000000001 /* MarqueeBorderView.swift */; };
 		A1000048000000000000001 /* LightBoardBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000049000000000000001 /* LightBoardBorderView.swift */; };
-		A1000056000000000000001 /* LinearBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000057000000000000001 /* LinearBorderView.swift */; };
 		A1000050000000000000001 /* HeartGridViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000051000000000000001 /* HeartGridViewController.swift */; };
 		A1000052000000000000001 /* ILoveUViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000053000000000000001 /* ILoveUViewController.swift */; };
 		A1000054000000000000001 /* View520ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000055000000000000001 /* View520ViewController.swift */; };
+		A1000056000000000000001 /* LinearBorderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000057000000000000001 /* LinearBorderView.swift */; };
 		A1000058000000000000001 /* CustomSpacedTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000059000000000000001 /* CustomSpacedTabBar.swift */; };
+		A1000060000000000000001 /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061000000000000001 /* StoreKitManager.swift */; };
+		A1000062000000000000001 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000063000000000000001 /* PurchaseManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		140966C82F55CD1A0095A3EA /* LEDPreviewViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LEDPreviewViewController.swift; sourceTree = "<group>"; };
 		141382192F56769B00F73105 /* LanguageManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LanguageManager.swift; sourceTree = "<group>"; };
-		141382AA2F56825C00F73105 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1413821D2F56825C00F73105 /* de */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = de; path = de.lproj/Localizable.strings; sourceTree = "<group>"; };
 		1413821E2F56825C00F73105 /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/Localizable.strings"; sourceTree = "<group>"; };
 		1413821F2F56825C00F73105 /* ja */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = ja; path = ja.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -80,6 +81,8 @@
 		1413823D2F56825C00F73105 /* SceneDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		1413823E2F56825C00F73105 /* SettingsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsViewController.swift; sourceTree = "<group>"; };
 		1413823F2F56825C00F73105 /* LEDPreviewViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LEDPreviewViewController.swift; sourceTree = "<group>"; };
+		141382AA2F56825C00F73105 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		6A4BCED52F72C6CB00568838 /* StoreKitConfiguration.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; name = StoreKitConfiguration.storekit; path = LedScreen/StoreKitConfiguration.storekit; sourceTree = "<group>"; };
 		A1000000000000000000001 /* LedScreen.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LedScreen.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A1000002000000000000001 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		A1000004000000000000001 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -106,11 +109,13 @@
 		A1000045000000000000001 /* MyCreationsViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyCreationsViewController.swift; sourceTree = "<group>"; };
 		A1000047000000000000001 /* MarqueeBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MarqueeBorderView.swift; sourceTree = "<group>"; };
 		A1000049000000000000001 /* LightBoardBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LightBoardBorderView.swift; sourceTree = "<group>"; };
-		A1000057000000000000001 /* LinearBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearBorderView.swift; sourceTree = "<group>"; };
 		A1000051000000000000001 /* HeartGridViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HeartGridViewController.swift; sourceTree = "<group>"; };
 		A1000053000000000000001 /* ILoveUViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ILoveUViewController.swift; sourceTree = "<group>"; };
 		A1000055000000000000001 /* View520ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = View520ViewController.swift; sourceTree = "<group>"; };
+		A1000057000000000000001 /* LinearBorderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LinearBorderView.swift; sourceTree = "<group>"; };
 		A1000059000000000000001 /* CustomSpacedTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSpacedTabBar.swift; sourceTree = "<group>"; };
+		A1000061000000000000001 /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
+		A1000063000000000000001 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -154,6 +159,8 @@
 				1413823D2F56825C00F73105 /* SceneDelegate.swift */,
 				1413823E2F56825C00F73105 /* SettingsViewController.swift */,
 				1413823F2F56825C00F73105 /* LEDPreviewViewController.swift */,
+				A1000061000000000000001 /* StoreKitManager.swift */,
+				A1000063000000000000001 /* PurchaseManager.swift */,
 			);
 			name = LedScreen;
 			sourceTree = "<group>";
@@ -161,7 +168,6 @@
 		1413825B2F5682BE00F73105 /* pt.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				1413825C2F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = pt.lproj;
 			sourceTree = "<group>";
@@ -169,7 +175,6 @@
 		1413825E2F5682BE00F73105 /* zh-Hant.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				1413825F2F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = "zh-Hant.lproj";
 			sourceTree = "<group>";
@@ -177,8 +182,6 @@
 		141382612F5682BE00F73105 /* ko.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				141382622F5682BE00F73105 /* Localizable.strings */,
-				141382642F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = ko.lproj;
 			sourceTree = "<group>";
@@ -186,7 +189,6 @@
 		141382672F5682BE00F73105 /* it.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				141382682F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = it.lproj;
 			sourceTree = "<group>";
@@ -194,7 +196,6 @@
 		1413826A2F5682BE00F73105 /* zh-Hans.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				1413826B2F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = "zh-Hans.lproj";
 			sourceTree = "<group>";
@@ -202,7 +203,6 @@
 		1413826D2F5682BE00F73105 /* de.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				1413826E2F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = de.lproj;
 			sourceTree = "<group>";
@@ -210,7 +210,6 @@
 		141382702F5682BE00F73105 /* ja.lproj */ = {
 			isa = PBXGroup;
 			children = (
-				141382712F5682BE00F73105 /* Localizable.strings */,
 			);
 			path = ja.lproj;
 			sourceTree = "<group>";
@@ -226,6 +225,7 @@
 		A0999998000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				6A4BCED52F72C6CB00568838 /* StoreKitConfiguration.storekit */,
 				A1000001000000000000002 /* LedScreen */,
 				A0999997000000000000001 /* Products */,
 			);
@@ -385,6 +385,8 @@
 				A1000052000000000000001 /* ILoveUViewController.swift in Sources */,
 				A1000054000000000000001 /* View520ViewController.swift in Sources */,
 				A1000058000000000000001 /* CustomSpacedTabBar.swift in Sources */,
+				A1000060000000000000001 /* StoreKitManager.swift in Sources */,
+				A1000062000000000000001 /* PurchaseManager.swift in Sources */,
 				140966C92F55CD1B0095A3EA /* LEDPreviewViewController.swift in Sources */,
 				1413821A2F56769B00F73105 /* LanguageManager.swift in Sources */,
 			);
@@ -511,7 +513,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
@@ -573,7 +575,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;

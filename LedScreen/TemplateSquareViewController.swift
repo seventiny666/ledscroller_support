@@ -43,11 +43,14 @@ import StoreKit
     private let trialStartDateKey = "trial_start_date"
     private let isLifetimeKey = "is_lifetime"
     private let subscriptionTypeKey = "subscription_type" // 新增：存储订阅类型
+    private let processedTransactionsKey = "processed_transactions" // 新增：已处理的交易ID
     
     private var isObserverAdded = false
     
     override init() {
         super.init()
+        
+        print("🔍 ===== VIPManager 初始化开始 =====")
         
         // 确保只添加一次观察者
         if !isObserverAdded {
@@ -56,8 +59,14 @@ import StoreKit
             print("🔍 StoreKit观察者已添加")
         }
         
+        print("🔍 加载本地VIP状态...")
         loadVIPStatus()
+        print("🔍 当前VIP状态: \(getVIPStatusText())")
+        
+        print("🔍 开始请求产品列表...")
         requestProducts()
+        
+        print("🔍 ===== VIPManager 初始化完成 =====")
     }
     
     deinit {
@@ -188,12 +197,25 @@ import StoreKit
     }
     
     private func requestProducts() {
-        guard !ProductID.allCases.isEmpty else { return }
+        print("🔍 ===== 开始请求产品列表 =====")
+        
+        guard !ProductID.allCases.isEmpty else {
+            print("❌ ProductID.allCases 为空")
+            return
+        }
         
         let productIDs = Set(ProductID.allCases.map { $0.rawValue })
+        print("🔍 请求的产品ID:")
+        for productID in productIDs {
+            print("   - \(productID)")
+        }
+        
         productsRequest = SKProductsRequest(productIdentifiers: productIDs)
         productsRequest?.delegate = self
         productsRequest?.start()
+        
+        print("🔍 产品请求已发送，等待回调...")
+        print("🔍 ===== 请求发送完成 =====")
     }
     
     @objc func startFreeTrial() {
@@ -214,7 +236,7 @@ import StoreKit
     @objc func purchase(product: SKProduct) {
         guard SKPaymentQueue.canMakePayments() else {
             NotificationCenter.default.post(
-                name: VIPManager.purchaseDidFailNotification, 
+                name: PurchaseManager.purchaseDidFailNotification, 
                 object: self, 
                 userInfo: ["error": "设备不支持应用内购买"]
             )
@@ -251,7 +273,7 @@ import StoreKit
         purchaseTimer = nil
         
         NotificationCenter.default.post(
-            name: VIPManager.purchaseDidFailNotification,
+            name: PurchaseManager.purchaseDidFailNotification,
             object: self,
             userInfo: ["error": "购买超时，请检查网络连接后重试"]
         )
@@ -265,7 +287,7 @@ import StoreKit
             print("⚠️ 设备不支持应用内购买")
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
-                    name: VIPManager.purchaseDidFailNotification, 
+                    name: PurchaseManager.purchaseDidFailNotification, 
                     object: self, 
                     userInfo: ["error": "设备不支持应用内购买"]
                 )
@@ -278,9 +300,9 @@ import StoreKit
             print("⚠️ 已经在处理购买操作中，忽略重复请求")
             DispatchQueue.main.async {
                 NotificationCenter.default.post(
-                    name: VIPManager.purchaseDidFailNotification,
+                    name: PurchaseManager.purchaseDidFailNotification,
                     object: self,
-                    userInfo: ["error": "请等待当前操作完成"]
+                    userInfo: ["error": "pleaseWait".localized]
                 )
             }
             return
@@ -311,7 +333,7 @@ import StoreKit
         restoreTimer = nil
         
         NotificationCenter.default.post(
-            name: VIPManager.purchaseDidFailNotification,
+            name: PurchaseManager.purchaseDidFailNotification,
             object: self,
             userInfo: ["error": "恢复购买超时，请检查网络连接后重试"]
         )
@@ -362,7 +384,7 @@ import StoreKit
         
         // 发送购买成功通知
         NotificationCenter.default.post(
-            name: VIPManager.purchaseDidCompleteNotification, 
+            name: PurchaseManager.purchaseDidCompleteNotification, 
             object: self, 
             userInfo: ["productID": productID]
         )
@@ -384,12 +406,52 @@ import StoreKit
         
         // 发送购买失败通知
         NotificationCenter.default.post(
-            name: VIPManager.purchaseDidFailNotification, 
+            name: PurchaseManager.purchaseDidFailNotification, 
             object: self, 
             userInfo: ["error": errorMessage]
         )
         
         print("购买失败: \(errorMessage)")
+    }
+    
+    // MARK: - 交易去重
+    
+    // 已处理的交易ID集合
+    private var processedTransactions: Set<String> {
+        get {
+            let array = userDefaults.stringArray(forKey: processedTransactionsKey) ?? []
+            return Set(array)
+        }
+        set {
+            userDefaults.set(Array(newValue), forKey: processedTransactionsKey)
+            userDefaults.synchronize()
+        }
+    }
+    
+    // 检查交易是否已处理
+    private func isTransactionProcessed(_ transactionID: String) -> Bool {
+        return processedTransactions.contains(transactionID)
+    }
+    
+    // 标记交易为已处理
+    private func markTransactionAsProcessed(_ transactionID: String) {
+        var processed = processedTransactions
+        processed.insert(transactionID)
+        
+        // 只保留最近 100 个交易ID，避免数据过大
+        if processed.count > 100 {
+            let sorted = Array(processed).sorted()
+            processed = Set(sorted.suffix(100))
+        }
+        
+        processedTransactions = processed
+        print("✅ 交易已标记为已处理: \(transactionID)")
+    }
+    
+    // 清理过期的交易记录（可选，在 App 启动时调用）
+    @objc func cleanupOldTransactions() {
+        // 可选：清理过期记录
+        // 对于单机 App，可以保留所有记录，或者定期清理
     }
 }
 
@@ -478,7 +540,7 @@ import StoreKit
         containerView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(containerView)
         
-        exitButton.setTitle("退出", for: .normal)
+        exitButton.setTitle("exit".localized, for: .normal)
         exitButton.setTitleColor(.white, for: .normal)
         exitButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
         exitButton.backgroundColor = UIColor.black.withAlphaComponent(0.6)
@@ -489,7 +551,7 @@ import StoreKit
         exitButton.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(exitButton)
         
-        becomeMemberButton.setTitle("成为会员", for: .normal)
+        becomeMemberButton.setTitle("becomeMember".localized, for: .normal)
         becomeMemberButton.setTitleColor(.black, for: .normal)
         becomeMemberButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         becomeMemberButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
@@ -604,7 +666,7 @@ class VIPScrollView: UIScrollView {
     
     private let scrollView = VIPScrollView() // 使用自定义ScrollView
     private let contentView = UIView()
-    private let vipManager = VIPManager.shared
+    private let purchaseManager = PurchaseManager.shared
     
     // UI组件
     private let headerView = UIView()
@@ -619,7 +681,11 @@ class VIPScrollView: UIScrollView {
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+
+        // Disable bouncing by default; we'll enable scrolling only if needed.
+        scrollView.alwaysBounceVertical = false
+        scrollView.bounces = false
+
         // 添加调试日志
         print("🔍 VIPSubscriptionViewController viewDidLoad")
         print("🔍 当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
@@ -658,7 +724,7 @@ class VIPScrollView: UIScrollView {
     
     @objc private func applicationDidEnterBackground() {
         // 应用进入后台时，强制重置购买状态，防止卡死
-        vipManager.forceResetPurchaseState()
+        PurchaseManager.shared.forceResetPurchaseState()
     }
     
     @objc private func vipStateDidReset() {
@@ -683,9 +749,8 @@ class VIPScrollView: UIScrollView {
         // 强制刷新语言设置，确保本地化正确
         print("🔍 VIP界面即将显示，当前语言: \(LanguageManager.shared.currentLanguage.rawValue)")
         
-        // 强制重新加载语言bundle
-        let currentLang = LanguageManager.shared.currentLanguage
-        LanguageManager.shared.currentLanguage = currentLang
+        // Avoid re-setting currentLanguage here; it posts LanguageDidChange and can disrupt
+        // navigation/presentation on some simulator/iOS versions.
         
         // 更新UI文本
         updateUITexts()
@@ -694,6 +759,8 @@ class VIPScrollView: UIScrollView {
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
         
+        ensureStoreKit2ProductsLoadedIfNeeded()
+
         // 延迟验证按钮设置，确保布局完成
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
             self.verifyButtonSetup()
@@ -774,7 +841,7 @@ class VIPScrollView: UIScrollView {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         // 强制重置购买状态，防止卡死
-        vipManager.forceResetPurchaseState()
+        PurchaseManager.shared.forceResetPurchaseState()
     }
     
     deinit {
@@ -782,7 +849,8 @@ class VIPScrollView: UIScrollView {
         // 移除通知监听
         NotificationCenter.default.removeObserver(self)
         // 强制重置购买状态
-        vipManager.forceResetPurchaseState()
+        PurchaseManager.shared.forceResetPurchaseState()
+        PurchaseManager.shared.forceResetPurchaseState()
     }
     
     override func viewDidLayoutSubviews() {
@@ -845,7 +913,7 @@ class VIPScrollView: UIScrollView {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(purchaseDidComplete(_:)),
-            name: VIPManager.purchaseDidCompleteNotification,
+            name: PurchaseManager.purchaseDidCompleteNotification,
             object: nil
         )
         
@@ -853,7 +921,7 @@ class VIPScrollView: UIScrollView {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(purchaseDidFail(_:)),
-            name: VIPManager.purchaseDidFailNotification,
+            name: PurchaseManager.purchaseDidFailNotification,
             object: nil
         )
         
@@ -869,6 +937,19 @@ class VIPScrollView: UIScrollView {
     @objc private func productsDidLoad() {
         DispatchQueue.main.async {
             self.setupSubscriptionOptions()
+        }
+    }
+
+    // (intentionally no extra viewDidAppear override here; the VC already has one earlier)
+    private func ensureStoreKit2ProductsLoadedIfNeeded() {
+        // Ensure StoreKit2 products are available for accurate pricing.
+        if #available(iOS 15.0, *) {
+            Task { @MainActor in
+                if StoreKitManager.shared.availableProducts.isEmpty {
+                    await StoreKitManager.shared.loadProducts()
+                    self.setupSubscriptionOptions()
+                }
+            }
         }
     }
     
@@ -938,9 +1019,9 @@ class VIPScrollView: UIScrollView {
         
         // 确保所有状态下都使用透明外观
         navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
         if #available(iOS 15.0, *) {
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
             navigationController?.navigationBar.compactScrollEdgeAppearance = appearance
         }
         
@@ -974,8 +1055,13 @@ class VIPScrollView: UIScrollView {
         contentView.isUserInteractionEnabled = true // 确保可以传递触摸事件
         scrollView.addSubview(contentView)
         
+        // Avoid iOS automatic insets creating extra top space on some devices.
+        if #available(iOS 11.0, *) {
+            scrollView.contentInsetAdjustmentBehavior = .never
+        }
+
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.topAnchor), // 改为从屏幕顶部开始，避免导航栏遮罩
+            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -1068,17 +1154,18 @@ class VIPScrollView: UIScrollView {
         headerView.addSubview(subtitleLabel)
         
         NSLayoutConstraint.activate([
-            headerView.topAnchor.constraint(equalTo: contentView.safeAreaLayoutGuide.topAnchor, constant: 0), // 往上移动20pt，从20改为0
+            // Pin to contentView top; safeArea here can add extra top padding inside scroll views.
+            headerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0),
             headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 160),
+            headerView.heightAnchor.constraint(equalToConstant: 140),
             
             vipIconView.topAnchor.constraint(equalTo: headerView.topAnchor),
             vipIconView.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            vipIconView.widthAnchor.constraint(equalToConstant: 80),
-            vipIconView.heightAnchor.constraint(equalToConstant: 80),
+            vipIconView.widthAnchor.constraint(equalToConstant: 72),
+            vipIconView.heightAnchor.constraint(equalToConstant: 72),
             
-            titleLabel.topAnchor.constraint(equalTo: vipIconView.bottomAnchor, constant: 15), // 减少间距，从20改为15
+            titleLabel.topAnchor.constraint(equalTo: vipIconView.bottomAnchor, constant: 10),
             titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
             titleLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -20),
             
@@ -1103,7 +1190,7 @@ class VIPScrollView: UIScrollView {
         
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 8 // 减少间距从16到8
+        stackView.spacing = 8 // add breathing room
         stackView.translatesAutoresizingMaskIntoConstraints = false
         featuresView.addSubview(stackView)
         
@@ -1113,7 +1200,7 @@ class VIPScrollView: UIScrollView {
         }
         
         NSLayoutConstraint.activate([
-            featuresView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 30), // 增加间距，从10改为30，拉开与上面的距离
+                featuresView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 16),
             featuresView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             featuresView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
@@ -1174,39 +1261,71 @@ class VIPScrollView: UIScrollView {
         // 创建订阅选项 - 使用实际产品价格或回退价格
         var subscriptionOptions: [(String, String, String, Bool)] = []
         
-        if vipManager.products.count >= 3 {
-            // 使用实际产品价格
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .currency
-            
-            for (index, product) in vipManager.products.enumerated() {
-                if index >= 3 { break } // 只处理前3个产品
-                
-                formatter.locale = product.priceLocale
-                let priceString = formatter.string(from: product.price) ?? "$0.00"
-                
+        if #available(iOS 15.0, *) {
+            // StoreKit2 price display (fixed order: weekly/monthly/yearly)
+            let ids = StoreKitManager.ProductIdentifier.allCases
+            for (index, id) in ids.enumerated() {
+                let priceString = StoreKitManager.shared.product(for: id)?.displayPrice
+                    ?? (index == 0 ? "$2.99" : index == 1 ? "$7.99" : "$29.99")
+
                 let title: String
                 let subtitle: String
                 let isSelected = (index == 0)
-                
+
                 switch index {
-                case 0: // Weekly
+                case 0:
                     title = "weeklySubscription".localized
                     subtitle = "freeTrial".localized
-                case 1: // Monthly
+                case 1:
                     title = "monthlySubscription".localized
                     subtitle = "mostPopular".localized
-                case 2: // Yearly
+                case 2:
                     title = "🔥 " + "yearlySubscription".localized
                     subtitle = "save76Percent".localized
                 default:
-                    title = product.localizedTitle
+                    title = id.displayName
                     subtitle = ""
                 }
-                
+
                 subscriptionOptions.append((title, priceString, subtitle, isSelected))
             }
         } else {
+            // StoreKit1 price display (assumes VIPManager.products ordering matches UI)
+            if VIPManager.shared.products.count >= 3 {
+                let formatter = NumberFormatter()
+                formatter.numberStyle = .currency
+
+                for (index, product) in VIPManager.shared.products.enumerated() {
+                    if index >= 3 { break }
+
+                    formatter.locale = product.priceLocale
+                    let priceString = formatter.string(from: product.price) ?? "$0.00"
+
+                    let title: String
+                    let subtitle: String
+                    let isSelected = (index == 0)
+
+                    switch index {
+                    case 0:
+                        title = "weeklySubscription".localized
+                        subtitle = "freeTrial".localized
+                    case 1:
+                        title = "monthlySubscription".localized
+                        subtitle = "mostPopular".localized
+                    case 2:
+                        title = "🔥 " + "yearlySubscription".localized
+                        subtitle = "save76Percent".localized
+                    default:
+                        title = product.localizedTitle
+                        subtitle = ""
+                    }
+
+                    subscriptionOptions.append((title, priceString, subtitle, isSelected))
+                }
+            }
+        }
+
+        if subscriptionOptions.isEmpty {
             // 如果产品还没加载完成，使用回退价格
             subscriptionOptions = [
                 ("weeklySubscription".localized, "$2.99", "freeTrial".localized, true),
@@ -1274,7 +1393,7 @@ class VIPScrollView: UIScrollView {
         let titleLabel = UILabel()
         titleLabel.text = title
         titleLabel.textColor = .white
-        titleLabel.font = .systemFont(ofSize: 16, weight: .semibold)
+        titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         button.addSubview(titleLabel)
         
@@ -1282,7 +1401,7 @@ class VIPScrollView: UIScrollView {
         let priceLabel = UILabel()
         priceLabel.text = price
         priceLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0) // 橙黄色，匹配渐变主题
-        priceLabel.font = .systemFont(ofSize: 18, weight: .bold)
+        priceLabel.font = .systemFont(ofSize: 19, weight: .bold)
         priceLabel.textAlignment = .right
         priceLabel.translatesAutoresizingMaskIntoConstraints = false
         button.addSubview(priceLabel)
@@ -1291,7 +1410,7 @@ class VIPScrollView: UIScrollView {
         let subtitleLabel = UILabel()
         subtitleLabel.text = subtitle
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.7)
-        subtitleLabel.font = .systemFont(ofSize: 12)
+        subtitleLabel.font = .systemFont(ofSize: 13)
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         button.addSubview(subtitleLabel)
         
@@ -1324,9 +1443,9 @@ class VIPScrollView: UIScrollView {
         }
         
         var constraints = [
-            button.heightAnchor.constraint(equalToConstant: 68), // 减少2pt，从70改为68
+            button.heightAnchor.constraint(equalToConstant: 66), // taller for readability + less cramped
             
-            titleLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 12),
+            titleLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 10),
             titleLabel.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
             
             // 价格垂直居中显示
@@ -1334,7 +1453,7 @@ class VIPScrollView: UIScrollView {
             priceLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
             priceLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 60),
             
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
             subtitleLabel.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
             subtitleLabel.trailingAnchor.constraint(equalTo: priceLabel.leadingAnchor, constant: -8)
         ]
@@ -1375,7 +1494,7 @@ class VIPScrollView: UIScrollView {
         let subscribeTitle = "startFreeTrial".localized
         subscribeButton.setTitle(subscribeTitle, for: .normal)
         subscribeButton.setTitleColor(.white, for: .normal)
-        subscribeButton.titleLabel?.font = .systemFont(ofSize: 18, weight: .bold)
+        subscribeButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .bold)
         subscribeButton.layer.cornerRadius = 25
         subscribeButton.layer.borderWidth = 0 // 确保没有描边
         subscribeButton.addTarget(self, action: #selector(subscribeTapped), for: .touchUpInside)
@@ -1524,11 +1643,11 @@ class VIPScrollView: UIScrollView {
         linksContainer.addSubview(privacyButton)
         
         NSLayoutConstraint.activate([
-            bottomButtonsView.topAnchor.constraint(equalTo: subscriptionOptionsView.bottomAnchor, constant: 20), // 减少间距，从30改为20
+            bottomButtonsView.topAnchor.constraint(equalTo: subscriptionOptionsView.bottomAnchor, constant: 12),
             bottomButtonsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             bottomButtonsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            bottomButtonsView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -30),
-            bottomButtonsView.heightAnchor.constraint(equalToConstant: 120), // 减少高度，因为移除了中间的恢复购买按钮
+            bottomButtonsView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
+            bottomButtonsView.heightAnchor.constraint(equalToConstant: 104),
             
             subscribeButton.topAnchor.constraint(equalTo: bottomButtonsView.topAnchor),
             subscribeButton.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
@@ -1536,14 +1655,14 @@ class VIPScrollView: UIScrollView {
             subscribeButton.heightAnchor.constraint(equalToConstant: 50),
             
             // 免责声明直接放在订阅按钮下面，往下移动4pt
-            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 16), // 从12改为16，往下移动4pt
+            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 18),
             disclaimerLabel.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
             disclaimerLabel.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
             
             // 底部链接容器 - 增加高度和点击区域
-            linksContainer.topAnchor.constraint(equalTo: disclaimerLabel.bottomAnchor, constant: 12),
+            linksContainer.topAnchor.constraint(equalTo: disclaimerLabel.bottomAnchor, constant: 8),
             linksContainer.centerXAnchor.constraint(equalTo: bottomButtonsView.centerXAnchor),
-            linksContainer.heightAnchor.constraint(equalToConstant: 44), // 增加高度到44pt，提供更大的点击区域
+            linksContainer.heightAnchor.constraint(equalToConstant: 40),
             linksContainer.leadingAnchor.constraint(greaterThanOrEqualTo: bottomButtonsView.leadingAnchor, constant: 20),
             linksContainer.trailingAnchor.constraint(lessThanOrEqualTo: bottomButtonsView.trailingAnchor, constant: -20),
             
@@ -1578,6 +1697,7 @@ class VIPScrollView: UIScrollView {
             
             // 验证按钮设置
             self.verifyButtonSetup()
+            self.updateScrollEnabledIfNeeded()
         }
     }
     
@@ -1594,11 +1714,19 @@ class VIPScrollView: UIScrollView {
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 0)
         gradientLayer.frame = button.bounds
-        gradientLayer.cornerRadius = 25
+        gradientLayer.cornerRadius = button.layer.cornerRadius
         
         button.layer.insertSublayer(gradientLayer, at: 0)
     }
     
+    private func updateScrollEnabledIfNeeded() {
+        // Prefer no scrolling when the content fits.
+        view.layoutIfNeeded()
+        let contentHeight = contentView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize).height
+        let availableHeight = scrollView.bounds.height
+        scrollView.isScrollEnabled = contentHeight > (availableHeight + 1)
+    }
+
     // 验证按钮设置
     private func verifyButtonSetup() {
         print("🔍 ===== 验证按钮设置 =====")
@@ -1672,7 +1800,7 @@ class VIPScrollView: UIScrollView {
         print("🔍 关闭订阅界面")
         
         // 强制清理所有可能的遮罩和定时器
-        vipManager.forceResetPurchaseState()
+        PurchaseManager.shared.forceResetPurchaseState()
         
         // 移除所有遮罩视图（包括VIP预览遮罩）
         view.subviews.forEach { subview in
@@ -1689,8 +1817,8 @@ class VIPScrollView: UIScrollView {
         // 确保导航栏显示
         navigationController?.setNavigationBarHidden(false, animated: false)
         
-        // 关闭当前视图控制器
-        dismiss(animated: true) {
+        // 关闭当前视图控制器（无动画）
+        dismiss(animated: false) {
             print("🔍 订阅界面已关闭")
         }
     }
@@ -1717,28 +1845,36 @@ class VIPScrollView: UIScrollView {
         print("🔍 订阅按钮被点击，选择的索引: \(selectedSubscriptionIndex)")
         
         // 检查当前loading状态
-        if vipManager.isLoading {
+        if PurchaseManager.shared.isLoading() {
             print("⚠️ 当前正在处理其他购买操作，忽略订阅请求")
-            showAlert(title: "tip".localized, message: "请等待当前操作完成")
+            showAlert(title: "tip".localized, message: "pleaseWait".localized)
             return
         }
         
-        // 如果选择的是周订阅且用户是免费用户，开始免费试用
-        if selectedSubscriptionIndex == 0 && !vipManager.isVIP() {
-            print("🔍 开始免费试用")
-            vipManager.startFreeTrial()
-            showSuccessAlert(message: "freeTrialStarted".localized, shouldDismiss: true)
-        } else {
-            // 其他情况进行购买
-            guard selectedSubscriptionIndex < vipManager.products.count else { 
-                print("⚠️ 产品列表未加载完成")
-                showAlert(title: "tip".localized, message: "loadingProducts".localized)
-                return 
-            }
-            let product = vipManager.products[selectedSubscriptionIndex]
-            print("🔍 开始购买产品: \(product.productIdentifier)")
-            vipManager.purchase(product: product)
+        // iOS 15+: StoreKit2 should drive trials via App Store Connect configuration.
+        // Do NOT fake a local trial; always trigger purchase.
+        if #available(iOS 15.0, *) {
+            print("🔍 使用 StoreKit2 购买，索引: \(selectedSubscriptionIndex)")
+            PurchaseManager.shared.purchaseProduct(at: selectedSubscriptionIndex)
+            return
         }
+
+        // iOS 14: keep legacy local free-trial behavior for weekly option.
+        if selectedSubscriptionIndex == 0 && !PurchaseManager.shared.isVIP() {
+            print("🔍 开始免费试用 (legacy)")
+            PurchaseManager.shared.startFreeTrialIfAvailable()
+            showSuccessAlert(message: "freeTrialStarted".localized, shouldDismiss: true)
+            return
+        }
+
+        guard selectedSubscriptionIndex < VIPManager.shared.products.count else {
+            print("⚠️ 产品列表未加载完成")
+            showAlert(title: "tip".localized, message: "loadingProducts".localized)
+            return
+        }
+        let product = VIPManager.shared.products[selectedSubscriptionIndex]
+        print("🔍 开始购买产品: \(product.productIdentifier)")
+        VIPManager.shared.purchase(product: product)
     }
     
     @objc private func restoreTapped() {
@@ -1748,15 +1884,15 @@ class VIPScrollView: UIScrollView {
         print("🔍 调用线程: \(Thread.isMainThread ? "主线程" : "后台线程")")
         
         // 检查当前loading状态
-        if vipManager.isLoading {
+        if PurchaseManager.shared.isLoading() {
             print("⚠️ 当前正在处理其他购买操作，忽略恢复购买请求")
-            showAlert(title: "tip".localized, message: "请等待当前操作完成")
+            showAlert(title: "tip".localized, message: "pleaseWait".localized)
             return
         }
         
         // 显示加载状态，但不立即显示alert
         print("🔍 开始恢复购买操作")
-        vipManager.restorePurchases()
+        PurchaseManager.shared.restorePurchases()
         print("🔍 已调用恢复购买方法")
         // 移除立即显示的alert，等待恢复结果
     }
@@ -1927,24 +2063,19 @@ class VIPScrollView: UIScrollView {
         // 存储引用以便关闭
         overlayView.tag = 999
         
-        // 动画显示
-        overlayView.alpha = 0
-        overlayView.transform = CGAffineTransform(translationX: 0, y: view.bounds.height)
+        // 直接显示，不使用动画
+        overlayView.alpha = 1
+        overlayView.transform = .identity
         
-        UIView.animate(withDuration: 0.4, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0, options: [], animations: {
-            overlayView.alpha = 1
-            overlayView.transform = .identity
-        }) { _ in
-            print("🔍 Full-screen custom alert presented successfully")
-            
-            // 强制更新布局并计算内容大小
-            DispatchQueue.main.async {
-                overlayView.layoutIfNeeded()
-                let contentHeight = messageLabel.intrinsicContentSize.height + 80 // 加上padding
-                print("🔍 Content height: \(contentHeight)")
-                print("🔍 ScrollView frame: \(scrollView.frame)")
-                print("🔍 MessageLabel frame: \(messageLabel.frame)")
-            }
+        print("🔍 Full-screen custom alert presented successfully")
+        
+        // 强制更新布局并计算内容大小
+        DispatchQueue.main.async {
+            overlayView.layoutIfNeeded()
+            let contentHeight = messageLabel.intrinsicContentSize.height + 80 // 加上padding
+            print("🔍 Content height: \(contentHeight)")
+            print("🔍 ScrollView frame: \(scrollView.frame)")
+            print("🔍 MessageLabel frame: \(messageLabel.frame)")
         }
     }
     
@@ -1996,14 +2127,11 @@ class VIPScrollView: UIScrollView {
     
     @objc private func dismissCustomAlert() {
         if let overlayView = view.viewWithTag(999) {
-            UIView.animate(withDuration: 0.2, animations: {
-                overlayView.alpha = 0
-            }) { _ in
-                overlayView.removeFromSuperview()
-                // 恢复导航栏显示
-                self.navigationController?.setNavigationBarHidden(false, animated: true)
-                print("🔍 Custom alert dismissed")
-            }
+            // 直接移除，不使用动画
+            overlayView.removeFromSuperview()
+            // 恢复导航栏显示
+            self.navigationController?.setNavigationBarHidden(false, animated: false)
+            print("🔍 Custom alert dismissed")
         }
     }
     
@@ -2047,7 +2175,11 @@ class VIPScrollView: UIScrollView {
         let alert = UIAlertController(title: "success".localized, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "confirm".localized, style: .default) { _ in
             if shouldDismiss {
-                self.dismiss(animated: true)
+                if let nav = self.navigationController {
+                    nav.popViewController(animated: true)
+                } else {
+                    self.dismiss(animated: true)
+                }
             }
         })
         present(alert, animated: true)
@@ -2058,6 +2190,31 @@ class VIPScrollView: UIScrollView {
 extension VIPManager: SKProductsRequestDelegate {
     func productsRequest(_ request: SKProductsRequest, didReceive response: SKProductsResponse) {
         DispatchQueue.main.async {
+            print("🔍 ===== 产品加载回调 =====")
+            print("🔍 有效产品数量: \(response.products.count)")
+            print("🔍 无效产品ID数量: \(response.invalidProductIdentifiers.count)")
+            
+            if !response.invalidProductIdentifiers.isEmpty {
+                print("⚠️ 无效的产品ID:")
+                for invalidID in response.invalidProductIdentifiers {
+                    print("   - \(invalidID)")
+                }
+                print("⚠️ 可能原因:")
+                print("   1. 产品未在 App Store Connect 创建")
+                print("   2. 产品ID拼写错误")
+                print("   3. Bundle ID 不匹配")
+                print("   4. 产品状态不是'准备提交'")
+            }
+            
+            for product in response.products {
+                print("✅ 有效产品:")
+                print("   - ID: \(product.productIdentifier)")
+                print("   - 名称: \(product.localizedTitle)")
+                print("   - 描述: \(product.localizedDescription)")
+                print("   - 价格: \(product.price)")
+                print("   - 货币: \(product.priceLocale.currencyCode ?? "unknown")")
+            }
+            
             // 按价格排序：周 < 月 < 年
             self.products = response.products.sorted { product1, product2 in
                 let order: [String] = [
@@ -2072,7 +2229,22 @@ extension VIPManager: SKProductsRequestDelegate {
                 return index1 < index2
             }
             
-            print("成功加载 \(self.products.count) 个产品")
+            if self.products.isEmpty {
+                print("❌ 警告: 没有加载到任何产品！")
+                print("❌ 请检查:")
+                print("   1. App Store Connect 是否已配置产品")
+                print("   2. Bundle ID 是否匹配: com.ledscreen.app")
+                print("   3. 产品ID 是否正确:")
+                print("      - com.ledscreen.vip.weekly")
+                print("      - com.ledscreen.vip.monthly")
+                print("      - com.ledscreen.vip.yearly")
+                print("   4. 是否已签署付费App协议")
+                print("   5. 产品状态是否为'准备提交'")
+            } else {
+                print("✅ 成功加载 \(self.products.count) 个产品")
+            }
+            
+            print("🔍 ===== 产品加载完成 =====")
             
             // 发送产品加载完成通知
             NotificationCenter.default.post(name: NSNotification.Name("ProductsDidLoad"), object: self)
@@ -2081,9 +2253,42 @@ extension VIPManager: SKProductsRequestDelegate {
     
     func request(_ request: SKRequest, didFailWithError error: Error) {
         DispatchQueue.main.async {
+            print("❌ ===== 产品请求失败 =====")
+            print("❌ 错误: \(error.localizedDescription)")
+            print("❌ 错误代码: \((error as NSError).code)")
+            print("❌ 错误域: \((error as NSError).domain)")
+            
+            if let skError = error as? SKError {
+                switch skError.code {
+                case .unknown:
+                    print("❌ 未知错误")
+                case .clientInvalid:
+                    print("❌ 客户端无效 - 检查设备是否允许内购")
+                case .paymentCancelled:
+                    print("❌ 支付已取消")
+                case .paymentInvalid:
+                    print("❌ 支付无效")
+                case .paymentNotAllowed:
+                    print("❌ 设备不允许支付")
+                case .storeProductNotAvailable:
+                    print("❌ 产品不可用 - 检查 App Store Connect 配置")
+                case .cloudServicePermissionDenied:
+                    print("❌ iCloud 权限被拒绝")
+                case .cloudServiceNetworkConnectionFailed:
+                    print("❌ 网络连接失败")
+                default:
+                    print("❌ 其他错误: \(skError.code.rawValue)")
+                }
+            }
+            
+            print("❌ 建议:")
+            print("   1. 检查网络连接")
+            print("   2. 检查 App Store Connect 配置")
+            print("   3. 稍后重试")
+            print("❌ ===== 错误信息结束 =====")
+            
             self.handleFailedPurchase(error: error)
         }
-        print("产品请求失败: \(error.localizedDescription)")
     }
 }
 
@@ -2094,13 +2299,45 @@ extension VIPManager: SKPaymentTransactionObserver {
         for transaction in transactions {
             print("🔍 处理交易: \(transaction.payment.productIdentifier), 状态: \(transaction.transactionState.rawValue)")
             
+            // 获取交易ID
+            let transactionID = transaction.transactionIdentifier ?? ""
+            
             switch transaction.transactionState {
             case .purchased:
+                // 检查是否已处理
+                if !transactionID.isEmpty && isTransactionProcessed(transactionID) {
+                    print("⚠️ 交易已处理过，跳过: \(transactionID)")
+                    SKPaymentQueue.default().finishTransaction(transaction)
+                    continue
+                }
+                
+                // 处理购买
                 handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                
+                // 标记为已处理
+                if !transactionID.isEmpty {
+                    markTransactionAsProcessed(transactionID)
+                }
+                
                 SKPaymentQueue.default().finishTransaction(transaction)
+                
             case .restored:
+                // 恢复购买也需要去重
+                if !transactionID.isEmpty && isTransactionProcessed(transactionID) {
+                    print("⚠️ 恢复的交易已处理过，跳过: \(transactionID)")
+                    SKPaymentQueue.default().finishTransaction(transaction)
+                    continue
+                }
+                
                 handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                
+                // 标记为已处理
+                if !transactionID.isEmpty {
+                    markTransactionAsProcessed(transactionID)
+                }
+                
                 SKPaymentQueue.default().finishTransaction(transaction)
+                
             case .failed:
                 if let error = transaction.error as? SKError {
                     if error.code != .paymentCancelled {
@@ -2111,7 +2348,7 @@ extension VIPManager: SKPaymentTransactionObserver {
                             self.isLoading = false
                             // 发送取消通知，让UI知道操作已完成
                             NotificationCenter.default.post(
-                                name: VIPManager.purchaseDidFailNotification,
+                                name: PurchaseManager.purchaseDidFailNotification,
                                 object: self,
                                 userInfo: ["error": "用户取消了购买", "cancelled": true]
                             )
@@ -2152,7 +2389,7 @@ extension VIPManager: SKPaymentTransactionObserver {
                 print("🔍 没有可恢复的购买，发送失败通知")
                 // 没有可恢复的购买
                 NotificationCenter.default.post(
-                    name: VIPManager.purchaseDidFailNotification, 
+                    name: PurchaseManager.purchaseDidFailNotification, 
                     object: self, 
                     userInfo: ["error": "noRestorablePurchases".localized]
                 )
@@ -2160,7 +2397,7 @@ extension VIPManager: SKPaymentTransactionObserver {
                 print("🔍 有可恢复的购买，发送成功通知")
                 // 发送恢复成功通知
                 NotificationCenter.default.post(
-                    name: VIPManager.purchaseDidCompleteNotification, 
+                    name: PurchaseManager.purchaseDidCompleteNotification, 
                     object: self, 
                     userInfo: ["restored": true]
                 )
@@ -3355,8 +3592,10 @@ class TemplateSquareViewController: UIViewController {
         appearance.shadowColor = .clear // 移除阴影
         
         navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
+        if #available(iOS 15.0, *) {
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        }
         navigationController?.navigationBar.prefersLargeTitles = false
         
         // 设置分段控制器 - 放在导航栏标题位置
@@ -3607,7 +3846,7 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     
     private func handleItemTap(_ item: LEDItem) {
         // 检查是否需要VIP且用户不是VIP
-        if item.isVIPRequired && !VIPManager.shared.isVIP() {
+        if item.isVIPRequired && !PurchaseManager.shared.isVIP() {
             showVIPPreview(for: item)
             return
         }
@@ -3714,9 +3953,27 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     
     private func presentVIPSubscriptionSafely() {
         let vipVC = VIPSubscriptionViewController()
+        vipVC.hidesBottomBarWhenPushed = true
+
+        // Prefer push when available to avoid modal presentation issues on newer simulators.
+        if let nav = navigationController {
+            // Defensive: ensure no lingering overlays block touches.
+            view.viewWithTag(9999)?.removeFromSuperview()
+            view.window?.viewWithTag(9999)?.removeFromSuperview()
+
+            nav.pushViewController(vipVC, animated: true)
+            return
+        }
+
         let nav = UINavigationController(rootViewController: vipVC)
-        nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
-        present(nav, animated: true)
+        nav.modalPresentationStyle = .fullScreen
+        nav.modalTransitionStyle = .coverVertical
+
+        var presenter: UIViewController = self
+        while let presented = presenter.presentedViewController {
+            presenter = presented
+        }
+        presenter.present(nav, animated: true)
     }
 }
 
@@ -3973,7 +4230,7 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
             // 热门模版：只有试用按钮
             cell.onTryTapped = { [weak self] item in
                 // 检查是否需要VIP且用户不是VIP
-                if item.isVIPRequired && !VIPManager.shared.isVIP() {
+                if item.isVIPRequired && !PurchaseManager.shared.isVIP() {
                     self?.onVIPSubscriptionNeeded?()
                     return
                 }

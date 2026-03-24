@@ -89,7 +89,7 @@ class EffectsRenderer: UIView {
                 position: CGPoint(x: CGFloat.random(in: 0...bounds.width), y: 0),
                 velocity: CGPoint(x: CGFloat.random(in: -2...2), y: 5),
                 size: CGFloat.random(in: 2...5),
-                color: .systemCyan,
+                color: .cyan,
                 alpha: 1.0,
                 type: .meteor
             )

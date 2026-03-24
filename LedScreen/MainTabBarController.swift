@@ -105,7 +105,6 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         
         // 应用到所有状态的TabBar
         tabBar.standardAppearance = appearance
-        tabBar.scrollEdgeAppearance = appearance
         if #available(iOS 15.0, *) {
             tabBar.scrollEdgeAppearance = appearance
         }

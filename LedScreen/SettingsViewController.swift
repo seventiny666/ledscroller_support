@@ -14,18 +14,15 @@ enum SettingItem {
         case .language: return "language".localized
         case .aboutUs: return "about".localized
         case .version: return "version".localized
-        case .restorePurchase: 
-            let vipManager = VIPManager.shared
-            if vipManager.isVIP() {
-                let subscriptionType = vipManager.getSubscriptionTypeText()
+        case .restorePurchase:
+            if PurchaseManager.shared.isVIP() {
+                let subscriptionType = PurchaseManager.shared.getSubscriptionTypeText()
                 if !subscriptionType.isEmpty {
                     return "subscriptionMember".localized + " " + subscriptionType
-                } else {
-                    return "subscriptionMember".localized
                 }
-            } else {
-                return "restorePurchase".localized
+                return "subscriptionMember".localized
             }
+            return "restorePurchase".localized
         case .feedback: return "feedback".localized
         case .rate: return "rate".localized
         }
@@ -45,6 +42,16 @@ enum SettingItem {
 
 // 设置视图控制器
 class SettingsViewController: UIViewController {
+
+    private func topMostPresenter() -> UIViewController {
+        // Prefer the window's root VC chain; fall back to self.
+        let root = view.window?.rootViewController
+        var top = root ?? self
+        while let presented = top.presentedViewController {
+            top = presented
+        }
+        return top
+    }
     
     private var scrollView: UIScrollView!
     private var stackView: UIStackView!
@@ -54,7 +61,7 @@ class SettingsViewController: UIViewController {
         super.viewDidLoad()
         
         // 确保VIP管理器状态正常
-        VIPManager.shared.checkAndResetIfStuck()
+        PurchaseManager.shared.checkAndResetIfStuck()
         
         setupUI()
         
@@ -62,7 +69,7 @@ class SettingsViewController: UIViewController {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(vipStatusDidChange),
-            name: VIPManager.vipStatusDidChangeNotification,
+            name: PurchaseManager.vipStatusDidChangeNotification,
             object: nil
         )
         
@@ -125,8 +132,10 @@ class SettingsViewController: UIViewController {
         appearance.shadowColor = .clear // 移除阴影
         
         navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
+        if #available(iOS 15.0, *) {
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        }
         navigationController?.navigationBar.prefersLargeTitles = true
         
         // 创建滚动视图
@@ -234,77 +243,159 @@ class SettingsViewController: UIViewController {
     }
     
     @objc private func settingCardTapped(_ gesture: UITapGestureRecognizer) {
-        guard let index = gesture.view?.tag, index < settings.count else { return }
+        print("🔍 ===== settingCardTapped 被触发 =====")
+        guard let index = gesture.view?.tag, index < settings.count else {
+            print("❌ 无效的index或超出范围")
+            return
+        }
         let item = settings[index]
+        print("🔍 点击的设置项: \(item.title)")
         handleSettingTap(item)
+        print("🔍 ===== settingCardTapped 结束 =====")
     }
     
     private func handleSettingTap(_ item: SettingItem) {
+        print("🔍 ===== handleSettingTap 开始 =====")
+        print("🔍 处理设置项: \(item.title)")
         switch item {
         case .language:
+            print("🔍 -> 语言设置")
             showLanguageSelector()
         case .aboutUs:
+            print("🔍 -> 关于我们")
             showAlert(title: "about".localized, message: "aboutMessage".localized)
         case .version:
+            print("🔍 -> 版本信息")
             showAlert(title: "version".localized, message: "versionMessage".localized)
         case .restorePurchase:
+            print("🔍 -> 恢复购买/订阅管理")
             handleRestorePurchase()
         case .feedback:
+            print("🔍 -> 反馈")
             showAlert(title: "feedback".localized, message: "feedbackMessage".localized)
         case .rate:
+            print("🔍 -> 评分")
             showAlert(title: "rate".localized, message: "rateMessage".localized)
         }
+        print("🔍 ===== handleSettingTap 结束 =====")
     }
     
     private func handleRestorePurchase() {
-        let vipManager = VIPManager.shared
-        
-        if vipManager.isVIP() {
-            // 已是VIP用户，显示管理订阅
+        print("🔍 ===== handleRestorePurchase 开始 =====")
+        if PurchaseManager.shared.isVIP() {
+            print("🔍 用户已是VIP，显示管理订阅弹窗")
             showCustomVIPAlert(
                 title: "vipMember".localized,
-                message: vipManager.getVIPStatusText(),
-                primaryButtonTitle: vipManager.getVIPButtonText(),
+                message: PurchaseManager.shared.getVIPStatusText(),
+                primaryButtonTitle: PurchaseManager.shared.getVIPButtonText(),
                 primaryAction: {
-                    vipManager.openManageSubscriptions()
+                    print("🔍 管理订阅按钮被点击")
+                    if #available(iOS 15.0, *) {
+                        StoreKitManager.shared.openManageSubscriptions()
+                    } else {
+                        VIPManager.shared.openManageSubscriptions()
+                    }
                 }
             )
         } else {
+            print("🔍 用户非VIP，显示开通VIP弹窗")
             // 非VIP用户，显示开通VIP - 交换按钮位置，恢复购买在上面，开通VIP在下面
             showCustomVIPAlert(
                 title: "vipMember".localized,
-                message: "开通订阅后您可解锁全部权益\n也可随时退订订阅", // 修改为2行文字，去掉逗号，在逗号位置换行
+                message: "vipAlertMessage".localized,
                 primaryButtonTitle: "restorePurchases".localized, // 交换：恢复购买作为主按钮
                 primaryAction: {
+                    print("🔍 ===== primaryAction（恢复购买）被调用 =====")
                     print("🔍 设置界面：恢复购买按钮被点击")
                     // 不直接调用恢复购买，而是打开VIP订阅界面
                     self.showVIPSubscription()
+                    print("🔍 ===== primaryAction（恢复购买）结束 =====")
                 },
-                secondaryButtonTitle: VIPManager.shared.getVIPButtonText(), // 交换：开通VIP作为次要按钮
+                secondaryButtonTitle: PurchaseManager.shared.getVIPButtonText(), // 交换：开通VIP作为次要按钮
                 secondaryAction: {
+                    print("🔍 ===== secondaryAction（开通VIP）被调用 =====")
+                    print("🔍 设置界面：立即开通VIP按钮被点击")
                     self.showVIPSubscription()
+                    print("🔍 ===== secondaryAction（开通VIP）结束 =====")
                 }
             )
         }
+        print("🔍 ===== handleRestorePurchase 结束 =====")
     }
     
     private func showVIPSubscription() {
+        print("🔍 ===== showVIPSubscription 开始 =====")
         print("🔍 设置界面：准备显示VIP订阅界面")
+        print("🔍 当前线程: \(Thread.current)")
+        print("🔍 view.window: \(String(describing: view.window))")
+        print("🔍 presentedViewController: \(String(describing: presentedViewController))")
         
         // 确保VIP管理器状态正常
-        VIPManager.shared.checkAndResetIfStuck()
+        PurchaseManager.shared.checkAndResetIfStuck()
         
-        let vipVC = VIPSubscriptionViewController()
-        let nav = UINavigationController(rootViewController: vipVC)
-        nav.modalPresentationStyle = .fullScreen
+        // 检查是否还有遮罩视图
+        if let remainingOverlay = view.viewWithTag(9999) {
+            print("⚠️ 发现残留的overlayView，强制移除")
+            remainingOverlay.removeFromSuperview()
+        }
         
-        // 确保在主线程上执行，并添加延迟以确保弹窗完全关闭
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            print("🔍 设置界面：开始present VIP订阅界面")
-            self.present(nav, animated: true) {
+        // 确保视图可以交互
+        view.isUserInteractionEnabled = true
+        print("🔍 view.isUserInteractionEnabled: \(view.isUserInteractionEnabled)")
+        
+        DispatchQueue.main.async {
+            // Defensive: remove any lingering overlay that could block touches.
+            let removedBefore = self.removeBlockingOverlays()
+            print("🔍 Settings: removedBeforePush=\(removedBefore)")
+
+            let vipVC = VIPSubscriptionViewController()
+            vipVC.hidesBottomBarWhenPushed = true
+
+            // Prefer push (Settings is already inside a UINavigationController via MainTabBarController).
+            if let nav = self.navigationController {
+                print("🔍 设置界面：push VIP订阅界面")
+                nav.pushViewController(vipVC, animated: true)
+
+                // After navigation transition starts, clear any lingering blockers again.
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                    let removedAfter = self.removeBlockingOverlays()
+                    let top = nav.topViewController
+                    print("🔍 Settings: removedAfterPush=\(removedAfter) topVC=\(String(describing: top))")
+
+                    if let window = nav.view.window {
+                        print("🔍 Settings: window subviews (count=\(window.subviews.count))")
+                        for v in window.subviews {
+                            let name = NSStringFromClass(type(of: v))
+                            print(" - \(name) frame=\(v.frame) alpha=\(v.alpha) tag=\(v.tag) interactive=\(v.isUserInteractionEnabled)")
+                        }
+                    } else {
+                        print("⚠️ Settings: nav.view.window is nil")
+                    }
+                }
+                return
+            }
+
+            // Fallback: present full screen.
+            let nav = UINavigationController(rootViewController: vipVC)
+            nav.modalPresentationStyle = .fullScreen
+            nav.modalTransitionStyle = .coverVertical
+
+            let presenter = self.topMostPresenter()
+            print("🔍 设置界面：present VIP订阅界面")
+            print("🔍 presenter: \(String(describing: presenter))")
+            print("🔍 presenter.presentedViewController: \(String(describing: presenter.presentedViewController))")
+
+            if presenter.presentedViewController != nil {
+                print("⚠️ presenter 已有正在展示的控制器，先不重复 present")
+                return
+            }
+
+            presenter.present(nav, animated: true) {
                 print("🔍 设置界面：VIP订阅界面已显示")
             }
         }
+        
+        print("🔍 ===== showVIPSubscription 结束 =====")
     }
     
     private func showCustomVIPAlert(
@@ -374,9 +465,17 @@ class SettingsViewController: UIViewController {
         primaryButton.layer.cornerRadius = 22 // 改为胶囊形状，高度44的一半
         primaryButton.translatesAutoresizingMaskIntoConstraints = false
         primaryButton.addAction(UIAction { _ in
+            print("🔍 ===== 主按钮点击事件触发 =====")
+            print("🔍 主按钮被点击: \(primaryButtonTitle)")
+            print("🔍 当前线程: \(Thread.current)")
+            print("🔍 开始调用 dismissCustomAlertWithCompletion")
             self.dismissCustomAlertWithCompletion {
+                print("🔍 主按钮：弹窗已关闭，执行primaryAction")
+                print("🔍 准备执行 primaryAction")
                 primaryAction()
+                print("🔍 primaryAction 已执行")
             }
+            print("🔍 ===== 主按钮点击事件结束 =====")
         }, for: .touchUpInside)
         
         // 添加视图到层次结构
@@ -420,25 +519,30 @@ class SettingsViewController: UIViewController {
         
         // 如果有次要按钮，添加它
         if let secondaryButtonTitle = secondaryButtonTitle, let secondaryAction = secondaryAction {
+            print("🔍 创建次要按钮: \(secondaryButtonTitle)")
             let secondaryButton = UIButton(type: .system)
             secondaryButton.setTitle(secondaryButtonTitle, for: .normal)
             secondaryButton.setTitleColor(.white, for: .normal) // 改为白色文字
             secondaryButton.titleLabel?.font = .systemFont(ofSize: 16)
             secondaryButton.backgroundColor = .clear // 改为透明背景，使用渐变
             secondaryButton.layer.cornerRadius = 22 // 改为胶囊形状，高度44的一半
+            secondaryButton.isUserInteractionEnabled = true // 确保可交互
             secondaryButton.translatesAutoresizingMaskIntoConstraints = false
             secondaryButton.addAction(UIAction { _ in
+                print("🔍 ===== 次要按钮点击事件触发 =====")
+                print("🔍 次要按钮被点击: \(secondaryButtonTitle)")
+                print("🔍 当前线程: \(Thread.current)")
+                print("🔍 开始调用 dismissCustomAlertWithCompletion")
                 self.dismissCustomAlertWithCompletion {
+                    print("🔍 次要按钮：弹窗已关闭，执行secondaryAction")
+                    print("🔍 准备执行 secondaryAction")
                     secondaryAction()
+                    print("🔍 secondaryAction 已执行")
                 }
+                print("🔍 ===== 次要按钮点击事件结束 =====")
             }, for: .touchUpInside)
             
             alertView.addSubview(secondaryButton)
-            
-            // 为次要按钮应用渐变背景
-            DispatchQueue.main.async {
-                self.applyGradientToVIPButton(secondaryButton)
-            }
             
             constraints.append(contentsOf: [
                 secondaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
@@ -449,6 +553,12 @@ class SettingsViewController: UIViewController {
                 primaryButton.topAnchor.constraint(equalTo: secondaryButton.bottomAnchor, constant: 16), // 增加间距从12到16
                 primaryButton.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -44) // 背景高度再增加10pt (从-34到-44)
             ])
+            
+            // 在布局完成后应用渐变背景
+            DispatchQueue.main.async {
+                print("🔍 为次要按钮应用渐变背景，bounds: \(secondaryButton.bounds)")
+                self.applyGradientToVIPButton(secondaryButton)
+            }
         } else {
             constraints.append(contentsOf: [
                 primaryButton.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 32), // 增加间距从24到32
@@ -458,49 +568,108 @@ class SettingsViewController: UIViewController {
         
         NSLayoutConstraint.activate(constraints)
         
-        // 动画显示
-        overlayView.alpha = 0
-        alertView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
-        
-        UIView.animate(withDuration: 0.3, delay: 0, usingSpringWithDamping: 0.8, initialSpringVelocity: 0) {
-            overlayView.alpha = 1
-            alertView.transform = .identity
-        } completion: { _ in
-            // 在动画完成后为次要按钮应用渐变（如果存在）
-            if let secondaryButton = alertView.subviews.first(where: { $0 is UIButton && ($0 as! UIButton).titleLabel?.text == secondaryButtonTitle }) as? UIButton {
-                self.applyGradientToVIPButton(secondaryButton)
-            }
-        }
+        // 直接显示，不使用动画
+        overlayView.alpha = 1
+        alertView.transform = .identity
     }
     
     @objc private func dismissCustomAlert() {
         guard let overlayView = view.viewWithTag(9999) else { return }
         
-        UIView.animate(withDuration: 0.2) {
-            overlayView.alpha = 0
-        } completion: { _ in
-            overlayView.removeFromSuperview()
-        }
+        // 直接移除，不使用动画
+        overlayView.removeFromSuperview()
     }
     
     private func dismissCustomAlertWithCompletion(_ completion: @escaping () -> Void) {
-        guard let overlayView = view.viewWithTag(9999) else {
-            completion()
-            return
+        print("🔍 ===== dismissCustomAlertWithCompletion 开始 =====")
+        print("🔍 dismissCustomAlertWithCompletion 被调用")
+        print("🔍 调用栈: \(Thread.callStackSymbols.prefix(5))")
+
+        // Remove any lingering overlays that could block touches (some simulator/iOS
+        // versions keep views alive across presentations).
+        let removed = removeBlockingOverlays()
+        if removed == 0 {
+            print("🔍 没有找到overlayView，直接执行completion")
+        } else {
+            print("🔍 已移除 \(removed) 个overlayView")
         }
-        
-        UIView.animate(withDuration: 0.2) {
-            overlayView.alpha = 0
-        } completion: { _ in
-            overlayView.removeFromSuperview()
-            DispatchQueue.main.async {
-                completion()
+
+        print("🔍 执行completion回调")
+        completion()
+        print("🔍 completion回调已执行")
+        print("🔍 ===== dismissCustomAlertWithCompletion 结束 =====")
+    }
+
+    @discardableResult
+    private func removeBlockingOverlays() -> Int {
+        var removed = 0
+
+        func removeTaggedOverlay(in container: UIView?, tag: Int) {
+            guard let container else { return }
+            if let overlay = container.viewWithTag(tag) {
+                overlay.isUserInteractionEnabled = false
+                overlay.removeFromSuperview()
+                removed += 1
             }
         }
+
+        func removeFullscreenInvisibleBlockers(in window: UIWindow) {
+            let winBounds = window.bounds
+            for subview in window.subviews {
+                guard subview.isUserInteractionEnabled, !subview.isHidden, subview.alpha > 0.0 else { continue }
+
+                let isFullscreen = subview.frame.equalTo(winBounds)
+                let className = NSStringFromClass(type(of: subview))
+                let looksLikeOverlay = className.localizedCaseInsensitiveContains("overlay")
+
+                // Heuristic: full-screen views that are transparent-ish and block touches.
+                // Use a slightly higher threshold; some overlays use alpha 0.1.
+                let isTransparentish = subview.alpha < 0.2
+
+                if isFullscreen && (looksLikeOverlay || isTransparentish) {
+                    print("⚠️ Removing blocker view: \(className) frame=\(subview.frame) alpha=\(subview.alpha) tag=\(subview.tag)")
+                    subview.isUserInteractionEnabled = false
+                    subview.removeFromSuperview()
+                    removed += 1
+                }
+            }
+        }
+
+        // Current VC view.
+        removeTaggedOverlay(in: view, tag: 9999)
+        removeTaggedOverlay(in: view, tag: 999)
+
+        // Window/root chain.
+        removeTaggedOverlay(in: view.window, tag: 9999)
+        removeTaggedOverlay(in: view.window, tag: 999)
+        removeTaggedOverlay(in: view.window?.rootViewController?.view, tag: 9999)
+        removeTaggedOverlay(in: view.window?.rootViewController?.view, tag: 999)
+
+        // As a last resort, scan all scene windows.
+        for window in UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows }) {
+            removeTaggedOverlay(in: window, tag: 9999)
+            removeTaggedOverlay(in: window, tag: 999)
+            removeFullscreenInvisibleBlockers(in: window)
+        }
+
+        return removed
     }
     
     // 为VIP按钮应用渐变背景（和订阅界面一样的渐变）
     private func applyGradientToVIPButton(_ button: UIButton) {
+        // 如果bounds还没有设置，延迟执行
+        if button.bounds.width == 0 || button.bounds.height == 0 {
+            print("🔍 按钮bounds为零，延迟应用渐变")
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                self.applyGradientToVIPButton(button)
+            }
+            return
+        }
+        
+        print("🔍 应用渐变背景到按钮，bounds: \(button.bounds)")
+        
         // 移除之前的渐变层
         button.layer.sublayers?.removeAll { $0 is CAGradientLayer }
         
@@ -514,7 +683,10 @@ class SettingsViewController: UIViewController {
         gradientLayer.frame = button.bounds
         gradientLayer.cornerRadius = 22 // 改为胶囊形状圆角，匹配按钮
         
+        // 确保渐变层在最底层，不会阻止触摸事件
         button.layer.insertSublayer(gradientLayer, at: 0)
+        
+        print("🔍 渐变背景已应用，gradientLayer.frame: \(gradientLayer.frame)")
     }
     
     private func showLanguageSelector() {

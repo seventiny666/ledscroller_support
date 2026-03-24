@@ -3185,7 +3185,7 @@ class LEDCreateViewController: UIViewController {
         }
         
         // 检查是否使用了VIP功能
-        if hasVIPContent() && !VIPManager.shared.isVIP() {
+        if hasVIPContent() && !PurchaseManager.shared.isVIP() {
             showVIPConfirmDialog()
             return
         }
@@ -3295,7 +3295,7 @@ class LEDCreateViewController: UIViewController {
         let vipVC = VIPSubscriptionViewController()
         let nav = UINavigationController(rootViewController: vipVC)
         nav.modalPresentationStyle = UIModalPresentationStyle.fullScreen
-        present(nav, animated: true)
+        present(nav, animated: false)
     }
     
     private func updateCurrentItem() {

@@ -290,7 +290,7 @@ class UnifiedStoreManager {
         if #available(iOS 15.0, *) {
             return StoreKitManager.shared.isVIP()
         } else {
-            return VIPManager.shared.isVIP()
+            return PurchaseManager.shared.isVIP()
         }
     }
     
@@ -299,7 +299,7 @@ class UnifiedStoreManager {
         if #available(iOS 15.0, *) {
             return StoreKitManager.shared.getStatusText()
         } else {
-            return VIPManager.shared.getVIPStatusText()
+            return PurchaseManager.shared.getVIPStatusText()
         }
     }
     
@@ -315,7 +315,7 @@ class UnifiedStoreManager {
                 }
             }
         } else {
-            VIPManager.shared.restorePurchases()
+            PurchaseManager.shared.restorePurchases()
             // 监听通知来判断结果
         }
     }

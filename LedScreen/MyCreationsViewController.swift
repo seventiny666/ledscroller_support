@@ -37,8 +37,10 @@ class MyCreationsViewController: UIViewController {
         appearance.shadowColor = .clear // 移除阴影
         
         navigationController?.navigationBar.standardAppearance = appearance
-        navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
+        if #available(iOS 15.0, *) {
+            navigationController?.navigationBar.scrollEdgeAppearance = appearance
+        }
         navigationController?.navigationBar.prefersLargeTitles = false
         
         // 右上角添加新增按钮

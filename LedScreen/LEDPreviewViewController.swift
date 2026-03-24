@@ -1,6 +1,6 @@
 import UIKit
 
-// LED预览页面（带编辑和预览按钮）
+// LED预览页面（带编辑和›预览按钮）
 class LEDPreviewViewController: UIViewController {
     
     private let ledItem: LEDItem
@@ -148,7 +148,7 @@ class LEDPreviewViewController: UIViewController {
         view.addSubview(buttonStack)
         
         // 编辑按钮改为"试用模版"
-        editButton.setTitle("试用模版", for: .normal)
+        editButton.setTitle("tryTemplate".localized, for: .normal)
         editButton.setTitleColor(.white, for: .normal)
         editButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         editButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.3)
@@ -159,7 +159,7 @@ class LEDPreviewViewController: UIViewController {
         buttonStack.addArrangedSubview(editButton)
         
         // 预览按钮改为"预览模版"
-        previewButton.setTitle("预览模版", for: .normal)
+        previewButton.setTitle("previewTemplate".localized, for: .normal)
         previewButton.setTitleColor(.white, for: .normal)
         previewButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         previewButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)

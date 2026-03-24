@@ -39,8 +39,8 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // 应用到所有导航栏
         UINavigationBar.appearance().standardAppearance = navigationBarAppearance
         UINavigationBar.appearance().compactAppearance = navigationBarAppearance
-        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
         if #available(iOS 15.0, *) {
+            UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
             UINavigationBar.appearance().compactScrollEdgeAppearance = navigationBarAppearance
         }
         

@@ -210,7 +210,7 @@ class MainViewController: UIViewController {
         previewBtn.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(previewBtn)
         
-        let codeBtn = createActionButton(title: "💻 生成代码", color: .systemCyan)
+        let codeBtn = createActionButton(title: "💻 生成代码", color: .cyan)
         codeBtn.addTarget(self, action: #selector(generateCodeTapped), for: .touchUpInside)
         codeBtn.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(codeBtn)
@@ -264,7 +264,7 @@ class MainViewController: UIViewController {
         btn.backgroundColor = UIColor(white: 0.15, alpha: 1)
         btn.layer.cornerRadius = 12
         btn.layer.borderWidth = 1
-        btn.layer.borderColor = UIColor.systemCyan.cgColor
+        btn.layer.borderColor = UIColor.cyan.cgColor
         btn.addTarget(self, action: #selector(presetButtonTapped(_:)), for: .touchUpInside)
         return btn
     }

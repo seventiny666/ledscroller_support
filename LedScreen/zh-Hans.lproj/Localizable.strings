@@ -23,6 +23,10 @@
 "confirm" = "确定";
 "create" = "创建";
 "done" = "完成";
+"exit" = "退出";
+"tryTemplate" = "试用模版";
+"previewTemplate" = "预览模版";
+"becomeMember" = "成为会员";
 
 /* Settings */
 "language" = "语言";
@@ -60,6 +64,7 @@
 "noRestorablePurchases" = "未找到可恢复的购买。";
 "loadingProducts" = "正在加载产品，请稍候...";
 "freeTrialStarted" = "免费试用已开始！享受3天VIP权益。";
+"pleaseWait" = "请等待当前操作完成";
 
 /* VIP Status */
 "vipStatusFree" = "免费用户";
@@ -71,6 +76,7 @@
 /* VIP Content Popup */
 "vipContentSelected" = "您选择了部分付费组件";
 "vipBenefitsMessage" = "成为订阅用户可解锁全部权益，如果不需要可随时取消";
+"vipAlertMessage" = "开通订阅后您可解锁全部权益\n也可随时退订订阅";
 "becomeVip" = "成为vip";
 "mostPopular" = "最受欢迎";
 "save67Percent" = "节省67%";
