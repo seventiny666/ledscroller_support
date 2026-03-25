@@ -6,7 +6,7 @@
 
 ## 修改文件
 
-- `LedScreen/CustomSpacedTabBar.swift`
+- `LedScroller/CustomSpacedTabBar.swift`
 
 ## 布局方案
 

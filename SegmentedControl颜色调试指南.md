@@ -79,7 +79,7 @@ Xcode可能使用了旧的构建缓存。
 xcodebuild clean
 
 # 删除派生数据
-rm -rf ~/Library/Developer/Xcode/DerivedData/LedScreen-*
+rm -rf ~/Library/Developer/Xcode/DerivedData/LedScroller-*
 
 # 重新构建
 xcodebuild build

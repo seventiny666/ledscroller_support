@@ -1,0 +1,163 @@
+/* Tab Bar */
+"home" = "Home";
+"templates" = "Modelli";
+"creations" = "Creazioni";
+"settings" = "Impostazioni";
+
+/* Template Categories */
+"neon" = "Schermo Neon";
+"idol" = "Schermo Idol";
+"led" = "Schermo LED";
+"popularAnimation" = "Animazione Popolare";
+"clock" = "Schermo Orologio";
+"other" = "Altro Schermo";
+
+/* Buttons */
+"try" = "Prova";
+"preview" = "Anteprima";
+"edit" = "Modifica";
+"save" = "Salva";
+"cancel" = "Annulla";
+"delete" = "Elimina";
+"tip" = "Suggerimento";
+"confirm" = "OK";
+"create" = "Crea";
+"done" = "Fatto";
+
+/* Settings */
+"language" = "Lingua";
+"about" = "Informazioni";
+"version" = "Versione";
+"feedback" = "Feedback";
+"rate" = "Valuta";
+"share" = "Condividi";
+"restorePurchase" = "Ripristina Acquisto";
+
+/* VIP Status Messages */
+"vipMember" = "Membro VIP";
+"vipStatusFree" = "Attiva VIP Ora";
+"vipStatusTrial" = "Prova: %d giorni rimanenti";
+"vipStatusSubscribed" = "Il Mio VIP: %d giorni rimanenti";
+"vipStatusLifetime" = "Il Mio VIP: Membro a Vita";
+"vipButtonFree" = "Attiva VIP Ora";
+"vipButtonManage" = "Gestisci Abbonamento";
+
+/* Messages */
+"saved" = "Nuova pagina salvata in Le Mie Creazioni";
+"deleted" = "Eliminato con successo";
+"error" = "Operazione fallita";
+"languageChanged" = "Lingua Cambiata";
+"restartRequired" = "Si prega di riavviare l'app per applicare le nuove impostazioni della lingua";
+"noRestorableItems" = "Nessun articolo di acquisto ripristinabile";
+
+/* About Messages */
+"aboutMessage" = "LedScroller - Fai brillare il tuo testo\n\nUn'applicazione professionale di simulazione display LED";
+"versionMessage" = "Versione Corrente: 1.0\n\nGrazie per l'utilizzo!";
+"feedbackMessage" = "Si prega di inviare un'email a:\n784430005@qq.com";
+"rateMessage" = "Grazie per il tuo supporto!\nSi prega di valutarci sull'App Store";
+
+/* Create LED */
+"createTitle" = "Crea LED";
+"editTitle" = "Modifica LED";
+"textContent" = "Contenuto Testo";
+"textPlaceholder" = "Inserisci testo LED";
+"pleaseEnterText" = "Si prega di inserire il contenuto del testo";
+"previewText" = "Anteprima";
+"fontSize" = "Dimensione Font";
+"fontSelection" = "Selezione Font";
+"textColor" = "Colore Testo";
+"gradientColor" = "Colore Gradiente";
+"glowIntensity" = "Intensità Bagliore";
+"backgroundColor" = "Colore Sfondo";
+"backgroundGradient" = "Gradiente Sfondo";
+"scrollType" = "Tipo Scorrimento";
+"speed" = "Velocità Riproduzione";
+
+/* Font Names */
+"pingfang" = "PingFang";
+"heiti" = "Heiti";
+"songti" = "Songti";
+"kaiti" = "Kaiti";
+
+/* Scroll Types */
+"static" = "Statico";
+"scrollLeft" = "Scorri a Sinistra";
+"scrollRight" = "Scorri a Destra";
+"scrollUp" = "Scorri in Alto";
+"scrollDown" = "Scorri in Basso";
+
+/* Tab Segments */
+"popular" = "Popolare";
+"animation" = "Animazione";
+"font" = "Font";
+"background" = "Sfondo";
+"border" = "Bordo";
+"gradientBackground" = "Sfondo Sfumato";
+"marqueeBorder" = "Bordo Scorrevole";
+"marqueeBorderDesc" = "Bordo scorrevole di punti LED rettangolari arrotondati, un cerchio di punti che scorrono e brillano";
+"lightBoardBorder" = "Bordo Insegna Luminosa";
+
+/* Presets */
+"happyBirthday" = "BUON COMPLEANNO";
+"happyNewYear" = "FELICE ANNO NUOVO";
+"merryChristmas" = "BUON NATALE";
+"marryMe" = "SPOSAMI";
+"iLoveU" = "TI AMO";
+
+/* Special Effects */
+"loveRain" = "💖 Pioggia di Cuori";
+"flipClock" = "Orologio Digitale";
+"fireworks" = "Fuochi d'Artificio";
+
+/* My Creations */
+"noLedScrollerHere" = "Nessuno schermo LED qui";
+"createFirstLED" = "Inizia a creare il tuo primo schermo LED";
+"createLED" = "Crea LED";
+"confirmDelete" = "Conferma Eliminazione";
+"confirmDeleteMessage" = "Sei sicuro di voler eliminare questo schermo LED?";
+"addSuccess" = "Aggiunto con successo!";
+"updateSuccess" = "Aggiornamento salvato con successo!";
+
+/* VIP Subscription */
+"startFreeTrial" = "Inizia Prova Gratuita";
+"restorePurchases" = "Ripristina Acquisti";
+"paymentDisclaimer" = "Il pagamento verrà addebitato sul tuo account iTunes alla conferma dell'acquisto. L'abbonamento si rinnova automaticamente a meno che non venga annullato almeno 24 ore prima della fine del periodo corrente.";
+"termsOfService" = "Termini di Servizio";
+"privacyPolicy" = "Informativa sulla Privacy";
+"success" = "Successo";
+"purchaseSuccess" = "Acquisto riuscito! Grazie per il vostro supporto.";
+"restoreSuccess" = "Cronologia acquisti ripristinata con successo!";
+"purchaseFailed" = "Acquisto fallito";
+"purchaseFailedMessage" = "Riprova più tardi";
+"restoreInProgress" = "Ripristino della cronologia acquisti...";
+"noRestorablePurchases" = "Nessun acquisto ripristinabile trovato";
+"freeTrialStarted" = "Prova gratuita iniziata! Puoi godere delle funzionalità VIP per 3 giorni.";
+"termsMessage" = "Grazie per aver utilizzato la nostra app. Per i termini di servizio dettagliati, visita il nostro sito web ufficiale.";
+"privacyMessage" = "Apprezziamo la tua privacy. Per l'informativa sulla privacy dettagliata, visita il nostro sito web ufficiale.";
+"loadingProducts" = "Caricamento opzioni abbonamento, riprova più tardi";
+"termsContent" = "Termini di Servizio\n\nAccettando questi termini, accetti di utilizzare questa applicazione solo per scopi personali e non commerciali. L'abbonamento VIP fornisce accesso alle funzionalità premium e si rinnova automaticamente. Per domande, contatta: 784430005@qq.com";
+"privacyContent" = "Informativa sulla Privacy\n\nRaccogliamo informazioni sul dispositivo e statistiche di utilizzo per migliorare l'app. Non condividiamo le tue informazioni personali con terze parti senza il tuo consenso. Per domande sulla privacy, contatta: 784430005@qq.com";
+"subscriptionMember" = "Membro Abbonamento";
+"weeklyMember" = "Membro Settimanale";
+"monthlyMember" = "Membro Mensile";
+"yearlyMember" = "Membro Annuale";
+"lifetimeMember" = "Membro a Vita";
+
+/* Language Confirmation */
+"selectLanguage" = "Seleziona lingua";
+"confirmLanguageTitle" = "Vuoi impostare %@ come lingua principale?";
+"useLanguage" = "Usa %@";
+
+/* Blink Speeds */
+"blinkSpeed" = "Velocità di Lampeggio";
+"blinkToggle" = "Lampeggio";
+"verySlow" = "Molto Lento";
+"slow" = "Lento";
+"fast" = "Veloce";
+"veryFast" = "Molto Veloce";
+"superFast" = "Super Veloce";
+"ultraFast" = "Ultra Veloce";
+/* VIP Content Popup */
+"vipContentSelected" = "Hai selezionato componenti premium";
+"vipBenefitsMessage" = "Diventa abbonato per sbloccare tutti i vantaggi, annulla in qualsiasi momento se non necessario";
+"becomeVip" = "Diventa VIP";

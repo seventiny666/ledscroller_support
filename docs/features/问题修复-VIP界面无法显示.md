@@ -166,7 +166,7 @@ private func showVIPSubscription() {
 
 ## 🔧 相关修改
 
-### 文件：`LedScreen/SettingsViewController.swift`
+### 文件：`LedScroller/SettingsViewController.swift`
 
 #### 修改 1: dismissCustomAlertWithCompletion
 - 在 completion 前添加 0.05秒延迟

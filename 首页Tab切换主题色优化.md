@@ -6,7 +6,7 @@
 
 ## 修改文件
 
-- `LedScreen/TemplateSquareViewController.swift`
+- `LedScroller/TemplateSquareViewController.swift`
 
 ## 颜色设置
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 
-# LedScreen 项目快速启动脚本
+# LedScroller 项目快速启动脚本
 # 使用方法: ./open_project.sh
 
-echo "🚀 LedScreen 项目启动器"
+echo "🚀 LedScroller 项目启动器"
 echo "===================="
 echo ""
 
@@ -18,7 +18,7 @@ echo "✅ Xcode 已安装"
 
 # 获取脚本所在目录
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-PROJECT_PATH="$SCRIPT_DIR/LedScreen.xcodeproj"
+PROJECT_PATH="$SCRIPT_DIR/LedScroller.xcodeproj"
 
 # 检查项目文件是否存在
 if [ ! -d "$PROJECT_PATH" ]; then
@@ -33,7 +33,7 @@ echo ""
 # 显示项目信息
 echo "📦 项目信息"
 echo "-------------------"
-echo "项目名称: LedScreen"
+echo "项目名称: LedScroller"
 echo "项目路径: $PROJECT_PATH"
 echo "最低版本: iOS 15.0+"
 echo ""
@@ -63,7 +63,7 @@ case $choice in
     2)
         echo ""
         echo "🧹 正在清理项目..."
-        rm -rf ~/Library/Developer/Xcode/DerivedData/LedScreen-*
+        rm -rf ~/Library/Developer/Xcode/DerivedData/LedScroller-*
         echo "✅ 清理完成"
         echo ""
         echo "🔨 正在打开项目..."
@@ -76,7 +76,7 @@ case $choice in
         echo "目标: iPhone 14 Pro 模拟器"
         echo ""
         xcodebuild -project "$PROJECT_PATH" \
-                   -scheme LedScreen \
+                   -scheme LedScroller \
                    -destination 'platform=iOS Simulator,name=iPhone 14 Pro' \
                    clean build
         

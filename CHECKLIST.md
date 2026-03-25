@@ -1,4 +1,4 @@
-# LedScreen 项目检查清单
+# LedScroller 项目检查清单
 
 ## ✅ 项目交付检查
 
@@ -19,7 +19,7 @@
 - [x] Assets.xcassets/
 
 #### 项目文件 (1/1)
-- [x] LedScreen.xcodeproj/project.pbxproj
+- [x] LedScroller.xcodeproj/project.pbxproj
 
 #### 文档文件 (5/5)
 - [x] README.md
@@ -343,7 +343,7 @@ Swift 文件:       7 个
 ### 版本信息
 - [x] 版本号: 1.0
 - [x] Build 号: 1
-- [x] Bundle ID: com.ledscreen.app
+- [x] Bundle ID: com.seventiny.ledscroller
 - [x] 最低版本: iOS 15.0
 
 ### 法律合规
@@ -429,7 +429,7 @@ Swift 文件:       7 个
 
 ## 🎉 交付确认
 
-**项目名称**: LedScreen  
+**项目名称**: LedScroller  
 **交付日期**: 2026-02-27  
 **项目状态**: ✅ 已完成  
 **编译状态**: ✅ BUILD SUCCEEDED  
@@ -441,4 +441,4 @@ Swift 文件:       7 个
 
 ---
 
-**恭喜！LedScreen 项目已成功交付！** 🎊🎉✨
+**恭喜！LedScroller 项目已成功交付！** 🎊🎉✨

@@ -57,10 +57,10 @@ item.imageInsets = UIEdgeInsets(top: -2, left: 0, bottom: 2, right: 0)
 
 ## 修改文件
 
-1. `LedScreen/CustomSpacedTabBar.swift`
+1. `LedScroller/CustomSpacedTabBar.swift`
    - 在layoutSubviews中添加按钮布局刷新
 
-2. `LedScreen/MainTabBarController.swift`
+2. `LedScroller/MainTabBarController.swift`
    - 在viewDidLoad中添加延迟刷新
    - 移除titlePositionAdjustment设置
    - 移除imageInsets设置

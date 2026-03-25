@@ -1,0 +1,195 @@
+/* Tab Bar */
+"home" = "首頁";
+"templates" = "模版";
+"creations" = "創作";
+"settings" = "設置";
+
+/* Template Categories */
+"neon" = "霓虹燈屏幕";
+"idol" = "偶像屏幕";
+"led" = "LED屏幕";
+"popularAnimation" = "熱門動畫";
+"clock" = "時鐘屏幕";
+"other" = "其他屏幕";
+
+/* Buttons */
+"try" = "試用";
+"preview" = "預覽";
+"edit" = "編輯";
+"save" = "保存";
+"cancel" = "取消";
+"delete" = "刪除";
+"tip" = "提示";
+"confirm" = "確定";
+"create" = "創建";
+"done" = "完成";
+"exit" = "退出";
+"tryTemplate" = "試用模版";
+"previewTemplate" = "預覽模版";
+"becomeMember" = "成為會員";
+
+/* Settings */
+"language" = "語言";
+"about" = "關於";
+"version" = "版本";
+"feedback" = "反饋";
+"rate" = "評分";
+"share" = "分享";
+"restorePurchase" = "恢復購買";
+
+/* VIP Status Messages */
+"vipMember" = "VIP會員";
+"vipStatusFree" = "立即開通 VIP";
+"vipStatusTrial" = "試用期：剩餘 %d 天";
+"vipStatusSubscribed" = "我的 VIP：剩餘 %d 天";
+"vipStatusLifetime" = "我的 VIP：終身會員";
+"vipButtonFree" = "立即開通 VIP";
+"vipButtonManage" = "管理訂閱";
+
+/* Messages */
+"saved" = "新頁面已保存到我的創作頁面";
+"deleted" = "刪除成功";
+"error" = "操作失敗";
+"languageChanged" = "語言已更改";
+"restartRequired" = "請重啟應用以應用新語言設置";
+"noRestorableItems" = "暫無可恢復的購買項目";
+
+/* About Messages */
+"aboutMessage" = "LedScroller - 讓你的文字發光\n\n一款專業的LED顯示屏模擬應用";
+"versionMessage" = "當前版本：1.0\n\n感謝您的使用！";
+"feedbackMessage" = "請發送郵件至：\n784430005@qq.com";
+"rateMessage" = "感謝您的支持！\n請前往App Store為我們評分";
+
+/* Create LED */
+"createTitle" = "創建LED屏幕";
+"editTitle" = "編輯LED屏幕";
+"textContent" = "文字內容";
+"textPlaceholder" = "輸入LED文字";
+"pleaseEnterText" = "請輸入文字內容";
+"previewText" = "預覽";
+"fontSize" = "字體大小";
+"fontSelection" = "字體選擇";
+"textColor" = "文字顏色";
+"gradientColor" = "漸變顏色";
+"glowIntensity" = "霓虹強度";
+"backgroundColor" = "背景顏色";
+"backgroundGradient" = "漸變背景色";
+"scrollType" = "滾動方式";
+"speed" = "播放速度";
+
+/* Font Names */
+"pingfang" = "蘋方";
+"heiti" = "黑體";
+"songti" = "宋體";
+"kaiti" = "楷體";
+
+/* Scroll Types */
+"static" = "靜止";
+"scrollToggle" = "滾動";
+"scrollLeft" = "左滾";
+"scrollRight" = "右滾";
+"scrollUp" = "上滾";
+"scrollDown" = "下滾";
+
+/* Blink Speeds */
+"blinkSpeed" = "閃爍速度";
+"blinkToggle" = "閃爍";
+"verySlow" = "很慢";
+"slow" = "慢";
+"fast" = "快";
+"veryFast" = "很快";
+"superFast" = "非常快";
+"ultraFast" = "極快";
+
+/* Tab Segments */
+"popular" = "熱門模版";
+"animation" = "動畫";
+"font" = "字體";
+"background" = "背景";
+"border" = "邊框";
+"gradientBackground" = "漸變背景";
+"marqueeBorder" = "跑馬燈邊框";
+"marqueeBorderDesc" = "圓角矩形LED圓點邊框跑馬燈，一圈圓點流動發光";
+"lightBoardBorder" = "燈牌邊框";
+
+/* Presets */
+"happyBirthday" = "生日快樂";
+"happyNewYear" = "新年快樂";
+"merryChristmas" = "聖誕快樂";
+"marryMe" = "嫁給我";
+"iLoveU" = "我愛你";
+
+/* Special Effects */
+"loveRain" = "💖 愛心流星雨";
+"flipClock" = "數字時鐘";
+"fireworks" = "煙花";
+
+/* My Creations */
+"noLedScrollerHere" = "暫無LED屏幕";
+"createFirstLED" = "開始創作您的第一個LED屏幕吧";
+"createLED" = "創建LED";
+"confirmDelete" = "確認刪除";
+"confirmDeleteMessage" = "確定要刪除這個LED屏幕嗎？";
+"addSuccess" = "添加成功!";
+"updateSuccess" = "更新保存成功!";
+
+/* VIP Subscription */
+"vipTitle" = "解鎖 VIP 會員";
+"vipSubtitle" = "享受全部高級功能和內容";
+"vipFeature1" = "解鎖全部高級模板";
+"vipFeature2" = "專屬霓虹燈效果";
+"vipFeature3" = "偶像應援模板";
+"vipFeature4" = "高級邊框樣式";
+"vipFeature5" = "優先體驗新功能";
+"vipFeature6" = "無限制創作內容";
+"subscriptionOptions" = "選擇訂閱方案";
+"weeklySubscription" = "週訂閱";
+"monthlySubscription" = "月訂閱";
+"yearlySubscription" = "年訂閱";
+"lifetimeSubscription" = "終身買斷";
+"freeTrial" = "免費試用3天";
+"mostPopular" = "最受歡迎";
+"save67Percent" = "節省67%";
+"save76Percent" = "節省76%";
+"oneTimePurchase" = "一次購買，永久使用";
+"startFreeTrial" = "開始免費試用";
+"restorePurchases" = "恢復購買";
+"paymentDisclaimer" = "確認購買時將向您的iTunes賬戶收費。除非在當前期間結束前至少24小時取消，否則訂閱會自動續訂。";
+"termsOfService" = "服務條款";
+"privacyPolicy" = "隱私政策";
+"success" = "成功";
+"purchaseSuccess" = "購買成功！感謝您的支持。";
+"purchaseError" = "購買錯誤";
+"restoreSuccess" = "購買記錄恢復成功！";
+"purchaseFailed" = "購買失敗";
+"purchaseFailedMessage" = "請稍後重試";
+"purchasePending" = "購買等待批准中。";
+"restoreError" = "恢復錯誤";
+"restoreInProgress" = "正在恢復您的購買記錄...";
+"noRestorablePurchases" = "沒有找到可恢復的購買記錄";
+"freeTrialStarted" = "免費試用已開始！您可以享受3天的VIP功能。";
+
+/* VIP Status */
+"vipStatusFree" = "免費用戶";
+"vipStatusSubscribed" = "VIP會員（剩餘%d天）";
+"termsMessage" = "感謝您使用我們的應用。詳細的服務條款請訪問我們的官方網站。";
+"privacyMessage" = "我們重視您的隱私。詳細的隱私政策請訪問我們的官方網站。";
+"termsContent" = "服務條款\n\n1. 接受條款\n通過下載、安裝或使用本應用程序，您同意受本服務條款的約束。\n\n2. 應用程序使用\n本應用程序僅供個人、非商業用途。您不得將本應用程序用於任何非法或未經授權的目的。\n\n3. 訂閱服務\n• VIP訂閱提供高級功能訪問權限\n• 訂閱費用將在確認購買時從您的iTunes賬戶中扣除\n• 訂閱將自動續訂，除非在當前期間結束前至少24小時關閉自動續訂\n• 您可以在iTunes賬戶設置中管理訂閱\n\n4. 知識產權\n本應用程序及其內容受版權法保護。未經許可，不得複製、修改或分發。\n\n5. 免責聲明\n本應用程序按現狀提供，不提供任何明示或暗示的保證。\n\n6. 聯繫我們\n如有疑問，請聯繫：784430005@qq.com";
+"privacyContent" = "隱私政策\n\n1. 信息收集\n我們可能收集以下信息：\n• 設備信息（型號、操作系統版本）\n• 應用使用統計\n• 崩潰報告\n\n2. 信息使用\n收集的信息用於：\n• 改善應用性能\n• 提供技術支持\n• 分析使用模式\n\n3. 信息共享\n我們不會向第三方出售、交易或轉讓您的個人信息，除非：\n• 獲得您的明確同意\n• 法律要求\n• 保護我們的權利\n\n4. 數據安全\n我們採用適當的安全措施保護您的信息免受未經授權的訪問、更改、披露或銷毀。\n\n5. iCloud同步\n如果您選擇使用iCloud同步功能，您的創作內容將存儲在您的iCloud賬戶中。\n\n6. 第三方服務\n本應用可能包含第三方服務的鏈接。我們不對這些服務的隱私做法負責。\n\n7. 政策更新\n我們可能會不時更新此隱私政策。重大更改將通過應用內通知告知您。\n\n8. 聯繫我們\n如有隱私相關問題，請聯繫：784430005@qq.com";
+"loadingProducts" = "正在加載訂閱選項，請稍後再試";
+"subscriptionMember" = "訂閱會員";
+"weeklyMember" = "週會員";
+"monthlyMember" = "月會員";
+"yearlyMember" = "年會員";
+"lifetimeMember" = "終身會員";
+
+/* Language Confirmation */
+"selectLanguage" = "選擇語言";
+"confirmLanguageTitle" = "您想將%@作為主要語言嗎？";
+"useLanguage" = "使用%@";
+/* VIP Content Popup */
+"vipContentSelected" = "您選擇了部分付費組件";
+"vipBenefitsMessage" = "成為訂閱用戶可解鎖全部權益，如果不需要可隨時取消";
+"vipAlertMessage" = "開通訂閱後您可解鎖全部權益\n也可隨時退訂訂閱";
+"becomeVip" = "成為vip";
+"pleaseWait" = "請等待當前操作完成";

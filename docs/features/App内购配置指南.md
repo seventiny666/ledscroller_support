@@ -29,20 +29,20 @@
 4. 在订阅群组中添加以下3个产品：
 
 #### 周订阅
-- **产品ID**: `com.ledscreen.vip.weekly`
+- **产品ID**: `com.seventiny.ledscroller.vip.weekly`
 - **引用名称**: Weekly VIP Subscription
 - **订阅时长**: 1周
 - **价格**: $2.99（或你想要的价格）
 - **免费试用**: 3天
 
 #### 月订阅
-- **产品ID**: `com.ledscreen.vip.monthly`
+- **产品ID**: `com.seventiny.ledscroller.vip.monthly`
 - **引用名称**: Monthly VIP Subscription
 - **订阅时长**: 1个月
 - **价格**: $7.99（或你想要的价格）
 
 #### 年订阅
-- **产品ID**: `com.ledscreen.vip.yearly`
+- **产品ID**: `com.seventiny.ledscroller.vip.yearly`
 - **引用名称**: Yearly VIP Subscription
 - **订阅时长**: 1年
 - **价格**: $29.99（或你想要的价格）
@@ -105,9 +105,9 @@
 
 ```swift
 enum ProductID: String, CaseIterable {
-    case weekly = "com.ledscreen.vip.weekly"
-    case monthly = "com.ledscreen.vip.monthly"
-    case yearly = "com.ledscreen.vip.yearly"
+    case weekly = "com.seventiny.ledscroller.vip.weekly"
+    case monthly = "com.seventiny.ledscroller.vip.monthly"
+    case yearly = "com.seventiny.ledscroller.vip.yearly"
 }
 ```
 

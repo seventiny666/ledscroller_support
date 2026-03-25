@@ -1,10 +1,10 @@
-# LedScreen 架构设计文档
+# LedScroller 架构设计文档
 
 ## 项目架构概览
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                     LedScreen App                         │
+│                     LedScroller App                         │
 ├─────────────────────────────────────────────────────────┤
 │  UI Layer (UIKit)                                       │
 │  ├─ MainViewController (参数调节界面)                   │
@@ -93,7 +93,7 @@ static func generatePseudoCode(from config: LEDConfig) -> String
 
 **输出示例**：
 ```swift
-LedScreen.create {
+LedScroller.create {
     text("I LOVE U")
     .fontSize(72)
     .neonColor("#FF1493")
@@ -123,7 +123,7 @@ static func generateURLScheme(from config: LEDConfig) -> String?
 
 **协议设计**：
 ```
-ledscreen://import?code=<base64_encoded_json>
+ledscroller://import?code=<base64_encoded_json>
 ```
 
 **优势**：
@@ -456,7 +456,7 @@ UIColor(hex: string) // 自动处理非法输入
 func testGeneratePseudoCode() {
     let config = LEDConfig(...)
     let code = CodeGenerator.generatePseudoCode(from: config)
-    XCTAssertTrue(code.contains("LedScreen.create"))
+    XCTAssertTrue(code.contains("LedScroller.create"))
 }
 
 // JSON 序列化测试
@@ -505,4 +505,4 @@ func testJSONRoundTrip() {
 
 ## 总结
 
-LedScreen 采用经典的 MVC 架构，清晰分离数据、业务逻辑和 UI 层。核心亮点"代码生成"功能通过 `CodeGenerator` 模块实现，支持三种格式输出。特效系统基于粒子引擎，性能优化良好。整体架构具有良好的扩展性和可维护性。
+LedScroller 采用经典的 MVC 架构，清晰分离数据、业务逻辑和 UI 层。核心亮点"代码生成"功能通过 `CodeGenerator` 模块实现，支持三种格式输出。特效系统基于粒子引擎，性能优化良好。整体架构具有良好的扩展性和可维护性。

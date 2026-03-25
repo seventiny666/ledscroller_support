@@ -58,6 +58,6 @@ class NoAnimationSegmentedControl: UISegmentedControl {
 3. 检查是否有其他视图层级覆盖了segment
 
 ## 修改的文件
-- `LedScreen/TemplateSquareViewController.swift`
+- `LedScroller/TemplateSquareViewController.swift`
   - NoAnimationSegmentedControl类（增加了forceUpdateSegmentColors方法）
   - 在didMoveToSuperview、layoutSubviews、selectedSegmentIndex didSet、touchesEnded中调用

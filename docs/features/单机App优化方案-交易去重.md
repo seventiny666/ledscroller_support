@@ -218,13 +218,13 @@ func application(_ application: UIApplication, didFinishLaunchingWithOptions lau
 添加后的日志输出示例：
 ```
 🔍 收到 1 个交易更新
-🔍 处理交易: com.ledscreen.vip.weekly, 状态: 1
+🔍 处理交易: com.seventiny.ledscroller.vip.weekly, 状态: 1
 ✅ 交易已标记为已处理: 1000000123456789
-购买成功: com.ledscreen.vip.weekly
+购买成功: com.seventiny.ledscroller.vip.weekly
 
 // 如果重复收到同一交易
 🔍 收到 1 个交易更新
-🔍 处理交易: com.ledscreen.vip.weekly, 状态: 1
+🔍 处理交易: com.seventiny.ledscroller.vip.weekly, 状态: 1
 ⚠️ 交易已处理过，跳过: 1000000123456789
 ```
 

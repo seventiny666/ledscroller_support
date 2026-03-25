@@ -7,7 +7,7 @@
 ## 样式配置
 
 ### 位置
-- 文件：`LedScreen/TemplateSquareViewController.swift`
+- 文件：`LedScroller/TemplateSquareViewController.swift`
 - 行数：约1095-1120行
 
 ### 颜色方案

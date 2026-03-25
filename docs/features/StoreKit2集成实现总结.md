@@ -20,30 +20,30 @@
 
 ### 3. 产品配置
 保留现有产品 ID 设置：
-- `com.ledscreen.vip.weekly` - 周订阅（含3天免费试用）
-- `com.ledscreen.vip.monthly` - 月订阅
-- `com.ledscreen.vip.yearly` - 年订阅
+- `com.seventiny.ledscroller.vip.weekly` - 周订阅（含3天免费试用）
+- `com.seventiny.ledscroller.vip.monthly` - 月订阅
+- `com.seventiny.ledscroller.vip.yearly` - 年订阅
 
 ## 文件结构
 
 ### 新增文件
-1. **`LedScreen/StoreKitManager.swift`**
+1. **`LedScroller/StoreKitManager.swift`**
    - StoreKit 2 主要管理器
    - 包含完整的购买、恢复、状态管理逻辑
    - 支持 async/await 现代语法
 
-2. **`LedScreen/StoreKitUsageExample.swift`**
+2. **`LedScroller/StoreKitUsageExample.swift`**
    - 使用示例和集成指南
    - UIKit 和 SwiftUI 集成示例
    - 统一管理器示例
 
-3. **`LedScreen/StoreKitConfiguration.storekit`**
+3. **`LedScroller/StoreKitConfiguration.storekit`**
    - StoreKit 测试配置文件
    - 包含所有产品定义和本地化信息
    - 支持沙盒环境测试
 
 ### 修改文件
-1. **`LedScreen/TemplateSquareViewController.swift`**
+1. **`LedScroller/TemplateSquareViewController.swift`**
    - 更新 VIPSubscriptionViewController 支持双版本
    - 添加 StoreKit 2 购买和恢复流程
    - 统一的产品显示逻辑
@@ -117,7 +117,7 @@ if #available(iOS 15.0, *) {
 ## 测试配置
 
 ### StoreKit 配置文件
-- 位置: `LedScreen/StoreKitConfiguration.storekit`
+- 位置: `LedScroller/StoreKitConfiguration.storekit`
 - 包含完整的产品定义
 - 支持本地化（英文、中文）
 - 配置了免费试用期

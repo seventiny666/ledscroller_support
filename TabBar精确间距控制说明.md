@@ -6,7 +6,7 @@
 ## 实现方案
 
 ### 1. 创建自定义 TabBar 类
-**文件**：`LedScreen/CustomSpacedTabBar.swift`
+**文件**：`LedScroller/CustomSpacedTabBar.swift`
 
 ```swift
 class CustomSpacedTabBar: UITabBar {
@@ -86,14 +86,14 @@ override func viewDidLoad() {
 ## 修改的文件
 
 ### 新增文件
-1. ✅ `LedScreen/CustomSpacedTabBar.swift` - 自定义 TabBar 类
+1. ✅ `LedScroller/CustomSpacedTabBar.swift` - 自定义 TabBar 类
 
 ### 修改文件
-1. ✅ `LedScreen/MainTabBarController.swift`
+1. ✅ `LedScroller/MainTabBarController.swift`
    - 在 `viewDidLoad()` 中使用自定义 TabBar
    - 在 `setupViewControllers()` 中添加占位标签
 
-2. ✅ `LedScreen.xcodeproj/project.pbxproj`
+2. ✅ `LedScroller.xcodeproj/project.pbxproj`
    - 添加 CustomSpacedTabBar.swift 到项目
 
 ## 技术细节
