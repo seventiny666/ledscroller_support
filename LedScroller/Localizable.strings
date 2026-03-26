@@ -108,7 +108,8 @@
 
 /* Special Effects */
 "loveRain" = "💖 Love Rain";
-"flipClock" = "Digital Clock";
+"flipClock" = "Flip Clock";
+"digitalClock" = "Digital Clock";
 "fireworks" = "Fireworks";
 
 /* My Creations */

@@ -18,9 +18,23 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
     
     private func showMainInterface() {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("-debugDigitalClock") {
+            let vc = DigitalClockViewController()
+            vc.modalPresentationStyle = .fullScreen
+            window?.rootViewController = vc
+            return
+        }
+        #endif
+
+        showMainInterfaceFromDebug()
+    }
+
+    // Exposed for debug-only root controllers that need to return to the main UI.
+    func showMainInterfaceFromDebug() {
         // 使用新的TabBar控制器
         let tabBarController = MainTabBarController()
-        
+
         // 添加淡入过渡动画
         UIView.transition(with: window!, duration: 0.3, options: .transitionCrossDissolve, animations: {
             self.window?.rootViewController = tabBarController

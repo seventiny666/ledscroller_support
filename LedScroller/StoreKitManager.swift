@@ -3,6 +3,7 @@ import StoreKit
 
 // MARK: - StoreKit 2 订阅管理器
 @available(iOS 15.0, *)
+@MainActor
 class StoreKitManager: ObservableObject {
     
     static let shared = StoreKitManager()
@@ -53,6 +54,7 @@ class StoreKitManager: ObservableObject {
     // MARK: - Private Properties
     private var updateListenerTask: Task<Void, Error>?
     private let productIDs = ProductIdentifier.allCases.map { $0.rawValue }
+    private var isUpdatingStatus = false
     
     // MARK: - Initialization
     private init() {
@@ -295,6 +297,10 @@ class StoreKitManager: ObservableObject {
     
     // MARK: - 更新订阅状态
     func updateSubscriptionStatus() async {
+        if isUpdatingStatus { return }
+        isUpdatingStatus = true
+        defer { isUpdatingStatus = false }
+
         var highestStatus: SubscriptionStatus = .notSubscribed
         var highestProductId: String?
         var highestExpirationDate: Date?
@@ -349,15 +355,18 @@ class StoreKitManager: ObservableObject {
             }
         }
 
+        let previousStatus = subscriptionStatus
         subscriptionStatus = highestStatus
 
-        NotificationCenter.default.post(name: VIPManager.vipStatusDidChangeNotification, object: self)
+        // Only notify/log when something meaningful changed.
+        if subscriptionStatus != previousStatus {
+            NotificationCenter.default.post(name: VIPManager.vipStatusDidChangeNotification, object: self)
+            printSubscriptionStatus()
+        }
 
         if let productId = highestProductId {
             purchasedProductIDs.insert(productId)
         }
-
-        printSubscriptionStatus()
     }
     
     // MARK: - 监听交易更新
@@ -510,6 +519,7 @@ enum StoreError: LocalizedError {
 }
 
 // MARK: - StoreKit 1 兼容层（用于 iOS 14 及以下）
+@MainActor
 class StoreKitLegacyManager: NSObject {
     static let shared = StoreKitLegacyManager()
     

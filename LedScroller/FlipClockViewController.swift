@@ -2,16 +2,26 @@ import UIKit
 
 // 翻页时钟视图控制器
 class FlipClockViewController: UIViewController {
-    
+
     private var hourTens: FlipDigitView!
     private var hourOnes: FlipDigitView!
     private var minuteTens: FlipDigitView!
     private var minuteOnes: FlipDigitView!
-    
+    private var secondTens: FlipDigitView!
+    private var secondOnes: FlipDigitView!
+
     private var timer: Timer?
     private var currentTime: (hour: Int, minute: Int) = (0, 0)
-    private var clockView: UIView!
-    
+    private var currentTimeSecond: Int = 0
+
+    // Layout state (computed in viewDidLayoutSubviews so safeArea is correct).
+    private var clockStack: UIStackView!
+    private var colon1: UILabel!
+    private var colon2: UILabel!
+    private var colon1WidthConstraint: NSLayoutConstraint!
+    private var colon2WidthConstraint: NSLayoutConstraint!
+    private var digitSizeConstraints: [(w: NSLayoutConstraint, h: NSLayoutConstraint)] = []
+
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -35,124 +45,152 @@ class FlipClockViewController: UIViewController {
     
     private func setupUI() {
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 统一为纯黑色
-        
-        // 创建时钟容器
-        let clockContainer = UIView()
-        clockContainer.backgroundColor = .clear
-        clockContainer.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(clockContainer)
-        
-        // 创建4个翻页数字
+
+        // Build the clock row; sizing is computed later (safeArea is not final in viewDidLoad).
+        clockStack = UIStackView()
+        clockStack.axis = .horizontal
+        clockStack.alignment = .center
+        // Expand spacing if needed to fill the fixed safe-area width.
+        clockStack.distribution = .equalSpacing
+        clockStack.translatesAutoresizingMaskIntoConstraints = false
+        view.addSubview(clockStack)
+
+        func makeColonLabel() -> UILabel {
+            let l = UILabel()
+            l.text = ":"
+            l.textColor = .white
+            l.textAlignment = .center
+            l.setContentHuggingPriority(.required, for: .horizontal)
+            l.setContentCompressionResistancePriority(.required, for: .horizontal)
+            return l
+        }
+
         hourTens = FlipDigitView()
         hourOnes = FlipDigitView()
         minuteTens = FlipDigitView()
         minuteOnes = FlipDigitView()
-        
-        let digits = [hourTens!, hourOnes!, minuteTens!, minuteOnes!]
-        digits.forEach {
-            $0.translatesAutoresizingMaskIntoConstraints = false
-            clockContainer.addSubview($0)
+        secondTens = FlipDigitView()
+        secondOnes = FlipDigitView()
+
+        colon1 = makeColonLabel()
+        colon2 = makeColonLabel()
+
+        let allViews: [UIView] = [hourTens!, hourOnes!, colon1, minuteTens!, minuteOnes!, colon2, secondTens!, secondOnes!]
+        allViews.forEach { v in
+            v.translatesAutoresizingMaskIntoConstraints = false
+            clockStack.addArrangedSubview(v)
+        }
+
+        // Layout position; fixed 10pt safety margin on both sides (hard requirement).
+        NSLayoutConstraint.activate([
+            clockStack.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
+            clockStack.leadingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 10),
+            clockStack.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -10)
+        ])
+
+        // Store constraints; constants are filled in viewDidLayoutSubviews when safeArea is final.
+        colon1WidthConstraint = colon1.widthAnchor.constraint(equalToConstant: 24)
+        colon2WidthConstraint = colon2.widthAnchor.constraint(equalToConstant: 24)
+        colon1WidthConstraint.isActive = true
+        colon2WidthConstraint.isActive = true
+
+        let digitViews: [FlipDigitView] = [hourTens!, hourOnes!, minuteTens!, minuteOnes!, secondTens!, secondOnes!]
+        digitSizeConstraints = digitViews.map { d in
+            let h = d.heightAnchor.constraint(equalToConstant: 100)
+            let w = d.widthAnchor.constraint(equalToConstant: 60)
+            h.isActive = true
+            w.isActive = true
+            return (w: w, h: h)
         }
         
-        // 计算屏幕尺寸
-        let screenWidth = view.bounds.width
-        let screenHeight = view.bounds.height
-        
-        // 留出边距：上下左右各2px
-        let margin: CGFloat = 2
-        let availableWidth = screenWidth - margin * 2
-        let availableHeight = screenHeight - margin * 2
-        
-        // 先根据宽度计算，确保4位数字+间距+冒号能完整显示
-        let spacing: CGFloat = 20
-        let colonWidth: CGFloat = 40
-        
-        // 从宽度反推数字宽度
-        let digitWidthFromWidth = (availableWidth - spacing * 3 - colonWidth) / 4
-        
-        // 数字高度是宽度的1.6倍
-        let digitHeightFromWidth = digitWidthFromWidth * 1.6
-        
-        // 确保高度不超过可用高度
-        let digitHeight = min(digitHeightFromWidth, availableHeight)
-        let digitWidth = digitHeight / 1.6
-        
-        // 计算实际需要的总宽度
-        let totalWidth = digitWidth * 4 + spacing * 3 + colonWidth
-        
-        print("🕐 全屏时钟尺寸:")
-        print("   屏幕: \(screenWidth) x \(screenHeight)")
-        print("   可用空间: \(availableWidth) x \(availableHeight)")
-        print("   数字尺寸: \(digitWidth) x \(digitHeight)")
-        print("   总宽度: \(totalWidth)")
-        print("   间距: \(spacing), 冒号: \(colonWidth)")
-        
-        // 创建冒号分隔符
-        let colonLabel = UILabel()
-        colonLabel.text = ":"
-        colonLabel.textColor = .white
-        colonLabel.font = .systemFont(ofSize: digitHeight * 0.35, weight: .bold) // 字体大小根据高度计算
-        colonLabel.textAlignment = .center
-        colonLabel.translatesAutoresizingMaskIntoConstraints = false
-        clockContainer.addSubview(colonLabel)
-        
-        NSLayoutConstraint.activate([
-            clockContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            clockContainer.centerYAnchor.constraint(equalTo: view.centerYAnchor),
-            clockContainer.widthAnchor.constraint(equalToConstant: totalWidth),
-            clockContainer.heightAnchor.constraint(equalToConstant: digitHeight),
-            
-            // 小时十位
-            hourTens.leadingAnchor.constraint(equalTo: clockContainer.leadingAnchor),
-            hourTens.centerYAnchor.constraint(equalTo: clockContainer.centerYAnchor),
-            hourTens.widthAnchor.constraint(equalToConstant: digitWidth),
-            hourTens.heightAnchor.constraint(equalToConstant: digitHeight),
-            
-            // 小时个位
-            hourOnes.leadingAnchor.constraint(equalTo: hourTens.trailingAnchor, constant: spacing),
-            hourOnes.centerYAnchor.constraint(equalTo: clockContainer.centerYAnchor),
-            hourOnes.widthAnchor.constraint(equalToConstant: digitWidth),
-            hourOnes.heightAnchor.constraint(equalToConstant: digitHeight),
-            
-            // 冒号
-            colonLabel.leadingAnchor.constraint(equalTo: hourOnes.trailingAnchor),
-            colonLabel.centerYAnchor.constraint(equalTo: clockContainer.centerYAnchor),
-            colonLabel.widthAnchor.constraint(equalToConstant: colonWidth),
-            
-            // 分钟十位
-            minuteTens.leadingAnchor.constraint(equalTo: colonLabel.trailingAnchor),
-            minuteTens.centerYAnchor.constraint(equalTo: clockContainer.centerYAnchor),
-            minuteTens.widthAnchor.constraint(equalToConstant: digitWidth),
-            minuteTens.heightAnchor.constraint(equalToConstant: digitHeight),
-            
-            // 分钟个位
-            minuteOnes.leadingAnchor.constraint(equalTo: minuteTens.trailingAnchor, constant: spacing),
-            minuteOnes.centerYAnchor.constraint(equalTo: clockContainer.centerYAnchor),
-            minuteOnes.widthAnchor.constraint(equalToConstant: digitWidth),
-            minuteOnes.heightAnchor.constraint(equalToConstant: digitHeight)
-        ])
-        
-        // 添加关闭按钮
+        // 添加关闭按钮（统一为首页预览的 xmark 样式：左上角）
         let closeButton = UIButton(type: .system)
-        closeButton.setTitle("done".localized, for: .normal)
-        closeButton.setTitleColor(.white, for: .normal)
-        closeButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .semibold)
-        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.2)
-        closeButton.layer.cornerRadius = 28
+        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+        closeButton.tintColor = .white
+        closeButton.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+        closeButton.layer.cornerRadius = 18
+        closeButton.layer.borderWidth = 1
+        closeButton.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
         closeButton.addTarget(self, action: #selector(closeTapped), for: .touchUpInside)
         closeButton.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
-            closeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -30),
-            closeButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -30),
-            closeButton.widthAnchor.constraint(equalToConstant: 120),
-            closeButton.heightAnchor.constraint(equalToConstant: 56)
+            closeButton.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -6),
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            closeButton.widthAnchor.constraint(equalToConstant: 36),
+            closeButton.heightAnchor.constraint(equalToConstant: 36)
         ])
     }
     
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        updateClockLayoutMetrics()
+    }
+
+    private func updateClockLayoutMetrics() {
+        // This must run after layout so safeAreaLayoutGuide.layoutFrame is correct.
+        let safeFrame = view.safeAreaLayoutGuide.layoutFrame
+        let availableWidth = max(1, safeFrame.width - 20) // 10pt on each side
+
+        // Keep minimum spacing; UIStackView(.equalSpacing) will expand it to fill.
+        let spacing = max(4, min(10, availableWidth * 0.01))
+
+        func colonFont(for digitH: CGFloat) -> UIFont {
+            UIFont.monospacedDigitSystemFont(ofSize: max(10, digitH * 0.55 - 4), weight: .bold)
+        }
+
+        func colonWidth(for font: UIFont) -> CGFloat {
+            // Add a bit of padding so it never touches the cards.
+            ceil(":".size(withAttributes: [.font: font]).width) + 4
+        }
+
+        // First pass.
+        var colonW: CGFloat = 24
+        var digitW = (availableWidth - spacing * 5 - colonW * 2) / 6
+        var digitH = digitW * 1.6
+
+        // Second pass using measured colon width.
+        let font = colonFont(for: digitH)
+        colonW = max(18, min(40, colonWidth(for: font)))
+        digitW = (availableWidth - spacing * 5 - colonW * 2) / 6
+        digitH = digitW * 1.6
+
+        // Apply.
+        clockStack.spacing = spacing
+        colon1WidthConstraint.constant = colonW
+        colon2WidthConstraint.constant = colonW
+        colon1.font = font
+        colon2.font = font
+
+        for c in digitSizeConstraints {
+            c.w.constant = digitW
+            c.h.constant = digitH
+        }
+
+        // Ensure updated constraint constants take effect immediately.
+        view.layoutIfNeeded()
+    }
+
     @objc private func closeTapped() {
-        dismiss(animated: true)
+        if presentingViewController != nil {
+            AppDelegate.orientationLock = .portrait
+            dismiss(animated: true)
+            return
+        }
+
+        // Debug path / unexpected presentation.
+        if let scene = view.window?.windowScene?.delegate as? SceneDelegate {
+            AppDelegate.orientationLock = .portrait
+            scene.showMainInterfaceFromDebug()
+            return
+        }
+
+        if let nav = navigationController {
+            AppDelegate.orientationLock = .portrait
+            nav.popViewController(animated: true)
+            return
+        }
     }
     
     private func startTimer() {
@@ -164,36 +202,51 @@ class FlipClockViewController: UIViewController {
     private func updateTime() {
         let now = Date()
         let calendar = Calendar.current
+        let hour = calendar.component(.hour, from: now)
         let minute = calendar.component(.minute, from: now)
         let second = calendar.component(.second, from: now)
         
-        let newTime = (hour: minute, minute: second)
+        let newTime = (hour: hour, minute: minute)
+        let newSecond = second
+
+        let oldSecondTens = (currentTimeSecond / 10)
+        let oldSecondOnes = (currentTimeSecond % 10)
+        let newSecondTens = newSecond / 10
+        let newSecondOnes = newSecond % 10
         
         // 检查哪些数字需要更新
-        let oldMinuteTens = currentTime.hour / 10
-        let oldMinuteOnes = currentTime.hour % 10
-        let oldSecondTens = currentTime.minute / 10
-        let oldSecondOnes = currentTime.minute % 10
-        
+        let oldHourTens = currentTime.hour / 10
+        let oldHourOnes = currentTime.hour % 10
+        let oldMinuteTens = currentTime.minute / 10
+        let oldMinuteOnes = currentTime.minute % 10
+
+        let newHourTens = hour / 10
+        let newHourOnes = hour % 10
         let newMinuteTens = minute / 10
         let newMinuteOnes = minute % 10
-        let newSecondTens = second / 10
-        let newSecondOnes = second % 10
-        
+
+        if oldHourTens != newHourTens {
+            hourTens.flipToDigit(newHourTens)
+        }
+        if oldHourOnes != newHourOnes {
+            hourOnes.flipToDigit(newHourOnes)
+        }
         if oldMinuteTens != newMinuteTens {
-            hourTens.flipToDigit(newMinuteTens)
+            minuteTens.flipToDigit(newMinuteTens)
         }
         if oldMinuteOnes != newMinuteOnes {
-            hourOnes.flipToDigit(newMinuteOnes)
+            minuteOnes.flipToDigit(newMinuteOnes)
         }
+
         if oldSecondTens != newSecondTens {
-            minuteTens.flipToDigit(newSecondTens)
+            secondTens.flipToDigit(newSecondTens)
         }
         if oldSecondOnes != newSecondOnes {
-            minuteOnes.flipToDigit(newSecondOnes)
+            secondOnes.flipToDigit(newSecondOnes)
         }
-        
+
         currentTime = newTime
+        currentTimeSecond = newSecond
     }
 }
 
@@ -203,6 +256,7 @@ class FlipDigitView: UIView {
     private var currentDigit: Int = 0
     private var digitView: UIView!
     private var digitLabel: UILabel!
+    private var foldGradient: CAGradientLayer?
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -223,32 +277,79 @@ class FlipDigitView: UIView {
         digitView.clipsToBounds = true
         digitView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(digitView)
+
+        // 折页质感：中间一条暗线（最上层）+ 上半部渐暗（覆盖到文字上）
+        let foldLine = UIView()
+        foldLine.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+        foldLine.translatesAutoresizingMaskIntoConstraints = false
+        digitView.addSubview(foldLine)
+
+        let gradient = CAGradientLayer()
+        gradient.colors = [
+            UIColor.black.withAlphaComponent(0.5).cgColor,
+            UIColor.clear.cgColor
+        ]
+        gradient.locations = [0.0, 1.0]
+        gradient.startPoint = CGPoint(x: 0.5, y: 0.0)
+        gradient.endPoint = CGPoint(x: 0.5, y: 1.0)
+        foldGradient = gradient
         
         // 数字标签
         digitLabel = UILabel()
         digitLabel.textColor = .white
-        digitLabel.font = .systemFont(ofSize: 400, weight: .bold) // 大字体
+        digitLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .bold)
         digitLabel.textAlignment = .center
-        digitLabel.adjustsFontSizeToFitWidth = true
+        digitLabel.adjustsFontSizeToFitWidth = false
+        digitLabel.baselineAdjustment = .alignCenters
         digitLabel.minimumScaleFactor = 0.2
         digitLabel.translatesAutoresizingMaskIntoConstraints = false
         digitView.addSubview(digitLabel)
+
+        if let gradient = foldGradient {
+            digitView.layer.addSublayer(gradient)
+        }
+
+        digitView.bringSubviewToFront(foldLine)
         
         NSLayoutConstraint.activate([
             digitView.topAnchor.constraint(equalTo: topAnchor),
             digitView.leadingAnchor.constraint(equalTo: leadingAnchor),
             digitView.trailingAnchor.constraint(equalTo: trailingAnchor),
             digitView.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+            foldLine.centerYAnchor.constraint(equalTo: digitView.centerYAnchor),
+            foldLine.leadingAnchor.constraint(equalTo: digitView.leadingAnchor),
+            foldLine.trailingAnchor.constraint(equalTo: digitView.trailingAnchor),
+            foldLine.heightAnchor.constraint(equalToConstant: 4),
             
             digitLabel.centerXAnchor.constraint(equalTo: digitView.centerXAnchor),
             digitLabel.centerYAnchor.constraint(equalTo: digitView.centerYAnchor),
             digitLabel.leadingAnchor.constraint(equalTo: digitView.leadingAnchor, constant: 8),
-            digitLabel.trailingAnchor.constraint(equalTo: digitView.trailingAnchor, constant: -8)
+            digitLabel.trailingAnchor.constraint(equalTo: digitView.trailingAnchor, constant: -8),
+            digitLabel.topAnchor.constraint(greaterThanOrEqualTo: digitView.topAnchor, constant: 10),
+            digitLabel.bottomAnchor.constraint(lessThanOrEqualTo: digitView.bottomAnchor, constant: -10)
         ])
         
         setDigit(0, animated: false)
     }
     
+    override func layoutSubviews() {
+        super.layoutSubviews()
+
+        // Size the digit font from height so it never clips vertically.
+        let h = digitView.bounds.height
+        // Empirically, ~70% of card height fills well with this font and avoids clipping at top/bottom.
+        digitLabel.font = .monospacedDigitSystemFont(ofSize: max(10, h * 0.66), weight: .bold)
+
+        if let gradient = foldGradient {
+            // Keep it between the digit text and the fold line so the line stays crisp.
+            if gradient.superlayer == nil {
+                digitView.layer.addSublayer(gradient)
+            }
+            gradient.frame = CGRect(x: 0, y: 0, width: digitView.bounds.width, height: digitView.bounds.height / 2)
+        }
+    }
+
     func flipToDigit(_ digit: Int) {
         guard digit != currentDigit else { return }
         setDigit(digit, animated: true)

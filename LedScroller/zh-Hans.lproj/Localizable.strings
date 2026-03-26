@@ -27,6 +27,9 @@
 "tryTemplate" = "试用模版";
 "previewTemplate" = "预览模版";
 "becomeMember" = "成为会员";
+"subscribeToUnlockAllPremiumContent" = "订阅以解锁全部高级内容";
+"useThisTemplate" = "使用此模版";
+"useThisTemplateLower" = "使用此模版";
 
 /* Settings */
 "language" = "语言";

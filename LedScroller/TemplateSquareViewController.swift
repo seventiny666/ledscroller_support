@@ -233,6 +233,7 @@ import StoreKit
         print("免费试用已开始")
     }
     
+    @MainActor
     @objc func purchase(product: SKProduct) {
         guard SKPaymentQueue.canMakePayments() else {
             NotificationCenter.default.post(
@@ -253,12 +254,11 @@ import StoreKit
         
         // 设置60秒购买超时
         purchaseTimer?.invalidate()
-        purchaseTimer = Timer.scheduledTimer(withTimeInterval: 60.0, repeats: false) { [weak self] _ in
-            print("⚠️ 购买超时")
-            DispatchQueue.main.async {
-                self?.handlePurchaseTimeout()
-            }
-        }
+        purchaseTimer = Timer.scheduledTimer(timeInterval: 60.0,
+                                             target: self,
+                                             selector: #selector(purchaseTimeoutFired),
+                                             userInfo: nil,
+                                             repeats: false)
         
         let payment = SKPayment(product: product)
         SKPaymentQueue.default().add(payment)
@@ -266,6 +266,14 @@ import StoreKit
         print("开始购买产品: \(product.productIdentifier)")
     }
     
+    @objc private func purchaseTimeoutFired() {
+        print("⚠️ 购买超时")
+        Task { @MainActor in
+            self.handlePurchaseTimeout()
+        }
+    }
+
+    @MainActor
     private func handlePurchaseTimeout() {
         print("🔍 处理购买超时")
         isLoading = false
@@ -279,6 +287,7 @@ import StoreKit
         )
     }
     
+    @MainActor
     @objc func restorePurchases() {
         print("🔍 VIPManager.restorePurchases() 被调用")
         print("🔍 调用来源: \(Thread.callStackSymbols.prefix(3))")
@@ -313,12 +322,11 @@ import StoreKit
         
         // 设置30秒超时
         restoreTimer?.invalidate()
-        restoreTimer = Timer.scheduledTimer(withTimeInterval: 30.0, repeats: false) { [weak self] _ in
-            print("⚠️ 恢复购买超时")
-            DispatchQueue.main.async {
-                self?.handleRestoreTimeout()
-            }
-        }
+        restoreTimer = Timer.scheduledTimer(timeInterval: 30.0,
+                                            target: self,
+                                            selector: #selector(restoreTimeoutFired),
+                                            userInfo: nil,
+                                            repeats: false)
         
         print("🔍 调用 SKPaymentQueue.default().restoreCompletedTransactions()")
         SKPaymentQueue.default().restoreCompletedTransactions()
@@ -326,6 +334,14 @@ import StoreKit
         print("🔍 开始恢复购买")
     }
     
+    @objc private func restoreTimeoutFired() {
+        print("⚠️ 恢复购买超时")
+        Task { @MainActor in
+            self.handleRestoreTimeout()
+        }
+    }
+
+    @MainActor
     private func handleRestoreTimeout() {
         print("🔍 处理恢复购买超时")
         isLoading = false
@@ -348,6 +364,7 @@ import StoreKit
     }
     
     // 处理成功购买
+    @MainActor
     private func handleSuccessfulPurchase(productID: String) {
         // 清理定时器
         purchaseTimer?.invalidate()
@@ -393,6 +410,7 @@ import StoreKit
     }
     
     // 处理购买失败
+    @MainActor
     private func handleFailedPurchase(error: Error?) {
         // 清理定时器
         purchaseTimer?.invalidate()
@@ -516,43 +534,48 @@ import StoreKit
 
 // MARK: - VIP预览遮罩视图
 @objc class VIPPreviewOverlayView: UIView {
-    
+
     var onExitTapped: (() -> Void)?
     var onBecomeMemberTapped: (() -> Void)?
-    
+
     private let containerView = UIView()
     private let exitButton = UIButton(type: .system)
     private let becomeMemberButton = UIButton(type: .system)
-    
+    private let subtitleLabel = UILabel()
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         setupUI()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
+    func setIsVIP(_ isVIP: Bool) {
+        becomeMemberButton.setTitle(isVIP ? "useThisTemplate".localized : "becomeMember".localized, for: .normal)
+        subtitleLabel.isHidden = isVIP
+    }
+
     private func setupUI() {
         backgroundColor = UIColor.black.withAlphaComponent(0.4)
-        
+
+        // Exit button: match subscription page left-top close style but place on top-right.
+        exitButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+        exitButton.tintColor = .white
+        exitButton.backgroundColor = .clear
+        exitButton.layer.cornerRadius = 0
+        exitButton.layer.borderWidth = 0
+        exitButton.addTarget(self, action: #selector(exitTapped), for: .touchUpInside)
+        exitButton.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(exitButton)
+
         containerView.backgroundColor = .clear
         containerView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(containerView)
-        
-        exitButton.setTitle("exit".localized, for: .normal)
-        exitButton.setTitleColor(.white, for: .normal)
-        exitButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .medium)
-        exitButton.backgroundColor = UIColor.black.withAlphaComponent(0.6)
-        exitButton.layer.cornerRadius = 25
-        exitButton.layer.borderWidth = 1
-        exitButton.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
-        exitButton.addTarget(self, action: #selector(exitTapped), for: .touchUpInside)
-        exitButton.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(exitButton)
-        
+
         becomeMemberButton.setTitle("becomeMember".localized, for: .normal)
-        becomeMemberButton.setTitleColor(.black, for: .normal)
+        becomeMemberButton.setTitleColor(.white, for: .normal)
         becomeMemberButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         // Match the subscription page primary CTA gradient (use the left/orange stop).
         becomeMemberButton.backgroundColor = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0)
@@ -560,51 +583,62 @@ import StoreKit
         becomeMemberButton.addTarget(self, action: #selector(becomeMemberTapped), for: .touchUpInside)
         becomeMemberButton.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(becomeMemberButton)
-        
+
+        subtitleLabel.text = "subscribeToUnlockAllPremiumContent".localized
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.85)
+        subtitleLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.numberOfLines = 2
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(subtitleLabel)
+
         NSLayoutConstraint.activate([
+            exitButton.topAnchor.constraint(equalTo: safeAreaLayoutGuide.topAnchor, constant: 12),
+            exitButton.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -16),
+            exitButton.widthAnchor.constraint(equalToConstant: 32),
+            exitButton.heightAnchor.constraint(equalToConstant: 32),
+
             containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 240),
-            containerView.heightAnchor.constraint(equalToConstant: 120),
-            
+            containerView.widthAnchor.constraint(equalToConstant: 260),
+
             becomeMemberButton.topAnchor.constraint(equalTo: containerView.topAnchor),
             becomeMemberButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             becomeMemberButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             becomeMemberButton.heightAnchor.constraint(equalToConstant: 50),
 
-            exitButton.topAnchor.constraint(equalTo: becomeMemberButton.bottomAnchor, constant: 20),
-            exitButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
-            exitButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
-            exitButton.heightAnchor.constraint(equalToConstant: 50),
-            exitButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+            subtitleLabel.topAnchor.constraint(equalTo: becomeMemberButton.bottomAnchor, constant: 10),
+            subtitleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            subtitleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            subtitleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
         ])
     }
-    
+
     @objc private func exitTapped() {
         onExitTapped?()
     }
-    
+
     @objc private func becomeMemberTapped() {
         onBecomeMemberTapped?()
     }
-    
+
     @objc func show(in parentView: UIView) {
         translatesAutoresizingMaskIntoConstraints = false
         parentView.addSubview(self)
-        
+
         NSLayoutConstraint.activate([
             topAnchor.constraint(equalTo: parentView.topAnchor),
             leadingAnchor.constraint(equalTo: parentView.leadingAnchor),
             trailingAnchor.constraint(equalTo: parentView.trailingAnchor),
             bottomAnchor.constraint(equalTo: parentView.bottomAnchor)
         ])
-        
+
         alpha = 0
         UIView.animate(withDuration: 0.3) {
             self.alpha = 1
         }
     }
-    
+
     @objc func hide(completion: (() -> Void)? = nil) {
         UIView.animate(withDuration: 0.3, animations: {
             self.alpha = 0
@@ -842,7 +876,9 @@ class VIPScrollView: UIScrollView {
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         // 强制重置购买状态，防止卡死
-        PurchaseManager.shared.forceResetPurchaseState()
+        Task { @MainActor in
+            PurchaseManager.shared.forceResetPurchaseState()
+        }
     }
     
     deinit {
@@ -850,8 +886,9 @@ class VIPScrollView: UIScrollView {
         // 移除通知监听
         NotificationCenter.default.removeObserver(self)
         // 强制重置购买状态
-        PurchaseManager.shared.forceResetPurchaseState()
-        PurchaseManager.shared.forceResetPurchaseState()
+        Task { @MainActor in
+            PurchaseManager.shared.forceResetPurchaseState()
+        }
     }
     
     override func viewDidLayoutSubviews() {
@@ -2211,7 +2248,11 @@ class VIPScrollView: UIScrollView {
         let alert = UIAlertController(title: "success".localized, message: message, preferredStyle: .alert)
         alert.addAction(UIAlertAction(title: "confirm".localized, style: .default) { _ in
             if shouldDismiss {
-                if let nav = self.navigationController {
+                // Subscription is presented modally in a UINavigationController.
+                // Always dismiss instead of pop, otherwise OK won't return.
+                if self.presentingViewController != nil {
+                    self.dismiss(animated: true)
+                } else if let nav = self.navigationController {
                     nav.popViewController(animated: true)
                 } else {
                     self.dismiss(animated: true)
@@ -2323,7 +2364,9 @@ extension VIPManager: SKProductsRequestDelegate {
             print("   3. 稍后重试")
             print("❌ ===== 错误信息结束 =====")
             
-            self.handleFailedPurchase(error: error)
+            Task { @MainActor in
+                self.handleFailedPurchase(error: error)
+            }
         }
     }
 }
@@ -2348,7 +2391,9 @@ extension VIPManager: SKPaymentTransactionObserver {
                 }
                 
                 // 处理购买
-                handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                Task { @MainActor in
+                    self.handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                }
                 
                 // 标记为已处理
                 if !transactionID.isEmpty {
@@ -2365,7 +2410,9 @@ extension VIPManager: SKPaymentTransactionObserver {
                     continue
                 }
                 
-                handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                Task { @MainActor in
+                    self.handleSuccessfulPurchase(productID: transaction.payment.productIdentifier)
+                }
                 
                 // 标记为已处理
                 if !transactionID.isEmpty {
@@ -2377,7 +2424,9 @@ extension VIPManager: SKPaymentTransactionObserver {
             case .failed:
                 if let error = transaction.error as? SKError {
                     if error.code != .paymentCancelled {
-                        handleFailedPurchase(error: error)
+                        Task { @MainActor in
+                            self.handleFailedPurchase(error: error)
+                        }
                     } else {
                         // 用户取消购买 - 确保重置loading状态并发送通知
                         DispatchQueue.main.async {
@@ -2392,7 +2441,9 @@ extension VIPManager: SKPaymentTransactionObserver {
                         print("用户取消了购买")
                     }
                 } else {
-                    handleFailedPurchase(error: transaction.error)
+                    Task { @MainActor in
+                        self.handleFailedPurchase(error: transaction.error)
+                    }
                 }
                 SKPaymentQueue.default().finishTransaction(transaction)
             case .deferred:
@@ -2449,8 +2500,10 @@ extension VIPManager: SKPaymentTransactionObserver {
             // 清理定时器
             self.restoreTimer?.invalidate()
             self.restoreTimer = nil
-            
-            self.handleFailedPurchase(error: error)
+
+            Task { @MainActor in
+                self.handleFailedPurchase(error: error)
+            }
         }
         print("恢复购买失败: \(error.localizedDescription)")
     }
@@ -3563,6 +3616,16 @@ enum TemplateTab: String {
 
 // 模版广场视图控制器
 class TemplateSquareViewController: UIViewController {
+
+    private func openEditor(for item: LEDItem) {
+        let createVC = LEDCreateViewController(editingItem: item, isTemplateEdit: true)
+        createVC.onSave = { [weak self] in
+            self?.showToast(message: "saved".localized)
+        }
+        let nav = UINavigationController(rootViewController: createVC)
+        nav.modalPresentationStyle = .fullScreen
+        present(nav, animated: true)
+    }
     
     private var tableView: UITableView!
     private var categories: [TemplateCategory] = []
@@ -3581,12 +3644,31 @@ class TemplateSquareViewController: UIViewController {
         super.viewDidLoad()
         updateCategories()
         setupUI()
+
+        // Keep VIP state in sync so VIP templates show the correct preview CTA.
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(vipStatusDidChange),
+            name: PurchaseManager.vipStatusDidChangeNotification,
+            object: nil
+        )
+    }
+
+    @objc private func vipStatusDidChange() {
+        // Keep this handler lightweight; StoreKitManager already updates entitlements.
+        // Preview UI reads the latest isVIP() when it is presented.
     }
     
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         // 强制恢复竖屏
         AppDelegate.orientationLock = .portrait
+
+        // StoreKitManager listens for transaction updates; avoid redundant refresh loops here.
         
         // 刷新UI以应用语言更改
         refreshUI()
@@ -3715,23 +3797,35 @@ class TemplateSquareViewController: UIViewController {
         toast.clipsToBounds = true
         toast.numberOfLines = 0
         toast.translatesAutoresizingMaskIntoConstraints = false
-        
-        view.addSubview(toast)
-        
+
+        // Prefer the current key window so the toast appears above any presented VC.
+        let keyWindow: UIWindow? = {
+            if #available(iOS 13.0, *) {
+                return UIApplication.shared.connectedScenes
+                    .compactMap { $0 as? UIWindowScene }
+                    .flatMap { $0.windows }
+                    .first { $0.isKeyWindow }
+            }
+            return nil
+        }()
+
+        let hostView: UIView = keyWindow ?? view.window ?? view
+        hostView.addSubview(toast)
+
         NSLayoutConstraint.activate([
-            toast.centerXAnchor.constraint(equalTo: view.centerXAnchor),
-            toast.centerYAnchor.constraint(equalTo: view.centerYAnchor),
+            toast.centerXAnchor.constraint(equalTo: hostView.centerXAnchor),
+            toast.centerYAnchor.constraint(equalTo: hostView.centerYAnchor),
             toast.widthAnchor.constraint(greaterThanOrEqualToConstant: 200),
             toast.heightAnchor.constraint(equalToConstant: 50)
         ])
-        
+
         toast.alpha = 0
-        UIView.animate(withDuration: 0.3) {
+        UIView.animate(withDuration: 0.2) {
             toast.alpha = 1
         }
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            UIView.animate(withDuration: 0.3, animations: {
+            UIView.animate(withDuration: 0.2, animations: {
                 toast.alpha = 0
             }) { _ in
                 toast.removeFromSuperview()
@@ -3917,8 +4011,13 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let clockVC = FlipClockViewController()
             clockVC.modalPresentationStyle = .fullScreen
             present(clockVC, animated: true)
+        } else if item.isDigitalClock {
+            AppDelegate.orientationLock = .landscape
+            let clockVC = DigitalClockViewController()
+            clockVC.modalPresentationStyle = .fullScreen
+            present(clockVC, animated: true)
         } else if item.isFireworksBloom {
-            let fireworksVC = FireworksBloomViewController()
+            let fireworksVC = FireworksShowViewController()
             fireworksVC.modalPresentationStyle = .fullScreen
             present(fireworksVC, animated: true)
         } else if item.isFireworks {
@@ -3955,10 +4054,32 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
                     displayVC.dismiss(animated: true)
                 }
             }
-            overlayView.onBecomeMemberTapped = {
+            // Ensure VIP status is up-to-date right before showing the preview overlay.
+            // StoreKit2 entitlement updates can be slightly delayed, so refresh once.
+            if #available(iOS 15.0, *) {
+                Task { @MainActor in
+                    await StoreKitManager.shared.updateSubscriptionStatus()
+                    overlayView.setIsVIP(PurchaseManager.shared.isVIP())
+                }
+            } else {
+                overlayView.setIsVIP(PurchaseManager.shared.isVIP())
+            }
+
+            // Also update once shortly after showing, in case StoreKit2 updates
+            // are slightly delayed on device.
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.6) {
+                overlayView.setIsVIP(PurchaseManager.shared.isVIP())
+            }
+
+            overlayView.onBecomeMemberTapped = { 
                 overlayView.hide {
                     displayVC.dismiss(animated: true) {
-                        self.showVIPSubscription()
+                        if PurchaseManager.shared.isVIP() {
+                            // VIP users: use template -> jump into editor flow.
+                            self.openEditor(for: item)
+                        } else {
+                            self.showVIPSubscription()
+                        }
                     }
                 }
             }
@@ -3976,9 +4097,11 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
                 }
             }
             
-            // 如果当前有模态视图，先关闭
-            if self.presentedViewController != nil {
-                self.dismiss(animated: false) {
+            // If we're already presenting something, do NOT dismiss self.
+            // Dismissing self while another VC is animating in/out can cause a
+            // transient blank period and occasional crashes on device.
+            if let presented = self.presentedViewController {
+                presented.dismiss(animated: false) {
                     self.presentVIPSubscriptionSafely()
                 }
             } else {
@@ -3989,18 +4112,9 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     
     private func presentVIPSubscriptionSafely() {
         let vipVC = VIPSubscriptionViewController()
-        vipVC.hidesBottomBarWhenPushed = true
 
-        // Prefer push when available to avoid modal presentation issues on newer simulators.
-        if let nav = navigationController {
-            // Defensive: ensure no lingering overlays block touches.
-            view.viewWithTag(9999)?.removeFromSuperview()
-            view.window?.viewWithTag(9999)?.removeFromSuperview()
-
-            nav.pushViewController(vipVC, animated: true)
-            return
-        }
-
+        // Always present modally for subscription to avoid disturbing the home
+        // navigation stack/tab bar state.
         let nav = UINavigationController(rootViewController: vipVC)
         nav.modalPresentationStyle = .fullScreen
         nav.modalTransitionStyle = .coverVertical
@@ -4141,8 +4255,8 @@ class TemplateCategoryCell: UITableViewCell {
             
             return items
         case .clock:
-            // 返回翻页时钟和占位符
-            var items = allItems.filter { $0.isFlipClock }
+            // 返回翻页时钟 + 数码管时钟
+            var items = allItems.filter { $0.isFlipClock || $0.isDigitalClock }
             // 如果没有时钟，创建占位符
             if items.isEmpty {
                 let clockItem = LEDItem(
@@ -4160,7 +4274,7 @@ class TemplateCategoryCell: UITableViewCell {
             // 返回预设卡片 + 用户创建的卡片
             let presetItems = allItems.filter { $0.isDefaultPreset }
             let userItems = allItems.filter { 
-                !$0.isFlipClock && !$0.isNeonTemplate && !$0.isIdolTemplate && 
+                !$0.isFlipClock && !$0.isDigitalClock && !$0.isNeonTemplate && !$0.isIdolTemplate && 
                 !$0.isLEDTemplate && !$0.isDefaultPreset && 
                 !$0.isFireworks && !$0.isFireworksBloom && !$0.isLoveRain
             }
@@ -4484,7 +4598,7 @@ class TemplateItemCell: UICollectionViewCell {
         
         // 移除之前可能添加的所有自定义视图
         imageView.subviews.forEach { subview in
-            if subview is HeartGridView || subview is ILoveUView || subview is View520 || subview is LoveRainCoverView || subview is FireworksCoverView || subview is FireworksBloomCoverView {
+            if subview is HeartGridView || subview is ILoveUView || subview is View520 || subview is LoveRainCoverView || subview is FireworksCoverView || subview is FireworksBloomCoverView || subview is SevenSegmentClockView {
                 subview.removeFromSuperview()
             }
         }
@@ -4638,31 +4752,51 @@ class TemplateItemCell: UICollectionViewCell {
         if item.isFireworksBloom {
             imageView.image = nil
             imageView.backgroundColor = UIColor.black // 黑色背景
-            
+
             let fireworksBloomCoverView = FireworksBloomCoverView()
             fireworksBloomCoverView.translatesAutoresizingMaskIntoConstraints = false
             imageView.addSubview(fireworksBloomCoverView)
-            
+
             NSLayoutConstraint.activate([
                 fireworksBloomCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
                 fireworksBloomCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
                 fireworksBloomCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
                 fireworksBloomCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
             ])
-            
+
             // 强制立即布局，确保尺寸正确
             fireworksBloomCoverView.setNeedsLayout()
             fireworksBloomCoverView.layoutIfNeeded()
-            
+
             // 延迟绘制，确保布局完成
             DispatchQueue.main.async {
                 fireworksBloomCoverView.setNeedsDisplay()
             }
-            
+
             // 隐藏文字标签
             overlayTextLabel.isHidden = true
         }
-        
+
+        // 数码管数字时钟封面：和预览一致的样式（静态显示）
+        if item.isDigitalClock {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black
+
+            let digitalCoverView = SevenSegmentClockView(mode: .staticPreview)
+            digitalCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(digitalCoverView)
+
+            NSLayoutConstraint.activate([
+                digitalCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                digitalCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                digitalCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                digitalCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+
+            digitalCoverView.setTimeString("12:20:35")
+            overlayTextLabel.isHidden = true
+        }
+
         if tab == .popular {
             // 热门模版：只显示试用按钮，隐藏预览按钮和标题
             // 特殊动画（爱心格子、I LOVE U、520、爱心流星雨、烟花、烟花绽放）不显示文字
@@ -4685,9 +4819,15 @@ class TemplateItemCell: UICollectionViewCell {
                 tryButton.layer.cornerRadius = tryButton.bounds.height / 2
             }
         } else {
-            // 动画模版：显示标题，隐藏按钮和封面文字
+            // 动画模版：显示标题（卡片下方），隐藏按钮和封面文字
             overlayTextLabel.isHidden = true
-            titleLabel.text = item.text
+            if item.isFlipClock {
+                titleLabel.text = "flipClock".localized
+            } else if item.isDigitalClock {
+                titleLabel.text = "digitalClock".localized
+            } else {
+                titleLabel.text = item.text
+            }
             titleLabel.isHidden = false
             buttonStack.isHidden = true
         }
@@ -4746,6 +4886,9 @@ extension LEDItem {
         } else if isFlipClock {
             // 翻页时钟使用 clock_1
             return "clock_1"
+        } else if isDigitalClock {
+            // 数码管时钟的封面使用自定义绘制（不依赖图片），这里返回 nil
+            return nil
         }
         return nil
     }

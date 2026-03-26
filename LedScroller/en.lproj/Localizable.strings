@@ -77,6 +77,9 @@
 "vipContentSelected" = "You selected premium components";
 "vipBenefitsMessage" = "Become a subscriber to unlock all benefits, cancel anytime if not needed";
 "vipAlertMessage" = "Subscribe to unlock all premium features\nCancel anytime";
+"subscribeToUnlockAllPremiumContent" = "Subscribe to unlock all premium content";
+"useThisTemplate" = "Use this template";
+"useThisTemplateLower" = "Use this template";
 "becomeVip" = "Become VIP";
 "save67Percent" = "Save 67%";
 "save76Percent" = "Save 76%";
@@ -185,7 +188,8 @@
 
 /* Special Effects */
 "loveRain" = "💖 Love Rain";
-"flipClock" = "Digital Clock";
+"flipClock" = "Flip Clock";
+"digitalClock" = "Digital Clock";
 "fireworks" = "Fireworks";
 
 /* My Creations */

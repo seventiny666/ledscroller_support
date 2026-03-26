@@ -7,6 +7,7 @@ import StoreKit
 //
 // This keeps call sites simple (isVIP/restore/purchase) while avoiding
 // re-implementing receipt validation without a server.
+@MainActor
 final class PurchaseManager {
     static let shared = PurchaseManager()
     private init() {}

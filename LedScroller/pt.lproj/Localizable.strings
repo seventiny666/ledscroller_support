@@ -161,3 +161,10 @@
 "vipContentSelected" = "Você selecionou componentes premium";
 "vipBenefitsMessage" = "Torne-se assinante para desbloquear todos os benefícios, cancele a qualquer momento se não precisar";
 "becomeVip" = "Tornar-se VIP";
+
+/* VIP Preview */
+"becomeMember" = "Tornar-se membro";
+"exit" = "Sair";
+"subscribeToUnlockAllPremiumContent" = "Assine para desbloquear todo o conteudo premium";
+"useThisTemplate" = "Usar este modelo";
+"useThisTemplateLower" = "Usar este modelo";

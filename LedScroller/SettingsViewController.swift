@@ -1,6 +1,7 @@
 import UIKit
 
 // 设置项
+@MainActor
 enum SettingItem {
     case language
     case aboutUs
@@ -86,10 +87,21 @@ class SettingsViewController: UIViewController {
         NotificationCenter.default.removeObserver(self)
     }
     
+    private var isRefreshingVIPStatus = false
+
     @objc private func vipStatusDidChange() {
         print("🔍 设置界面：收到VIP状态变化通知")
+
+        // Debounce: subscription state can trigger multiple notifications quickly.
+        // Rebuilding the whole stack repeatedly can freeze UI and exacerbate crashes.
+        if isRefreshingVIPStatus { return }
+        isRefreshingVIPStatus = true
+
         DispatchQueue.main.async {
             self.refreshSettingsDisplay()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                self.isRefreshingVIPStatus = false
+            }
         }
     }
     

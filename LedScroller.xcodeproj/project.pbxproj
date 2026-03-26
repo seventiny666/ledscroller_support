@@ -26,8 +26,11 @@
 		A1000028000000000000001 /* UIColor+Hex.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000029000000000000001 /* UIColor+Hex.swift */; };
 		A1000030000000000000001 /* FireworksViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000031000000000000001 /* FireworksViewController.swift */; };
 		A1000032000000000000001 /* FireworksBloomViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000033000000000000001 /* FireworksBloomViewController.swift */; };
+		91B594F039329C522644F704 /* FireworksShowViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39329C522644F704042F521B /* FireworksShowViewController.swift */; };
 		A1000034000000000000001 /* FlipClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000035000000000000001 /* FlipClockViewController.swift */; };
 		A1000036000000000000001 /* LoveRainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000037000000000000001 /* LoveRainViewController.swift */; };
+		73441E768A324FB79C3718E9 /* DigitalClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */; };
+		CE3260CC34484AB8B11851A2 /* SevenSegmentClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */; };
 		A1000038000000000000001 /* MainTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000039000000000000001 /* MainTabBarController.swift */; };
 		A1000040000000000000001 /* TemplateSquareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000041000000000000001 /* TemplateSquareViewController.swift */; };
 		A1000042000000000000001 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000043000000000000001 /* SettingsViewController.swift */; };
@@ -68,6 +71,8 @@
 		141382302F56825C00F73105 /* Localizable.strings */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.strings; path = Localizable.strings; sourceTree = "<group>"; };
 		141382312F56825C00F73105 /* LEDDisplayViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LEDDisplayViewController.swift; sourceTree = "<group>"; };
 		141382322F56825C00F73105 /* FlipClockViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlipClockViewController.swift; sourceTree = "<group>"; };
+		D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DigitalClockViewController.swift; sourceTree = "<group>"; };
+		C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SevenSegmentClockView.swift; sourceTree = "<group>"; };
 		141382332F56825C00F73105 /* MainTabBarController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabBarController.swift; sourceTree = "<group>"; };
 		141382342F56825C00F73105 /* MyCreationsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyCreationsViewController.swift; sourceTree = "<group>"; };
 		141382352F56825C00F73105 /* CodeGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeGenerator.swift; sourceTree = "<group>"; };
@@ -101,6 +106,7 @@
 		A1000029000000000000001 /* UIColor+Hex.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "UIColor+Hex.swift"; sourceTree = "<group>"; };
 		A1000031000000000000001 /* FireworksViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireworksViewController.swift; sourceTree = "<group>"; };
 		A1000033000000000000001 /* FireworksBloomViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireworksBloomViewController.swift; sourceTree = "<group>"; };
+		39329C522644F704042F521B /* FireworksShowViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FireworksShowViewController.swift; sourceTree = "<group>"; };
 		A1000035000000000000001 /* FlipClockViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FlipClockViewController.swift; sourceTree = "<group>"; };
 		A1000037000000000000001 /* LoveRainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoveRainViewController.swift; sourceTree = "<group>"; };
 		A1000039000000000000001 /* MainTabBarController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainTabBarController.swift; sourceTree = "<group>"; };
@@ -139,6 +145,7 @@
 				141382232F56825C00F73105 /* TemplateSquareViewController.swift */,
 				141382252F56825C00F73105 /* FireworksViewController.swift */,
 				141382262F56825C00F73105 /* FireworksBloomViewController.swift */,
+				39329C522644F704042F521B /* FireworksShowViewController.swift */,
 				141382272F56825C00F73105 /* UIColor+Hex.swift */,
 				141382292F56825C00F73105 /* LEDCreateViewController.swift */,
 				1413822A2F56825C00F73105 /* MainViewController.swift */,
@@ -148,6 +155,8 @@
 				141382302F56825C00F73105 /* Localizable.strings */,
 				141382312F56825C00F73105 /* LEDDisplayViewController.swift */,
 				141382322F56825C00F73105 /* FlipClockViewController.swift */,
+				D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */,
+				C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */,
 				141382332F56825C00F73105 /* MainTabBarController.swift */,
 				141382342F56825C00F73105 /* MyCreationsViewController.swift */,
 				141382352F56825C00F73105 /* CodeGenerator.swift */,
@@ -255,7 +264,10 @@
 				A1000027000000000000001 /* LEDFullScreenViewController.swift */,
 				A1000031000000000000001 /* FireworksViewController.swift */,
 				A1000033000000000000001 /* FireworksBloomViewController.swift */,
+				39329C522644F704042F521B /* FireworksShowViewController.swift */,
 				A1000035000000000000001 /* FlipClockViewController.swift */,
+				D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */,
+				C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */,
 				A1000037000000000000001 /* LoveRainViewController.swift */,
 				A1000023000000000000001 /* LEDItem.swift */,
 				A1000029000000000000001 /* UIColor+Hex.swift */,
@@ -372,7 +384,10 @@
 				A1000028000000000000001 /* UIColor+Hex.swift in Sources */,
 				A1000030000000000000001 /* FireworksViewController.swift in Sources */,
 				A1000032000000000000001 /* FireworksBloomViewController.swift in Sources */,
+				91B594F039329C522644F704 /* FireworksShowViewController.swift in Sources */,
 				A1000034000000000000001 /* FlipClockViewController.swift in Sources */,
+				73441E768A324FB79C3718E9 /* DigitalClockViewController.swift in Sources */,
+				CE3260CC34484AB8B11851A2 /* SevenSegmentClockView.swift in Sources */,
 				A1000036000000000000001 /* LoveRainViewController.swift in Sources */,
 				A1000038000000000000001 /* MainTabBarController.swift in Sources */,
 				A1000040000000000000001 /* TemplateSquareViewController.swift in Sources */,

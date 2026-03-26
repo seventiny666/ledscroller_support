@@ -161,3 +161,10 @@
 "vipContentSelected" = "Sie haben Premium-Komponenten ausgewählt";
 "vipBenefitsMessage" = "Werden Sie Abonnent, um alle Vorteile freizuschalten, jederzeit kündbar falls nicht benötigt";
 "becomeVip" = "VIP werden";
+
+/* VIP Preview */
+"becomeMember" = "Mitglied werden";
+"exit" = "Beenden";
+"subscribeToUnlockAllPremiumContent" = "Abonnieren, um alle Premium-Inhalte freizuschalten";
+"useThisTemplate" = "Diese Vorlage verwenden";
+"useThisTemplateLower" = "Diese Vorlage verwenden";

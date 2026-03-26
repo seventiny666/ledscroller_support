@@ -58,6 +58,13 @@
 "save76Percent" = "76%節約";
 "oneTimePurchase" = "一回の購入で生涯アクセス";
 "startFreeTrial" = "無料トライアルを開始";
+
+/* VIP Preview */
+"becomeMember" = "メンバーになる";
+"exit" = "終了";
+"subscribeToUnlockAllPremiumContent" = "サブスクしてすべてのプレミアムコンテンツを解放";
+"useThisTemplate" = "このテンプレートを使う";
+"useThisTemplateLower" = "このテンプレートを使う";
 "restorePurchases" = "購入を復元";
 "paymentDisclaimer" = "購入確認時にiTunesアカウントに課金されます。現在の期間終了の少なくとも24時間前にキャンセルしない限り、サブスクリプションは自動的に更新されます。";
 "termsOfService" = "利用規約";

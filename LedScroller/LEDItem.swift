@@ -18,6 +18,7 @@ struct LEDItem: Codable {
     var isFireworks: Bool // 标识是否为烟花效果
     var isFireworksBloom: Bool // 标识是否为烟花绽放效果（第二种）
     var isFlipClock: Bool // 标识是否为翻页时钟效果
+    var isDigitalClock: Bool // 标识是否为数码管数字时钟（纯显示）
     var isLoveRain: Bool // 标识是否为爱心流星雨效果
     var isHeartGrid: Bool // 标识是否为爱心格子动画效果
     var isILoveU: Bool // 标识是否为I LOVE U动画效果
@@ -33,6 +34,90 @@ struct LEDItem: Codable {
         case scrollUp = "上滚"
         case scrollDown = "下滚"
         case blink = "闪烁"
+    }
+
+    // Custom Codable so new fields (e.g. isDigitalClock) default to false when decoding older saved data.
+    enum CodingKeys: String, CodingKey {
+        case id
+        case text
+        case fontSize
+        case textColor
+        case backgroundColor
+        case backgroundImageName
+        case glowIntensity
+        case scrollType
+        case speed
+        case fontName
+        case borderStyle
+        case lightBoardStyle
+        case linearBorderStyle
+        case isFireworks
+        case isFireworksBloom
+        case isFlipClock
+        case isDigitalClock
+        case isLoveRain
+        case isHeartGrid
+        case isILoveU
+        case is520
+        case isDefaultPreset
+        case isVIPRequired
+        case createdAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(String.self, forKey: .id)
+        text = try c.decode(String.self, forKey: .text)
+        fontSize = try c.decode(CGFloat.self, forKey: .fontSize)
+        textColor = try c.decode(String.self, forKey: .textColor)
+        backgroundColor = try c.decode(String.self, forKey: .backgroundColor)
+        backgroundImageName = try c.decodeIfPresent(String.self, forKey: .backgroundImageName)
+        glowIntensity = try c.decode(CGFloat.self, forKey: .glowIntensity)
+        scrollType = try c.decode(ScrollType.self, forKey: .scrollType)
+        speed = try c.decode(CGFloat.self, forKey: .speed)
+        fontName = try c.decode(String.self, forKey: .fontName)
+        borderStyle = try c.decodeIfPresent(Int.self, forKey: .borderStyle)
+        lightBoardStyle = try c.decodeIfPresent(Int.self, forKey: .lightBoardStyle)
+        linearBorderStyle = try c.decodeIfPresent(Int.self, forKey: .linearBorderStyle)
+        isFireworks = try c.decodeIfPresent(Bool.self, forKey: .isFireworks) ?? false
+        isFireworksBloom = try c.decodeIfPresent(Bool.self, forKey: .isFireworksBloom) ?? false
+        isFlipClock = try c.decodeIfPresent(Bool.self, forKey: .isFlipClock) ?? false
+        isDigitalClock = try c.decodeIfPresent(Bool.self, forKey: .isDigitalClock) ?? false
+        isLoveRain = try c.decodeIfPresent(Bool.self, forKey: .isLoveRain) ?? false
+        isHeartGrid = try c.decodeIfPresent(Bool.self, forKey: .isHeartGrid) ?? false
+        isILoveU = try c.decodeIfPresent(Bool.self, forKey: .isILoveU) ?? false
+        is520 = try c.decodeIfPresent(Bool.self, forKey: .is520) ?? false
+        isDefaultPreset = try c.decodeIfPresent(Bool.self, forKey: .isDefaultPreset) ?? false
+        isVIPRequired = try c.decodeIfPresent(Bool.self, forKey: .isVIPRequired) ?? false
+        createdAt = try c.decodeIfPresent(Date.self, forKey: .createdAt) ?? Date()
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(id, forKey: .id)
+        try c.encode(text, forKey: .text)
+        try c.encode(fontSize, forKey: .fontSize)
+        try c.encode(textColor, forKey: .textColor)
+        try c.encode(backgroundColor, forKey: .backgroundColor)
+        try c.encodeIfPresent(backgroundImageName, forKey: .backgroundImageName)
+        try c.encode(glowIntensity, forKey: .glowIntensity)
+        try c.encode(scrollType, forKey: .scrollType)
+        try c.encode(speed, forKey: .speed)
+        try c.encode(fontName, forKey: .fontName)
+        try c.encodeIfPresent(borderStyle, forKey: .borderStyle)
+        try c.encodeIfPresent(lightBoardStyle, forKey: .lightBoardStyle)
+        try c.encodeIfPresent(linearBorderStyle, forKey: .linearBorderStyle)
+        try c.encode(isFireworks, forKey: .isFireworks)
+        try c.encode(isFireworksBloom, forKey: .isFireworksBloom)
+        try c.encode(isFlipClock, forKey: .isFlipClock)
+        try c.encode(isDigitalClock, forKey: .isDigitalClock)
+        try c.encode(isLoveRain, forKey: .isLoveRain)
+        try c.encode(isHeartGrid, forKey: .isHeartGrid)
+        try c.encode(isILoveU, forKey: .isILoveU)
+        try c.encode(is520, forKey: .is520)
+        try c.encode(isDefaultPreset, forKey: .isDefaultPreset)
+        try c.encode(isVIPRequired, forKey: .isVIPRequired)
+        try c.encode(createdAt, forKey: .createdAt)
     }
     
     init(id: String = UUID().uuidString,
@@ -51,6 +136,7 @@ struct LEDItem: Codable {
          isFireworks: Bool = false,
          isFireworksBloom: Bool = false,
          isFlipClock: Bool = false,
+         isDigitalClock: Bool = false,
          isLoveRain: Bool = false,
          isHeartGrid: Bool = false,
          isILoveU: Bool = false,
@@ -74,6 +160,7 @@ struct LEDItem: Codable {
         self.isFireworks = isFireworks
         self.isFireworksBloom = isFireworksBloom
         self.isFlipClock = isFlipClock
+        self.isDigitalClock = isDigitalClock
         self.isLoveRain = isLoveRain
         self.isHeartGrid = isHeartGrid
         self.isILoveU = isILoveU
@@ -238,6 +325,17 @@ class LEDDataManager {
                 scrollType: .none,
                 speed: 1.0,
                 isFlipClock: true
+            ),
+            LEDItem(
+                id: "digital-clock-special",
+                text: "",
+                fontSize: 45,
+                textColor: "#FF2A2A",
+                backgroundColor: "#000000",
+                glowIntensity: 0,
+                scrollType: .none,
+                speed: 1.0,
+                isDigitalClock: true
             )
         ]
     }

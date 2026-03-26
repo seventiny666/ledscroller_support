@@ -122,6 +122,14 @@ extension LEDSquareViewController: UICollectionViewDelegate, UICollectionViewDat
             present(clockVC, animated: true)
             return
         }
+
+        if item.isDigitalClock {
+            AppDelegate.orientationLock = .landscape
+            let clockVC = DigitalClockViewController()
+            clockVC.modalPresentationStyle = .fullScreen
+            present(clockVC, animated: true)
+            return
+        }
         
         // 检查是否为烟花绽放效果（第二种）
         if item.isFireworksBloom {
@@ -150,8 +158,8 @@ extension LEDSquareViewController: UICollectionViewDelegate, UICollectionViewDat
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let item = ledItems[indexPath.item]
         
-        // 烟花卡片、翻页时钟和爱心流星雨不显示编辑/删除菜单
-        if item.isFireworks || item.isFireworksBloom || item.isFlipClock || item.isLoveRain {
+        // 烟花卡片、时钟和爱心流星雨不显示编辑/删除菜单
+        if item.isFireworks || item.isFireworksBloom || item.isFlipClock || item.isDigitalClock || item.isLoveRain {
             return nil
         }
         
@@ -280,6 +288,9 @@ class LEDCell: UICollectionViewCell {
         // 如果是翻页时钟卡片 - 显示静态时钟预览
         else if item.isFlipClock {
             setupStaticFlipClock()
+        }
+        else if item.isDigitalClock {
+            setupStaticDigitalClock()
         }
         // 如果是烟花绽放卡片（第二种）- 显示静态礼花炸开效果
         else if item.isFireworksBloom {
@@ -439,6 +450,27 @@ class LEDCell: UICollectionViewCell {
         digitLabel.textAlignment = .center
         digitLabel.frame = CGRect(x: 0, y: 0, width: width, height: height)
         digitView.addSubview(digitLabel)
+    }
+
+    private func setupStaticDigitalClock() {
+        textLabel.alpha = 0
+        textLabel.text = ""
+
+        clockTitleLabel.isHidden = false
+        clockTitleLabel.text = "Digital Clock"
+
+        let clock = SevenSegmentClockView(mode: .staticPreview)
+        clock.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(clock)
+
+        NSLayoutConstraint.activate([
+            clock.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            clock.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            clock.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            clock.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -28)
+        ])
+
+        clock.setTimeString("12:20:35")
     }
     
     // 第二种烟花：静态礼花炸开效果

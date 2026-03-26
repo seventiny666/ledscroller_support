@@ -3220,6 +3220,46 @@ class LEDCreateViewController: UIViewController {
         }
         
         LEDDataManager.shared.saveItems(items)
+
+        // Show toast on key window so it works consistently for all entry points
+        // (home edit + "Use this template").
+        let toastMessage = "saved".localized
+        if let keyWindow = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap({ $0.windows })
+            .first(where: { $0.isKeyWindow }) {
+            let toast = UILabel()
+            toast.text = toastMessage
+            toast.textColor = .white
+            toast.backgroundColor = UIColor.black.withAlphaComponent(0.8)
+            toast.font = .systemFont(ofSize: 14, weight: .medium)
+            toast.textAlignment = .center
+            toast.layer.cornerRadius = 8
+            toast.clipsToBounds = true
+            toast.numberOfLines = 0
+            toast.translatesAutoresizingMaskIntoConstraints = false
+
+            keyWindow.addSubview(toast)
+            NSLayoutConstraint.activate([
+                toast.centerXAnchor.constraint(equalTo: keyWindow.centerXAnchor),
+                toast.centerYAnchor.constraint(equalTo: keyWindow.centerYAnchor),
+                toast.widthAnchor.constraint(greaterThanOrEqualToConstant: 200),
+                toast.heightAnchor.constraint(equalToConstant: 50)
+            ])
+
+            toast.alpha = 0
+            UIView.animate(withDuration: 0.2) {
+                toast.alpha = 1
+            }
+
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                UIView.animate(withDuration: 0.2, animations: {
+                    toast.alpha = 0
+                }) { _ in
+                    toast.removeFromSuperview()
+                }
+            }
+        }
         
         dismiss(animated: true) {
             self.onSave?()

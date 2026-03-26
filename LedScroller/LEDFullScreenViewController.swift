@@ -1,5 +1,9 @@
 import UIKit
 
+// Access VIP status.
+// PurchaseManager lives in TemplateSquareViewController.swift, but it's part of the app module.
+
+
 // LED全屏显示页面
 class LEDFullScreenViewController: UIViewController {
     
@@ -11,6 +15,12 @@ class LEDFullScreenViewController: UIViewController {
     private let linearBorderView = LinearBorderView(displayMode: .fullscreen) // 线性边框视图
     private let textLabel = UILabel()
     private var displayLink: CADisplayLink?
+
+    // Top-right close button (tap to dismiss)
+    private let closeButton = UIButton(type: .system)
+
+    // VIP template action
+    private let useTemplateButton = UIButton(type: .system)
     
     init(ledItem: LEDItem) {
         self.ledItem = ledItem
@@ -25,6 +35,7 @@ class LEDFullScreenViewController: UIViewController {
         super.viewDidLoad()
         setupUI()
         setupGestures()
+        setupUseTemplateButtonIfNeeded()
     }
     
     override func viewWillAppear(_ animated: Bool) {
@@ -214,12 +225,28 @@ class LEDFullScreenViewController: UIViewController {
             textLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20)
         ])
         
+        // Close button (top-right)
+        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+        closeButton.tintColor = .white
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.addTarget(self, action: #selector(dismissView), for: .touchUpInside)
+        view.addSubview(closeButton)
+        view.bringSubviewToFront(closeButton)
+
+        NSLayoutConstraint.activate([
+            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            closeButton.widthAnchor.constraint(equalToConstant: 32),
+            closeButton.heightAnchor.constraint(equalToConstant: 32)
+        ])
+
         // 屏幕常亮
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
     private func setupGestures() {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissView))
+        tapGesture.cancelsTouchesInView = false // don't swallow button taps
         view.addGestureRecognizer(tapGesture)
     }
     
@@ -282,6 +309,68 @@ class LEDFullScreenViewController: UIViewController {
         }
     }
     
+    private func setupUseTemplateButtonIfNeeded() {
+        // Show for templates (home/template square). Do NOT show for user creations.
+        // We infer "template" by id prefix; creations use UUIDs.
+        let isTemplateItem = ledItem.id.hasPrefix("template_")
+        guard isTemplateItem else {
+            useTemplateButton.isHidden = true
+            return
+        }
+
+        // VIP-required templates only show the button for VIP users.
+        if ledItem.isVIPRequired && !PurchaseManager.shared.isVIP() {
+            useTemplateButton.isHidden = true
+            return
+        }
+
+        useTemplateButton.setTitle("useThisTemplateLower".localized, for: .normal)
+        useTemplateButton.setTitleColor(.white, for: .normal)
+        useTemplateButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        useTemplateButton.layer.cornerRadius = 22
+        useTemplateButton.layer.masksToBounds = false
+        useTemplateButton.addTarget(self, action: #selector(useTemplateTapped), for: .touchUpInside)
+        useTemplateButton.translatesAutoresizingMaskIntoConstraints = false
+
+        // Pink glow style (solid pink + inner-ish glow)
+        let pink = UIColor(red: 1.0, green: 0.45, blue: 0.75, alpha: 1.0)
+        useTemplateButton.backgroundColor = pink
+        useTemplateButton.layer.shadowColor = pink.cgColor
+        useTemplateButton.layer.shadowOpacity = 0.9
+        useTemplateButton.layer.shadowRadius = 10
+        useTemplateButton.layer.shadowOffset = .zero
+
+        view.addSubview(useTemplateButton)
+        view.bringSubviewToFront(useTemplateButton)
+
+        NSLayoutConstraint.activate([
+            useTemplateButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            useTemplateButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
+            useTemplateButton.heightAnchor.constraint(equalToConstant: 44),
+            useTemplateButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 170)
+        ])
+    }
+
+    @objc private func useTemplateTapped() {
+        // Dismiss preview first, then open editor from the presenting VC.
+        let item = ledItem
+        let opener = presentingViewController
+        dismiss(animated: true) {
+            guard let opener else { return }
+            let createVC = LEDCreateViewController(editingItem: item, isTemplateEdit: true)
+            createVC.onSave = {
+                if let opener = opener as? TemplateSquareViewController {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                        opener.showToast(message: "saved".localized)
+                    }
+                }
+            }
+            let nav = UINavigationController(rootViewController: createVC)
+            nav.modalPresentationStyle = .fullScreen
+            opener.present(nav, animated: true)
+        }
+    }
+
     @objc private func dismissView() {
         // 先停止动画，再dismiss，减少卡顿
         textLabel.layer.removeAllAnimations()
