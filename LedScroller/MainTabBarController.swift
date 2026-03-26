@@ -8,6 +8,14 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         
         // 使用自定义 TabBar
         setValue(CustomSpacedTabBar(), forKey: "tabBar")
+
+        // iPadOS may switch UITabBarController to the new top-tab style in regular width.
+        // Force compact width on iPad so we keep the bottom tab bar with icons.
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            if #available(iOS 17.0, *) {
+                traitOverrides.horizontalSizeClass = .compact
+            }
+        }
         
         self.delegate = self
         setupViewControllers() // 先设置视图控制器
@@ -87,7 +95,7 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         // 设置选中和未选中的颜色
         let accentColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
         
-        // 配置 stacked 布局（图标在上，文字在下）- 增加字体大小和间距
+        // Configure all layout styles (iPad may use inline/compactInline; iPhone typically uses stacked).
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor.systemGray,
             .font: UIFont.systemFont(ofSize: 11)
@@ -96,12 +104,18 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
             .foregroundColor: accentColor,
             .font: UIFont.systemFont(ofSize: 11, weight: .medium)
         ]
-        
-        appearance.stackedLayoutAppearance.normal.iconColor = UIColor.systemGray
-        appearance.stackedLayoutAppearance.normal.titleTextAttributes = normalAttributes
-        
-        appearance.stackedLayoutAppearance.selected.iconColor = accentColor
-        appearance.stackedLayoutAppearance.selected.titleTextAttributes = selectedAttributes
+
+        let layouts = [
+            appearance.stackedLayoutAppearance,
+            appearance.inlineLayoutAppearance,
+            appearance.compactInlineLayoutAppearance
+        ]
+        for layout in layouts {
+            layout.normal.iconColor = UIColor.systemGray
+            layout.normal.titleTextAttributes = normalAttributes
+            layout.selected.iconColor = accentColor
+            layout.selected.titleTextAttributes = selectedAttributes
+        }
         
         // 应用到所有状态的TabBar
         tabBar.standardAppearance = appearance
