@@ -49,43 +49,6 @@ final class StopwatchViewController: UIViewController {
         super.viewWillTransition(to: size, with: coordinator)
         coordinator.animate(alongsideTransition: nil) { [weak self] _ in
             self?.enforceLandscape()
-            self?.updateButtonLayout()
-        }
-    }
-
-    override func viewDidLayoutSubviews() {
-        super.viewDidLayoutSubviews()
-        updateButtonLayout()
-    }
-
-    private func updateButtonLayout() {
-        // Keep SF Symbol above title for iOS versions without UIButton.Configuration.
-        [resetButton, startStopButton, lapButton].forEach { b in
-            guard
-                let imageView = b.imageView,
-                let titleLabel = b.titleLabel
-            else { return }
-
-            // Ensure intrinsic sizes are computed.
-            titleLabel.sizeToFit()
-
-            let spacing: CGFloat = 6
-            let imageSize = imageView.bounds.size
-            let titleSize = titleLabel.bounds.size
-            let totalHeight = imageSize.height + spacing + titleSize.height
-
-            b.imageEdgeInsets = UIEdgeInsets(
-                top: -(totalHeight - imageSize.height),
-                left: 0,
-                bottom: 0,
-                right: -titleSize.width
-            )
-            b.titleEdgeInsets = UIEdgeInsets(
-                top: 0,
-                left: -imageSize.width,
-                bottom: -(totalHeight - titleSize.height),
-                right: 0
-            )
         }
     }
 
@@ -145,33 +108,30 @@ final class StopwatchViewController: UIViewController {
         controls.axis = .horizontal
         controls.alignment = .fill
         controls.distribution = .fillEqually
-        controls.spacing = 14
+        controls.spacing = 10
         controls.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(controls)
 
         func styleButton(_ b: UIButton, symbolName: String, title: String) {
-            // Avoid UIButton.Configuration/AttributedString so we can support iOS < 15.
             b.setTitle(title, for: .normal)
             b.setTitleColor(.white, for: .normal)
-            b.titleLabel?.font = .systemFont(ofSize: 12, weight: .semibold)
-            b.titleLabel?.textAlignment = .center
-            b.titleLabel?.numberOfLines = 2
+            b.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+            b.titleLabel?.numberOfLines = 1
 
             b.setImage(UIImage(systemName: symbolName), for: .normal)
             b.tintColor = .white
+            b.semanticContentAttribute = .forceLeftToRight
+
+            // Icon on the left, text on the right; keep the button short.
+            b.imageEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 6)
+            b.titleEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
+            b.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
 
             b.backgroundColor = UIColor.white.withAlphaComponent(0.15)
             b.layer.cornerRadius = 14
             b.layer.masksToBounds = true
             b.layer.borderWidth = 1
             b.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
-
-            // Vertical image above title.
-            b.contentEdgeInsets = UIEdgeInsets(top: 10, left: 10, bottom: 10, right: 10)
-            b.imageView?.contentMode = .scaleAspectFit
-
-            // Use transform-based layout because edgeInsets is unreliable before layout pass.
-            // We'll update in viewDidLayoutSubviews.
         }
 
         styleButton(startStopButton, symbolName: "play.fill", title: "Start")
@@ -186,11 +146,15 @@ final class StopwatchViewController: UIViewController {
         controls.addArrangedSubview(startStopButton)
         controls.addArrangedSubview(lapButton)
 
+        let width = controls.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.44)
+        width.priority = .defaultHigh
+
         NSLayoutConstraint.activate([
             controls.trailingAnchor.constraint(equalTo: view.safeAreaLayoutGuide.trailingAnchor, constant: -12),
-            controls.centerYAnchor.constraint(equalTo: view.safeAreaLayoutGuide.centerYAnchor),
-            controls.widthAnchor.constraint(equalTo: view.safeAreaLayoutGuide.widthAnchor, multiplier: 0.34),
-            controls.heightAnchor.constraint(equalTo: view.safeAreaLayoutGuide.heightAnchor, multiplier: 0.62)
+            controls.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -14),
+            controls.heightAnchor.constraint(equalToConstant: 44),
+            width,
+            controls.leadingAnchor.constraint(greaterThanOrEqualTo: view.safeAreaLayoutGuide.leadingAnchor, constant: 12)
         ])
     }
 
@@ -256,7 +220,6 @@ final class StopwatchViewController: UIViewController {
             stopTimer()
             startStopButton.setImage(UIImage(systemName: "play.fill"), for: .normal)
             startStopButton.setTitle("Start", for: .normal)
-            updateButtonLayout()
             updateDisplay()
         } else {
             isRunning = true
@@ -264,7 +227,6 @@ final class StopwatchViewController: UIViewController {
             startTimer()
             startStopButton.setImage(UIImage(systemName: "pause.fill"), for: .normal)
             startStopButton.setTitle("Pause", for: .normal)
-            updateButtonLayout()
         }
     }
 
