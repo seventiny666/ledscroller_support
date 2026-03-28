@@ -62,7 +62,8 @@ final class DigitalClockViewController: UIViewController {
 
         clockView.plateText = "88:88:88"
         clockView.plateAlpha = 0.15
-        clockView.digitColor = UIColor(red: 1.0, green: 0.12, blue: 0.12, alpha: 1.0)
+        // Match the cover's cyan tone.
+        clockView.digitColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
         clockView.glowOpacity = 0.9
         clockView.glowRadius = 10
 
