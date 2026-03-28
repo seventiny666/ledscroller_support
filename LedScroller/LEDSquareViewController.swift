@@ -116,18 +116,45 @@ extension LEDSquareViewController: UICollectionViewDelegate, UICollectionViewDat
         
         // 检查是否为翻页时钟效果
         if item.isFlipClock {
+            // Set landscape first, then present a tick later to avoid a brief portrait flash.
             AppDelegate.orientationLock = .landscape
-            let clockVC = FlipClockViewController()
-            clockVC.modalPresentationStyle = .fullScreen
-            present(clockVC, animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                let clockVC = FlipClockViewController()
+                clockVC.modalPresentationStyle = .fullScreen
+                self?.present(clockVC, animated: true)
+            }
             return
         }
 
         if item.isDigitalClock {
+            // Set landscape first, then present a tick later to avoid a brief portrait flash.
             AppDelegate.orientationLock = .landscape
-            let clockVC = DigitalClockViewController()
-            clockVC.modalPresentationStyle = .fullScreen
-            present(clockVC, animated: true)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                let clockVC = DigitalClockViewController()
+                clockVC.modalPresentationStyle = .fullScreen
+                self?.present(clockVC, animated: true)
+            }
+            return
+        }
+
+        if item.isStopwatch {
+            // Set landscape first, then present a tick later to avoid a brief portrait flash.
+            AppDelegate.orientationLock = .landscape
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                let swVC = StopwatchViewController()
+                swVC.modalPresentationStyle = .fullScreen
+                self?.present(swVC, animated: true)
+            }
+            return
+        }
+
+        if item.isCountdown {
+            AppDelegate.orientationLock = .landscape
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
+                let cdVC = CountdownViewController()
+                cdVC.modalPresentationStyle = .fullScreen
+                self?.present(cdVC, animated: true)
+            }
             return
         }
         
@@ -158,8 +185,8 @@ extension LEDSquareViewController: UICollectionViewDelegate, UICollectionViewDat
     func collectionView(_ collectionView: UICollectionView, contextMenuConfigurationForItemAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
         let item = ledItems[indexPath.item]
         
-        // 烟花卡片、时钟和爱心流星雨不显示编辑/删除菜单
-        if item.isFireworks || item.isFireworksBloom || item.isFlipClock || item.isDigitalClock || item.isLoveRain {
+        // 烟花卡片、时钟、秒表/倒计时和爱心流星雨不显示编辑/删除菜单
+        if item.isFireworks || item.isFireworksBloom || item.isFlipClock || item.isDigitalClock || item.isStopwatch || item.isCountdown || item.isLoveRain {
             return nil
         }
         
@@ -291,6 +318,12 @@ class LEDCell: UICollectionViewCell {
         }
         else if item.isDigitalClock {
             setupStaticDigitalClock()
+        }
+        else if item.isStopwatch {
+            setupStaticStopwatch()
+        }
+        else if item.isCountdown {
+            setupStaticCountdown()
         }
         // 如果是烟花绽放卡片（第二种）- 显示静态礼花炸开效果
         else if item.isFireworksBloom {
@@ -459,7 +492,7 @@ class LEDCell: UICollectionViewCell {
         clockTitleLabel.isHidden = false
         clockTitleLabel.text = "Digital Clock"
 
-        let clock = SevenSegmentClockView(mode: .staticPreview)
+        let clock = DSEGClockView(mode: .staticPreview)
         clock.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(clock)
 
@@ -471,6 +504,48 @@ class LEDCell: UICollectionViewCell {
         ])
 
         clock.setTimeString("12:20:35")
+    }
+
+    private func setupStaticStopwatch() {
+        textLabel.alpha = 0
+        textLabel.text = ""
+
+        clockTitleLabel.isHidden = false
+        clockTitleLabel.text = "Stopwatch"
+
+        let sw = DSEGClockView(mode: .staticPreview)
+        sw.translatesAutoresizingMaskIntoConstraints = false
+        sw.plateText = "88:88.88"
+        sw.digitColor = UIColor(red: 1.0, green: 0.12, blue: 0.12, alpha: 1.0)
+        containerView.addSubview(sw)
+
+        NSLayoutConstraint.activate([
+            sw.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            sw.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            sw.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            sw.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -28)
+        ])
+
+        sw.setTimeString("00:12.34")
+    }
+
+    private func setupStaticCountdown() {
+        textLabel.alpha = 0
+        textLabel.text = ""
+
+        clockTitleLabel.isHidden = false
+        clockTitleLabel.text = "Countdown"
+
+        let cover = CountdownCoverView()
+        cover.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(cover)
+
+        NSLayoutConstraint.activate([
+            cover.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            cover.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 8),
+            cover.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            cover.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -28)
+        ])
     }
     
     // 第二种烟花：静态礼花炸开效果

@@ -60,7 +60,7 @@
 /* About Messages */
 "aboutMessage" = "LedScroller - 讓你的文字發光\n\n一款專業的LED顯示屏模擬應用";
 "versionMessage" = "當前版本：1.0\n\n感謝您的使用！";
-"feedbackMessage" = "請發送郵件至：\n784430005@qq.com";
+"feedbackMessage" = "請發送郵件至：\nseventiny007@126.com";
 "rateMessage" = "感謝您的支持！\n請前往App Store為我們評分";
 
 /* Create LED */
@@ -124,7 +124,9 @@
 
 /* Special Effects */
 "loveRain" = "💖 愛心流星雨";
-"flipClock" = "數字時鐘";
+"flipClock" = "翻頁時鐘";
+"digitalClock" = "電子時鐘";
+"stopwatch" = "秒錶";
 "fireworks" = "煙花";
 
 /* My Creations */
@@ -177,8 +179,8 @@
 "vipStatusSubscribed" = "VIP會員（剩餘%d天）";
 "termsMessage" = "感謝您使用我們的應用。詳細的服務條款請訪問我們的官方網站。";
 "privacyMessage" = "我們重視您的隱私。詳細的隱私政策請訪問我們的官方網站。";
-"termsContent" = "服務條款\n\n1. 接受條款\n通過下載、安裝或使用本應用程序，您同意受本服務條款的約束。\n\n2. 應用程序使用\n本應用程序僅供個人、非商業用途。您不得將本應用程序用於任何非法或未經授權的目的。\n\n3. 訂閱服務\n• VIP訂閱提供高級功能訪問權限\n• 訂閱費用將在確認購買時從您的iTunes賬戶中扣除\n• 訂閱將自動續訂，除非在當前期間結束前至少24小時關閉自動續訂\n• 您可以在iTunes賬戶設置中管理訂閱\n\n4. 知識產權\n本應用程序及其內容受版權法保護。未經許可，不得複製、修改或分發。\n\n5. 免責聲明\n本應用程序按現狀提供，不提供任何明示或暗示的保證。\n\n6. 聯繫我們\n如有疑問，請聯繫：784430005@qq.com";
-"privacyContent" = "隱私政策\n\n1. 信息收集\n我們可能收集以下信息：\n• 設備信息（型號、操作系統版本）\n• 應用使用統計\n• 崩潰報告\n\n2. 信息使用\n收集的信息用於：\n• 改善應用性能\n• 提供技術支持\n• 分析使用模式\n\n3. 信息共享\n我們不會向第三方出售、交易或轉讓您的個人信息，除非：\n• 獲得您的明確同意\n• 法律要求\n• 保護我們的權利\n\n4. 數據安全\n我們採用適當的安全措施保護您的信息免受未經授權的訪問、更改、披露或銷毀。\n\n5. iCloud同步\n如果您選擇使用iCloud同步功能，您的創作內容將存儲在您的iCloud賬戶中。\n\n6. 第三方服務\n本應用可能包含第三方服務的鏈接。我們不對這些服務的隱私做法負責。\n\n7. 政策更新\n我們可能會不時更新此隱私政策。重大更改將通過應用內通知告知您。\n\n8. 聯繫我們\n如有隱私相關問題，請聯繫：784430005@qq.com";
+"termsContent" = "服務條款\n\n1. 接受條款\n當你下載、安裝或使用 LedScroller，即表示你同意遵守本服務條款。\n\n2. 授權與限制\n我們授予你在個人裝置上使用本應用的有限、非獨占、不可轉讓授權。你不得複製、修改、反向工程或將本應用用於任何違法用途。\n\n3. VIP 訂閱\n- 訂閱由 Apple App Store 處理。\n- 確認購買後將向你的 Apple ID 帳戶收費。\n- 訂閱將自動續訂，除非在目前週期結束前至少 24 小時取消。\n- 你可在 iOS 設定 -> Apple ID -> 訂閱 中管理或取消訂閱，或造訪：\nhttps://apps.apple.com/account/subscriptions\n\n4. 免責聲明\n本應用按「現狀」提供，不提供任何明示或暗示的保證。\n\n5. 責任限制\n在法律允許的最大範圍內，我們不對因使用或無法使用本應用而產生的間接或後果性損失承擔責任。\n\n6. 適用法律\n本條款受中華人民共和國法律管轄。\n\n7. 聯絡我們\nEmail：seventiny007@126.com";
+"privacyContent" = "隱私政策\n\nLedScroller 是一款離線、注重隱私的應用。我們不收集個人資訊，不進行使用者行為追蹤，也不營運任何後端伺服器。\n\n1. 我們收集的資訊\n我們不收集任何個人資訊，包括但不限於：\n- 不收集個人身份資訊\n- 不收集使用統計/分析資料\n- 不收集廣告識別碼\n- 不收集位置資訊\n- 不收集通訊錄等聯絡人資訊\n\n2. 本機資料儲存\n你的創作內容與設定僅儲存在你的裝置本機（例如 iOS UserDefaults）。卸載應用後，本機資料會被刪除。\n\n3. 網路與第三方服務\n由於我們不提供任何伺服器端服務，LedScroller 不會連線到我們的伺服器。\n應用內購買/訂閱由 Apple 透過 StoreKit 處理，用於 App 發佈與訂閱管理。\n\n4. 兒童隱私\n我們不會主動收集 13 歲以下兒童的個人資訊。\n\n5. 聯絡我們\nEmail：seventiny007@126.com";
 "loadingProducts" = "正在加載訂閱選項，請稍後再試";
 "subscriptionMember" = "訂閱會員";
 "weeklyMember" = "週會員";
@@ -196,3 +198,22 @@
 "vipAlertMessage" = "開通訂閱後您可解鎖全部權益\n也可隨時退訂訂閱";
 "becomeVip" = "成為vip";
 "pleaseWait" = "請等待當前操作完成";
+
+"feedbackContentTitle" = "您的回饋內容：";
+"feedbackPlaceholder" = "請描述你的問題或建議（例如：出現問題的步驟、截圖等）";
+"feedbackEmailTitle" = "您的 Email：";
+"feedbackEmailPlaceholder" = "Email（可選）";
+"feedbackSubmit" = "傳送郵件";
+"feedbackEmpty" = "回饋內容不能為空。";
+"feedbackThanks" = "感謝您的寶貴意見！";
+"feedbackOpenMailTip" = "已打開郵件 App，請送出郵件完成回饋。";
+"feedbackMailNotAvailable" = "目前裝置無法寄送郵件，請先在系統中設定郵件帳號後再試。";
+"feedbackMailSetupTitle" = "無法寄送郵件";
+"feedbackMailSetupMessage" = "目前裝置未設定郵件。請將回饋寄送至：%s";
+"feedbackCopyEmail" = "複製 Email";
+"feedbackCopyContent" = "複製內容";
+"copied" = "已複製";
+"rateSheetTitle" = "喜歡 LED 跑馬燈嗎？";
+"rateSheetMessage" = "花幾秒留下評價，或把建議回饋給我們，我們會持續改進。";
+"rateSheetFeedback" = "回饋建議";
+"rateSheetRate" = "去評分";

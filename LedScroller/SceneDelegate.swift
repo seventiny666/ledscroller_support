@@ -25,6 +25,11 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
             window?.rootViewController = vc
             return
         }
+        if ProcessInfo.processInfo.arguments.contains("-debugSettings") {
+            let nav = UINavigationController(rootViewController: SettingsViewController())
+            window?.rootViewController = nav
+            return
+        }
         #endif
 
         showMainInterfaceFromDebug()

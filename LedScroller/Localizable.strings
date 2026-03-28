@@ -44,7 +44,7 @@
 /* About Messages */
 "aboutMessage" = "LedScroller - Make Your Text Glow\n\nA professional LED display simulation app";
 "versionMessage" = "Current Version: 1.0\n\nThank you for using!";
-"feedbackMessage" = "Please send email to:\n784430005@qq.com";
+"feedbackMessage" = "Please send email to:\nseventiny007@126.com";
 "rateMessage" = "Thank you for your support!\nPlease rate us on the App Store";
 
 /* Create LED */
@@ -110,6 +110,7 @@
 "loveRain" = "💖 Love Rain";
 "flipClock" = "Flip Clock";
 "digitalClock" = "Digital Clock";
+"stopwatch" = "Stopwatch";
 "fireworks" = "Fireworks";
 
 /* My Creations */
@@ -124,3 +125,22 @@
 "selectLanguage" = "Select Language";
 "confirmLanguageTitle" = "Do you want to set %@ as the primary language?";
 "useLanguage" = "Use %@";
+
+"feedbackContentTitle" = "Your feedback:";
+"feedbackPlaceholder" = "Tell us what you like, what to improve, or any bug you found...";
+"feedbackEmailTitle" = "Your email:";
+"feedbackEmailPlaceholder" = "Email (optional)";
+"feedbackSubmit" = "Send Email";
+"feedbackEmpty" = "Feedback content cannot be empty.";
+"feedbackThanks" = "Thank you for your valuable feedback!";
+"feedbackOpenMailTip" = "Mail app opened. Please send the email to complete your feedback.";
+"feedbackMailNotAvailable" = "Mail is not available on this device. Please configure Mail and try again.";
+"feedbackMailSetupTitle" = "Mail Not Configured";
+"feedbackMailSetupMessage" = "Mail is not available. Please send your feedback to: %s";
+"feedbackCopyEmail" = "Copy Email";
+"feedbackCopyContent" = "Copy Content";
+"copied" = "Copied";
+"rateSheetTitle" = "Enjoy LedScroller?";
+"rateSheetMessage" = "Take a few seconds to leave a review, or send us feedback to help us improve.";
+"rateSheetFeedback" = "Send Feedback";
+"rateSheetRate" = "Rate Now";

@@ -96,13 +96,16 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         let accentColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
         
         // Configure all layout styles (iPad may use inline/compactInline; iPhone typically uses stacked).
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let tabFontSize: CGFloat = isPad ? 14 : 11
+
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor.systemGray,
-            .font: UIFont.systemFont(ofSize: 11)
+            .font: UIFont.systemFont(ofSize: tabFontSize)
         ]
         let selectedAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: accentColor,
-            .font: UIFont.systemFont(ofSize: 11, weight: .medium)
+            .font: UIFont.systemFont(ofSize: tabFontSize, weight: .medium)
         ]
 
         let layouts = [
@@ -161,6 +164,13 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
     }
     
     private func setupViewControllers() {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: isPad ? 22 : 17, weight: .regular)
+
+        func sym(_ name: String) -> UIImage? {
+            UIImage(systemName: name, withConfiguration: symbolConfig)
+        }
+
         // 1. 首页
         let templateVC = TemplateSquareViewController()
         let templateNav = UINavigationController(rootViewController: templateVC)
@@ -168,8 +178,8 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         // 直接使用本地化字符串
         templateNav.tabBarItem = UITabBarItem(
             title: "home".localized,
-            image: UIImage(systemName: "square.grid.2x2"),
-            selectedImage: UIImage(systemName: "square.grid.2x2.fill")
+            image: sym("square.grid.2x2"),
+            selectedImage: sym("square.grid.2x2.fill")
         )
         templateNav.tabBarItem.tag = 0
         
@@ -190,8 +200,8 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         let creationsNav = UINavigationController(rootViewController: creationsVC)
         creationsNav.tabBarItem = UITabBarItem(
             title: "creations".localized,
-            image: UIImage(systemName: "plus.circle"),
-            selectedImage: UIImage(systemName: "plus.circle.fill")
+            image: sym("plus.circle"),
+            selectedImage: sym("plus.circle.fill")
         )
         creationsNav.tabBarItem.tag = 1
         
@@ -212,8 +222,8 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         let settingsNav = UINavigationController(rootViewController: settingsVC)
         settingsNav.tabBarItem = UITabBarItem(
             title: "settings".localized,
-            image: UIImage(systemName: "gearshape"),
-            selectedImage: UIImage(systemName: "gearshape.fill")
+            image: sym("gearshape"),
+            selectedImage: sym("gearshape.fill")
         )
         settingsNav.tabBarItem.tag = 2
         
@@ -224,9 +234,33 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         
         print("🔍 TabBar: 设置 tabBarItem.title = '\(settingsNav.tabBarItem.title ?? "nil")'")
         
+        if isPad {
+            // Larger nav title fonts on iPad (do not affect iPhone).
+            let navAppearance = UINavigationBarAppearance()
+            navAppearance.configureWithOpaqueBackground()
+            navAppearance.backgroundColor = UIColor(red: 0, green: 0, blue: 0, alpha: 1)
+            navAppearance.shadowColor = .clear
+            navAppearance.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 20, weight: .semibold)
+            ]
+            navAppearance.largeTitleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+            ]
+
+            [templateNav, creationsNav, settingsNav].forEach { nav in
+                nav.navigationBar.standardAppearance = navAppearance
+                nav.navigationBar.compactAppearance = navAppearance
+                if #available(iOS 15.0, *) {
+                    nav.navigationBar.scrollEdgeAppearance = navAppearance
+                }
+            }
+        }
+
         // 使用5个标签布局：首页 - 占位1 - 创作 - 占位2 - 设置
         viewControllers = [templateNav, spacer1, creationsNav, spacer2, settingsNav]
-        
+
         print("🔍 TabBar: viewControllers count = \(viewControllers?.count ?? 0)")
     }
     

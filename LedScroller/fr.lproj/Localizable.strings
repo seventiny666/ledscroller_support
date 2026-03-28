@@ -30,7 +30,7 @@
 "version" = "Version";
 "feedback" = "Commentaires";
 "rate" = "Évaluer";
-"share" = "Partager";
+"share" = "Share";
 "restorePurchase" = "Restaurer l'Achat";
 
 /* VIP Status Messages */
@@ -53,7 +53,7 @@
 /* About Messages */
 "aboutMessage" = "LedScroller - Faites briller votre texte\n\nUne application professionnelle de simulation d'affichage LED";
 "versionMessage" = "Version Actuelle: 1.0\n\nMerci d'utiliser!";
-"feedbackMessage" = "Veuillez envoyer un e-mail à:\n784430005@qq.com";
+"feedbackMessage" = "Veuillez envoyer un e-mail à:\nseventiny007@126.com";
 "rateMessage" = "Merci pour votre soutien!\nVeuillez nous évaluer sur l'App Store";
 
 /* Create LED */
@@ -106,7 +106,9 @@
 
 /* Special Effects */
 "loveRain" = "💖 Pluie de Cœurs";
-"flipClock" = "Horloge Numérique";
+"flipClock" = "Horloge à volets";
+"digitalClock" = "Horloge Numérique";
+"stopwatch" = "Chronomètre";
 "fireworks" = "Feux d'Artifice";
 
 /* My Creations */
@@ -135,8 +137,8 @@
 "termsMessage" = "Merci d'utiliser notre application. Pour les conditions d'utilisation détaillées, veuillez visiter notre site officiel.";
 "privacyMessage" = "Nous valorisons votre vie privée. Pour la politique de confidentialité détaillée, veuillez visiter notre site officiel.";
 "loadingProducts" = "Chargement des options d'abonnement, veuillez réessayer plus tard";
-"termsContent" = "Conditions d'Utilisation\n\n1. Acceptation des Conditions\nEn téléchargeant, installant ou utilisant cette application, vous acceptez ces Conditions d'Utilisation.\n\n2. Utilisation de l'Application\nCette application est destinée à un usage personnel et non commercial uniquement.\n\n3. Services d'Abonnement\n• L'abonnement VIP donne accès aux fonctionnalités premium\n• Les frais d'abonnement seront débités de votre compte iTunes lors de la confirmation d'achat\n• Les abonnements se renouvellent automatiquement sauf si le renouvellement automatique est désactivé au moins 24 heures avant la fin de la période actuelle\n\n4. Propriété Intellectuelle\nCette application et son contenu sont protégés par le droit d'auteur.\n\n5. Avis de Non-Responsabilité\nCette application est fournie sans garanties.\n\n6. Contact\nPour toute question, contactez : 784430005@qq.com";
-"privacyContent" = "Politique de Confidentialité\n\n1. Collecte d'Informations\nNous pouvons collecter :\n• Informations sur l'appareil\n• Statistiques d'utilisation de l'application\n• Rapports de plantage\n\n2. Utilisation des Informations\nLes informations collectées sont utilisées pour :\n• Améliorer les performances de l'application\n• Fournir un support technique\n• Analyser les modèles d'utilisation\n\n3. Partage d'Informations\nNous ne vendons ni ne transférons vos informations personnelles à des tiers, sauf si requis par la loi.\n\n4. Sécurité des Données\nNous mettons en œuvre des mesures de sécurité appropriées pour protéger vos informations.\n\n5. Contact\nPour les questions liées à la confidentialité, contactez : 784430005@qq.com";
+"termsContent" = "Terms of Service\n\n1. Acceptance of Terms\nBy downloading, installing, or using LedScroller, you agree to be bound by these Terms of Service.\n\n2. App License\nWe grant you a limited, non-exclusive, non-transferable license to use the app on your personal devices. You may not copy, modify, reverse engineer, or use the app for unlawful purposes.\n\n3. VIP Subscription\n- Subscriptions are handled by Apple's App Store.\n- Payment will be charged to your Apple ID account at confirmation of purchase.\n- Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period.\n- Manage/cancel in iOS Settings -> Apple ID -> Subscriptions, or visit:\nhttps://apps.apple.com/account/subscriptions\n\n4. Disclaimer\nThe app is provided \"as is\" without warranties of any kind.\n\n5. Limitation of Liability\nTo the maximum extent permitted by law, we are not liable for any indirect or consequential damages.\n\n6. Governing Law\nThese terms are governed by the laws of the People's Republic of China.\n\n7. Contact\nEmail: seventiny007@126.com";
+"privacyContent" = "Privacy Policy\n\nLedScroller is designed to be offline and privacy-focused. We do not collect personal information, do not track user behavior, and we do not operate any backend servers for this app.\n\n1. Information We Collect\nWe collect NO personal information.\n- No personal information\n- No usage analytics\n- No advertising identifiers\n- No location data\n- No contact information\n\n2. Local Data Storage\nYour creations and settings are stored locally on your device (e.g., iOS UserDefaults). Data is deleted when you uninstall the app.\n\n3. Network & Third-Party Services\nLedScroller does not connect to our servers because we do not run any server-side services.\nApple services may be used for App Store distribution and for in-app purchases/subscriptions (StoreKit).\n\n4. Children's Privacy\nWe do not knowingly collect information from children under 13.\n\n5. Contact\nEmail: seventiny007@126.com";
 "subscriptionMember" = "Membre Abonnement";
 "weeklyMember" = "Membre Hebdomadaire";
 "monthlyMember" = "Membre Mensuel";
@@ -168,3 +170,22 @@
 "subscribeToUnlockAllPremiumContent" = "Abonnez-vous pour debloquer tout le contenu premium";
 "useThisTemplate" = "Utiliser ce modele";
 "useThisTemplateLower" = "Utiliser ce modele";
+
+"feedbackContentTitle" = "Your feedback:";
+"feedbackPlaceholder" = "Tell us what you like, what to improve, or any bug you found...";
+"feedbackEmailTitle" = "Your email:";
+"feedbackEmailPlaceholder" = "Email (optional)";
+"feedbackSubmit" = "Send Email";
+"feedbackEmpty" = "Feedback content cannot be empty.";
+"feedbackThanks" = "Thank you for your valuable feedback!";
+"feedbackOpenMailTip" = "Mail app opened. Please send the email to complete your feedback.";
+"feedbackMailNotAvailable" = "Mail is not available on this device. Please configure Mail and try again.";
+"feedbackMailSetupTitle" = "Mail Not Configured";
+"feedbackMailSetupMessage" = "Mail is not available. Please send your feedback to: %s";
+"feedbackCopyEmail" = "Copy Email";
+"feedbackCopyContent" = "Copy Content";
+"copied" = "Copied";
+"rateSheetTitle" = "Enjoy LedScroller?";
+"rateSheetMessage" = "Take a few seconds to leave a review, or send us feedback to help us improve.";
+"rateSheetFeedback" = "Send Feedback";
+"rateSheetRate" = "Rate Now";

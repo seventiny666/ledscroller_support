@@ -793,7 +793,16 @@ class VIPScrollView: UIScrollView {
     
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
-        
+
+        // Some full-screen animation modules force landscape via UIDevice orientation.
+        // Ensure the main (home) screen returns to portrait.
+        AppDelegate.orientationLock = .portrait
+        if #available(iOS 16.0, *) {
+            setNeedsUpdateOfSupportedInterfaceOrientations()
+        }
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
+
         ensureStoreKit2ProductsLoadedIfNeeded()
 
         // 延迟验证按钮设置，确保布局完成
@@ -3692,8 +3701,8 @@ class TemplateSquareViewController: UIViewController {
             // 热门模版：霓虹灯看板、偶像应援、LED横幅
             categories = [.neon, .idol, .ledScreen]
         case .animation:
-            // 动画模版：热门动画、数字时钟、其他分类
-            categories = [.popularAnimation, .clock, .other]
+            // 动画模版：热门动画、数字时钟
+            categories = [.popularAnimation, .clock]
         }
     }
     
@@ -3720,16 +3729,19 @@ class TemplateSquareViewController: UIViewController {
         segmentedControl.selectedSegmentIndex = 0
         segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
         
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let segFontSize: CGFloat = isPad ? 17 : 13
+
         // 未选中状态：白色半透明文字
         segmentedControl.setTitleTextAttributes([
             .foregroundColor: UIColor.white.withAlphaComponent(0.6),
-            .font: UIFont.systemFont(ofSize: 13, weight: .medium)
+            .font: UIFont.systemFont(ofSize: segFontSize, weight: .medium)
         ], for: .normal)
         
         // 选中状态：黑色文字
         segmentedControl.setTitleTextAttributes([
             .foregroundColor: UIColor.black,
-            .font: UIFont.systemFont(ofSize: 13, weight: .semibold)
+            .font: UIFont.systemFont(ofSize: segFontSize, weight: .semibold)
         ], for: .selected)
         
         // 将分段控制器设置为导航栏的titleView
@@ -3738,8 +3750,8 @@ class TemplateSquareViewController: UIViewController {
         // 设置分段控制器的固定尺寸（增加高度以显示内边距效果）
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
         NSLayoutConstraint.activate([
-            segmentedControl.widthAnchor.constraint(equalToConstant: 220),
-            segmentedControl.heightAnchor.constraint(equalToConstant: 40) // 从36增加到40，让选中背景看起来有内边距
+            segmentedControl.widthAnchor.constraint(equalToConstant: isPad ? 320 : 220),
+            segmentedControl.heightAnchor.constraint(equalToConstant: isPad ? 48 : 40) // iPad needs a bigger pill
         ])
         
         // 创建表格视图
@@ -3868,19 +3880,11 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         let cardHeight = cardWidth * 0.95 // 与sizeForItemAt中的比例保持一致
         let lineSpacing: CGFloat = 16
         
-        switch category {
-        case .clock:
-            // 时钟分类只有1个卡片，1行
-            return cardHeight
-        case .popularAnimation:
-            // 热门动画分类有6个卡片，3行（2+2+2）
-            // 3行卡片 + 2个行间距
-            return cardHeight * 3 + lineSpacing * 2
-        default:
-            // 其他分类有4个卡片，2行（2+2）
-            // 2行卡片 + 1个行间距
-            return cardHeight * 2 + lineSpacing * 1
-        }
+        // CollectionView is non-scrollable; the row height must fit all items.
+        // 2-column grid -> rows = ceil(count / 2).
+        let itemCount = TemplateCategoryCell.buildItems(for: category).count
+        let rows = max(1, Int(ceil(Double(itemCount) / 2.0)))
+        return cardHeight * CGFloat(rows) + lineSpacing * CGFloat(max(0, rows - 1))
     }
     
     func tableView(_ tableView: UITableView, viewForHeaderInSection section: Int) -> UIView? {
@@ -4016,6 +4020,16 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let clockVC = DigitalClockViewController()
             clockVC.modalPresentationStyle = .fullScreen
             present(clockVC, animated: true)
+        } else if item.isStopwatch {
+            AppDelegate.orientationLock = .landscape
+            let swVC = StopwatchViewController()
+            swVC.modalPresentationStyle = .fullScreen
+            present(swVC, animated: true)
+        } else if item.isCountdown {
+            AppDelegate.orientationLock = .landscape
+            let cdVC = CountdownViewController()
+            cdVC.modalPresentationStyle = .fullScreen
+            present(cdVC, animated: true)
         } else if item.isFireworksBloom {
             let fireworksVC = FireworksShowViewController()
             fireworksVC.modalPresentationStyle = .fullScreen
@@ -4185,15 +4199,14 @@ class TemplateCategoryCell: UITableViewCell {
         collectionView.reloadData()
     }
     
-    private func getItems(for category: TemplateCategory) -> [LEDItem] {
+    static func buildItems(for category: TemplateCategory) -> [LEDItem] {
         let allItems = LEDDataManager.shared.loadItems()
-        
+
         switch category {
         case .popularAnimation:
-            // 返回热门动画：爱心格子、爱心雨、烟花、烟花绽放
+            // Hot animations (no fireworks): Heart Grid, I LOVE U, 520, Love Rain + 4 moved presets.
             var items: [LEDItem] = []
-            
-            // 爱心格子（新增的第一个卡片）
+
             var heartGridItem = LEDItem(
                 id: "heart-grid-animation",
                 text: "红心",
@@ -4201,13 +4214,11 @@ class TemplateCategoryCell: UITableViewCell {
                 textColor: "#FF3366",
                 backgroundColor: "#1a1a2e",
                 glowIntensity: 5.0,
-                isVIPRequired: true // 需要VIP
+                isVIPRequired: true
             )
-            // 标记为特殊的爱心格子动画
             heartGridItem.isHeartGrid = true
             items.append(heartGridItem)
-            
-            // I LOVE U（新增的第二个卡片）
+
             var iLoveUItem = LEDItem(
                 id: "i-love-u-animation",
                 text: "I LOVE U",
@@ -4215,13 +4226,11 @@ class TemplateCategoryCell: UITableViewCell {
                 textColor: "#FF3366",
                 backgroundColor: "#1a1a2e",
                 glowIntensity: 5.0,
-                isVIPRequired: true // 需要VIP
+                isVIPRequired: true
             )
-            // 标记为特殊的I LOVE U动画
             iLoveUItem.isILoveU = true
             items.append(iLoveUItem)
-            
-            // 520（新增的第三个卡片）
+
             var item520 = LEDItem(
                 id: "520-animation",
                 text: "520",
@@ -4229,35 +4238,33 @@ class TemplateCategoryCell: UITableViewCell {
                 textColor: "#FF3366",
                 backgroundColor: "#1a1a2e",
                 glowIntensity: 5.0,
-                isVIPRequired: true // 需要VIP
+                isVIPRequired: true
             )
-            // 标记为特殊的520动画
             item520.is520 = true
             items.append(item520)
-            
-            // 爱心雨
+
             if var loveRainItem = allItems.first(where: { $0.isLoveRain }) {
-                loveRainItem.isVIPRequired = true // 需要VIP
+                loveRainItem.isVIPRequired = true
                 items.append(loveRainItem)
             }
-            
-            // 烟花
-            if var fireworksItem = allItems.first(where: { $0.isFireworks }) {
-                fireworksItem.isVIPRequired = true // 需要VIP
-                items.append(fireworksItem)
+
+            // Move these four cards from Other -> Popular Animation.
+            let movedPresetIds: [String] = [
+                "happy-birthday-default",
+                "happy-new-year-default",
+                "merry-christmas-default",
+                "marry-me-default"
+            ]
+            for id in movedPresetIds {
+                if let preset = allItems.first(where: { $0.id == id }) {
+                    items.append(preset)
+                }
             }
-            
-            // 烟花绽放
-            if var fireworksBloomItem = allItems.first(where: { $0.isFireworksBloom }) {
-                fireworksBloomItem.isVIPRequired = true // 需要VIP
-                items.append(fireworksBloomItem)
-            }
-            
+
             return items
+
         case .clock:
-            // 返回翻页时钟 + 数码管时钟
-            var items = allItems.filter { $0.isFlipClock || $0.isDigitalClock }
-            // 如果没有时钟，创建占位符
+            var items = allItems.filter { $0.isFlipClock || $0.isDigitalClock || $0.isStopwatch || $0.isCountdown }
             if items.isEmpty {
                 let clockItem = LEDItem(
                     id: "clock-placeholder",
@@ -4270,29 +4277,36 @@ class TemplateCategoryCell: UITableViewCell {
                 items.append(clockItem)
             }
             return items
+
         case .other:
-            // 返回预设卡片 + 用户创建的卡片
-            let presetItems = allItems.filter { $0.isDefaultPreset }
-            let userItems = allItems.filter { 
-                !$0.isFlipClock && !$0.isDigitalClock && !$0.isNeonTemplate && !$0.isIdolTemplate && 
-                !$0.isLEDTemplate && !$0.isDefaultPreset && 
+            let movedPresetIds = Set([
+                "happy-birthday-default",
+                "happy-new-year-default",
+                "merry-christmas-default",
+                "marry-me-default"
+            ])
+            let presetItems = allItems.filter { $0.isDefaultPreset && !movedPresetIds.contains($0.id) }
+            let userItems = allItems.filter {
+                !$0.isFlipClock && !$0.isDigitalClock && !$0.isStopwatch && !$0.isCountdown && !$0.isNeonTemplate && !$0.isIdolTemplate &&
+                !$0.isLEDTemplate && !$0.isDefaultPreset &&
                 !$0.isFireworks && !$0.isFireworksBloom && !$0.isLoveRain
             }
-            // 预设卡片在前，用户创建的在后
             return presetItems + userItems
+
         case .neon:
-            // 霓虹灯看板模版（占位）- 改为4个
-            return createPlaceholderItems(category: "neon", count: 4)
+            return Self.createPlaceholderItems(category: "neon", count: 4)
         case .idol:
-            // 偶像应援模版（占位）- 改为4个
-            return createPlaceholderItems(category: "idol", count: 4)
+            return Self.createPlaceholderItems(category: "idol", count: 4)
         case .ledScreen:
-            // LED屏幕模版（占位）- 改为4个
-            return createPlaceholderItems(category: "led", count: 4)
+            return Self.createPlaceholderItems(category: "led", count: 4)
         }
     }
+
+    private func getItems(for category: TemplateCategory) -> [LEDItem] {
+        return Self.buildItems(for: category)
+    }
     
-    private func createPlaceholderItems(category: String, count: Int) -> [LEDItem] {
+    private static func createPlaceholderItems(category: String, count: Int) -> [LEDItem] {
         var items: [LEDItem] = []
         
         // 定义每个分类的文字内容
@@ -4474,10 +4488,13 @@ class TemplateItemCell: UICollectionViewCell {
         overlayTextLabel.textColor = .white
         // 根据屏幕尺寸动态调整字体大小
         let screenHeight = UIScreen.main.bounds.height
-        let overlayFontSize: CGFloat = screenHeight >= 926 ? 22 : 20 // 大屏设备使用22pt
-        let titleFontSize: CGFloat = screenHeight >= 926 ? 15 : 13 // 大屏设备使用15pt
-        let buttonFontSize: CGFloat = screenHeight >= 926 ? 14 : 12 // 大屏设备使用14pt
-        let previewFontSize: CGFloat = screenHeight >= 926 ? 13 : 11 // 大屏设备使用13pt
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+
+        // iPad card covers are much larger; keep the overlay text visually balanced.
+        let overlayFontSize: CGFloat = isPad ? 34 : (screenHeight >= 926 ? 22 : 20)
+        let titleFontSize: CGFloat = isPad ? 18 : (screenHeight >= 926 ? 15 : 13)
+        let buttonFontSize: CGFloat = isPad ? 16 : (screenHeight >= 926 ? 14 : 12)
+        let previewFontSize: CGFloat = isPad ? 15 : (screenHeight >= 926 ? 13 : 11)
         
         // 封面图片上的文字（霓虹效果）
         overlayTextLabel.textColor = .white
@@ -4598,7 +4615,7 @@ class TemplateItemCell: UICollectionViewCell {
         
         // 移除之前可能添加的所有自定义视图
         imageView.subviews.forEach { subview in
-            if subview is HeartGridView || subview is ILoveUView || subview is View520 || subview is LoveRainCoverView || subview is FireworksCoverView || subview is FireworksBloomCoverView || subview is SevenSegmentClockView {
+            if subview is HeartGridView || subview is ILoveUView || subview is View520 || subview is LoveRainCoverView || subview is FireworksCoverView || subview is FireworksBloomCoverView || subview is SevenSegmentClockView || subview is DSEGClockView || subview is FlipClockCoverView || subview is CountdownCoverView {
                 subview.removeFromSuperview()
             }
         }
@@ -4777,12 +4794,31 @@ class TemplateItemCell: UICollectionViewCell {
             overlayTextLabel.isHidden = true
         }
 
+        // 翻页时钟封面：用真实的翻页卡片样式（静态显示）
+        if item.isFlipClock {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black
+
+            let flipCoverView = FlipClockCoverView()
+            flipCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(flipCoverView)
+
+            NSLayoutConstraint.activate([
+                flipCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                flipCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                flipCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                flipCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+
+            overlayTextLabel.isHidden = true
+        }
+
         // 数码管数字时钟封面：和预览一致的样式（静态显示）
         if item.isDigitalClock {
             imageView.image = nil
             imageView.backgroundColor = UIColor.black
 
-            let digitalCoverView = SevenSegmentClockView(mode: .staticPreview)
+            let digitalCoverView = DSEGClockView(mode: .staticPreview)
             digitalCoverView.translatesAutoresizingMaskIntoConstraints = false
             imageView.addSubview(digitalCoverView)
 
@@ -4793,7 +4829,74 @@ class TemplateItemCell: UICollectionViewCell {
                 digitalCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
             ])
 
+            digitalCoverView.digitColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+            digitalCoverView.plateText = "88:88:88"
+            digitalCoverView.plateAlpha = 0.15
             digitalCoverView.setTimeString("12:20:35")
+            overlayTextLabel.isHidden = true
+        }
+
+        // 倒计时封面：圆环 + 中间数字（静态显示）
+        if item.isCountdown {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black
+
+            let cdCoverView = CountdownCoverView()
+            cdCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(cdCoverView)
+
+            NSLayoutConstraint.activate([
+                cdCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                cdCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                cdCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                cdCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+
+            overlayTextLabel.isHidden = true
+        }
+
+        // 秒表封面：电子屏风格，底板用 88:88.88
+        if item.isStopwatch {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black
+
+            let swCoverView = DSEGClockView(mode: .staticPreview)
+            swCoverView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(swCoverView)
+
+            NSLayoutConstraint.activate([
+                swCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                swCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                swCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                swCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+
+            swCoverView.digitColor = UIColor(red: 1.0, green: 0.12, blue: 0.12, alpha: 1.0)
+            swCoverView.plateText = "88:88.88"
+            swCoverView.plateAlpha = 0.15
+            swCoverView.setTimeString("00:12.34")
+            overlayTextLabel.isHidden = true
+        }
+
+        // 秒表封面：电子屏风格（静态显示）
+        if item.isStopwatch {
+            imageView.image = nil
+            imageView.backgroundColor = UIColor.black
+
+            let stopwatchCoverView = DSEGClockView(mode: .staticPreview)
+            stopwatchCoverView.translatesAutoresizingMaskIntoConstraints = false
+            stopwatchCoverView.plateText = "88:88.88"
+            stopwatchCoverView.digitColor = UIColor(red: 1.0, green: 0.12, blue: 0.12, alpha: 1.0)
+            imageView.addSubview(stopwatchCoverView)
+
+            NSLayoutConstraint.activate([
+                stopwatchCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                stopwatchCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                stopwatchCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                stopwatchCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+
+            stopwatchCoverView.setTimeString("00:12.34")
             overlayTextLabel.isHidden = true
         }
 
@@ -4825,6 +4928,10 @@ class TemplateItemCell: UICollectionViewCell {
                 titleLabel.text = "flipClock".localized
             } else if item.isDigitalClock {
                 titleLabel.text = "digitalClock".localized
+            } else if item.isStopwatch {
+                titleLabel.text = "stopwatch".localized
+            } else if item.isCountdown {
+                titleLabel.text = "倒计时"
             } else {
                 titleLabel.text = item.text
             }

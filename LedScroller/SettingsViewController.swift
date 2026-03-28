@@ -1,4 +1,5 @@
 import UIKit
+import StoreKit
 
 // 设置项
 @MainActor
@@ -9,6 +10,7 @@ enum SettingItem {
     case restorePurchase
     case feedback
     case rate
+    case share
     
     var title: String {
         switch self {
@@ -26,6 +28,7 @@ enum SettingItem {
             return "restorePurchase".localized
         case .feedback: return "feedback".localized
         case .rate: return "rate".localized
+        case .share: return "share".localized
         }
     }
     
@@ -37,6 +40,7 @@ enum SettingItem {
         case .restorePurchase: return "arrow.clockwise.circle"
         case .feedback: return "envelope"
         case .rate: return "star"
+        case .share: return "square.and.arrow.up"
         }
     }
 }
@@ -56,7 +60,7 @@ class SettingsViewController: UIViewController {
     
     private var scrollView: UIScrollView!
     private var stackView: UIStackView!
-    private let settings: [SettingItem] = [.language, .aboutUs, .version, .restorePurchase, .feedback, .rate]
+    private let settings: [SettingItem] = [.language, .aboutUs, .version, .restorePurchase, .feedback, .rate, .share]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -116,9 +120,23 @@ class SettingsViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        
+
+        AppDelegate.orientationLock = .portrait
+
         // 刷新设置项显示，特别是恢复购买项的标题
         refreshSettingsDisplay()
+    }
+
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Ensure we return to portrait after any landscape-only modules.
+        AppDelegate.orientationLock = .portrait
+        if #available(iOS 16.0, *) {
+            setNeedsUpdateOfSupportedInterfaceOrientations()
+        }
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
     }
     
     private func refreshSettingsDisplay() {
@@ -135,12 +153,26 @@ class SettingsViewController: UIViewController {
         title = "settings".localized
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1)
         
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+
         // 设置导航栏样式 - 统一为纯黑色
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 纯黑背景
-        appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
-        appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+
+        if isPad {
+            appearance.titleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 20, weight: .semibold)
+            ]
+            appearance.largeTitleTextAttributes = [
+                .foregroundColor: UIColor.white,
+                .font: UIFont.systemFont(ofSize: 34, weight: .bold)
+            ]
+        } else {
+            appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+            appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
+        }
         appearance.shadowColor = .clear // 移除阴影
         
         navigationController?.navigationBar.standardAppearance = appearance
@@ -196,11 +228,13 @@ class SettingsViewController: UIViewController {
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(iconImageView)
         
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+
         // 标题
         let titleLabel = UILabel()
         titleLabel.text = item.title
         titleLabel.textColor = .white
-        titleLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        titleLabel.font = .systemFont(ofSize: isPad ? 20 : 16, weight: .medium)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(titleLabel)
         
@@ -209,7 +243,7 @@ class SettingsViewController: UIViewController {
             let versionLabel = UILabel()
             versionLabel.text = "1.0.0"
             versionLabel.textColor = .gray
-            versionLabel.font = .systemFont(ofSize: 14)
+            versionLabel.font = .systemFont(ofSize: isPad ? 18 : 14)
             versionLabel.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview(versionLabel)
             
@@ -229,18 +263,18 @@ class SettingsViewController: UIViewController {
             NSLayoutConstraint.activate([
                 arrowImageView.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
                 arrowImageView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
-                arrowImageView.widthAnchor.constraint(equalToConstant: 12),
-                arrowImageView.heightAnchor.constraint(equalToConstant: 20)
+                arrowImageView.widthAnchor.constraint(equalToConstant: isPad ? 14 : 12),
+                arrowImageView.heightAnchor.constraint(equalToConstant: isPad ? 22 : 20)
             ])
         }
         
         NSLayoutConstraint.activate([
-            card.heightAnchor.constraint(equalToConstant: 60),
+            card.heightAnchor.constraint(equalToConstant: isPad ? 76 : 60),
             
             iconImageView.leadingAnchor.constraint(equalTo: card.leadingAnchor, constant: 20),
             iconImageView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
-            iconImageView.widthAnchor.constraint(equalToConstant: 24),
-            iconImageView.heightAnchor.constraint(equalToConstant: 24),
+            iconImageView.widthAnchor.constraint(equalToConstant: isPad ? 30 : 24),
+            iconImageView.heightAnchor.constraint(equalToConstant: isPad ? 30 : 24),
             
             titleLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 12),
             titleLabel.centerYAnchor.constraint(equalTo: card.centerYAnchor)
@@ -262,11 +296,11 @@ class SettingsViewController: UIViewController {
         }
         let item = settings[index]
         print("🔍 点击的设置项: \(item.title)")
-        handleSettingTap(item)
+        handleSettingTap(item, sourceView: gesture.view)
         print("🔍 ===== settingCardTapped 结束 =====")
     }
-    
-    private func handleSettingTap(_ item: SettingItem) {
+
+    private func handleSettingTap(_ item: SettingItem, sourceView: UIView?) {
         print("🔍 ===== handleSettingTap 开始 =====")
         print("🔍 处理设置项: \(item.title)")
         switch item {
@@ -275,7 +309,9 @@ class SettingsViewController: UIViewController {
             showLanguageSelector()
         case .aboutUs:
             print("🔍 -> 关于我们")
-            showAlert(title: "about".localized, message: "aboutMessage".localized)
+            let vc = AboutViewController()
+            vc.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(vc, animated: true)
         case .version:
             print("🔍 -> 版本信息")
             showAlert(title: "version".localized, message: "versionMessage".localized)
@@ -284,12 +320,99 @@ class SettingsViewController: UIViewController {
             handleRestorePurchase()
         case .feedback:
             print("🔍 -> 反馈")
-            showAlert(title: "feedback".localized, message: "feedbackMessage".localized)
+            let vc = FeedbackViewController()
+            vc.hidesBottomBarWhenPushed = true
+            navigationController?.pushViewController(vc, animated: true)
         case .rate:
             print("🔍 -> 评分")
-            showAlert(title: "rate".localized, message: "rateMessage".localized)
+            presentRateSheet(sourceView: sourceView)
+        case .share:
+            print("🔍 -> 分享")
+            presentShareSheet(sourceView: sourceView)
         }
         print("🔍 ===== handleSettingTap 结束 =====")
+    }
+
+    private func presentShareSheet(sourceView: UIView?) {
+        let appStoreURL = "https://apps.apple.com/app/id6761117233"
+
+        let message: String
+        if Locale.preferredLanguages.first?.hasPrefix("zh") == true {
+            message = "我在用 LedScroller 做 LED 跑马灯字幕，效果很酷。App Store 搜索『LedScroller』或点这里： \(appStoreURL)"
+        } else {
+            message = "I’m using LedScroller to create LED marquee messages. Get it here: \(appStoreURL)"
+        }
+
+        let vc = UIActivityViewController(activityItems: [message, URL(string: appStoreURL) as Any], applicationActivities: nil)
+
+        if let popover = vc.popoverPresentationController {
+            popover.sourceView = sourceView ?? view
+            if let sourceView {
+                popover.sourceRect = sourceView.bounds
+            } else {
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.midY, width: 1, height: 1)
+            }
+        }
+
+        present(vc, animated: true)
+    }
+
+    private func presentRateSheet(sourceView: UIView?) {
+        let alert = UIAlertController(
+            title: "rateSheetTitle".localized,
+            message: "rateSheetMessage".localized,
+            preferredStyle: .actionSheet
+        )
+
+        alert.addAction(UIAlertAction(title: "rateSheetFeedback".localized, style: .default) { [weak self] _ in
+            guard let self else { return }
+            let vc = FeedbackViewController()
+            vc.hidesBottomBarWhenPushed = true
+            self.navigationController?.pushViewController(vc, animated: true)
+        })
+
+        alert.addAction(UIAlertAction(title: "rateSheetRate".localized, style: .default) { [weak self] _ in
+            self?.requestReviewOrOpenAppStore()
+        })
+
+        alert.addAction(UIAlertAction(title: "cancel".localized, style: .cancel))
+
+        // iPad requires a popover anchor for action sheets.
+        if let popover = alert.popoverPresentationController {
+            popover.sourceView = sourceView ?? view
+            if let sourceView {
+                popover.sourceRect = sourceView.bounds
+            } else {
+                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY - 1, width: 1, height: 1)
+            }
+            popover.permittedArrowDirections = []
+        }
+
+        present(alert, animated: true)
+    }
+
+    private func requestReviewOrOpenAppStore() {
+        // Best effort: system rating prompt (Apple controls if/when it appears).
+        if #available(iOS 14.0, *), let scene = view.window?.windowScene {
+            SKStoreReviewController.requestReview(in: scene)
+        } else if #available(iOS 10.3, *) {
+            requestReviewLegacy()
+        }
+
+        // Fallback: open the App Store write-review page.
+        let appStoreAppId = "6761117233"
+        if let url = URL(string: "https://apps.apple.com/app/id\(appStoreAppId)?action=write-review") {
+            UIApplication.shared.open(url)
+        }
+    }
+
+    @available(iOS 10.3, *)
+    private func requestReviewLegacy() {
+        // Avoid direct reference to deprecated +requestReview() to keep builds warning-free.
+        let selector = NSSelectorFromString("requestReview")
+        if SKStoreReviewController.responds(to: selector) {
+            _ = SKStoreReviewController.perform(selector)
+        }
     }
     
     private func handleRestorePurchase() {

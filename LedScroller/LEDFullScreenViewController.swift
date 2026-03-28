@@ -311,8 +311,13 @@ class LEDFullScreenViewController: UIViewController {
     
     private func setupUseTemplateButtonIfNeeded() {
         // Show for templates (home/template square). Do NOT show for user creations.
-        // We infer "template" by id prefix; creations use UUIDs.
-        let isTemplateItem = ledItem.id.hasPrefix("template_")
+        // Templates are identified by known preset flags/prefixes; user creations use UUID ids.
+        let isTemplateItem =
+            ledItem.isNeonTemplate || ledItem.isIdolTemplate || ledItem.isLEDTemplate ||
+            ledItem.isFlipClock || ledItem.isDigitalClock ||
+            ledItem.isHeartGrid || ledItem.isILoveU || ledItem.is520 ||
+            ledItem.isLoveRain || ledItem.isFireworks || ledItem.isFireworksBloom
+
         guard isTemplateItem else {
             useTemplateButton.isHidden = true
             return

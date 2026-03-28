@@ -30,7 +30,7 @@
 "version" = "버전";
 "feedback" = "피드백";
 "rate" = "평가";
-"share" = "공유";
+"share" = "Share";
 "restorePurchase" = "구매 복원";
 
 /* VIP Subscription */
@@ -71,8 +71,8 @@
 "privacyPolicy" = "개인정보 보호정책";
 "success" = "성공";
 "purchaseSuccess" = "구매가 성공했습니다! 지원해 주셔서 감사합니다.";
-"termsContent" = "서비스 약관\n\n1. 약관 동의\n이 애플리케이션을 다운로드, 설치 또는 사용함으로써 본 서비스 약관에 동의하는 것으로 간주됩니다.\n\n2. 애플리케이션 사용\n이 애플리케이션은 개인적, 비상업적 용도로만 사용할 수 있습니다. 불법적이거나 승인되지 않은 목적으로 사용할 수 없습니다.\n\n3. 구독 서비스\n• VIP 구독은 프리미엄 기능에 대한 액세스를 제공합니다\n• 구독 요금은 구매 확인 시 iTunes 계정으로 청구됩니다\n• 현재 기간 종료 최소 24시간 전에 자동 갱신을 끄지 않으면 구독이 자동으로 갱신됩니다\n• iTunes 계정 설정에서 구독을 관리할 수 있습니다\n\n4. 지적 재산권\n이 애플리케이션과 그 콘텐츠는 저작권법으로 보호됩니다. 허가 없이 복사, 수정 또는 배포할 수 없습니다.\n\n5. 면책 조항\n이 애플리케이션은 명시적 또는 묵시적 보증 없이 '있는 그대로' 제공됩니다.\n\n6. 문의하기\n질문이 있으시면 784430005@qq.com으로 연락해 주세요.";
-"privacyContent" = "개인정보 보호정책\n\n1. 정보 수집\n다음 정보를 수집할 수 있습니다:\n• 기기 정보 (모델, OS 버전)\n• 앱 사용 통계\n• 충돌 보고서\n\n2. 정보 사용\n수집된 정보는 다음 용도로 사용됩니다:\n• 앱 성능 개선\n• 기술 지원 제공\n• 사용 패턴 분석\n\n3. 정보 공유\n다음의 경우를 제외하고는 개인정보를 제3자에게 판매, 거래 또는 전송하지 않습니다:\n• 명시적 동의가 있는 경우\n• 법률에서 요구하는 경우\n• 당사의 권리를 보호하는 경우\n\n4. 데이터 보안\n무단 액세스, 변경, 공개 또는 파괴로부터 정보를 보호하기 위해 적절한 보안 조치를 구현합니다.\n\n5. iCloud 동기화\niCloud 동기화 기능을 사용하는 경우, 생성한 콘텐츠가 iCloud 계정에 저장됩니다.\n\n6. 제3자 서비스\n이 앱에는 제3자 서비스에 대한 링크가 포함될 수 있습니다. 이들의 개인정보 보호 관행에 대해서는 책임지지 않습니다.\n\n7. 정책 업데이트\n이 개인정보 보호정책은 수시로 업데이트될 수 있습니다. 중요한 변경사항은 앱 내 알림을 통해 알려드립니다.\n\n8. 문의하기\n개인정보 보호 관련 질문은 784430005@qq.com으로 연락해 주세요.";
+"termsContent" = "Terms of Service\n\n1. Acceptance of Terms\nBy downloading, installing, or using LedScroller, you agree to be bound by these Terms of Service.\n\n2. App License\nWe grant you a limited, non-exclusive, non-transferable license to use the app on your personal devices. You may not copy, modify, reverse engineer, or use the app for unlawful purposes.\n\n3. VIP Subscription\n- Subscriptions are handled by Apple's App Store.\n- Payment will be charged to your Apple ID account at confirmation of purchase.\n- Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period.\n- Manage/cancel in iOS Settings -> Apple ID -> Subscriptions, or visit:\nhttps://apps.apple.com/account/subscriptions\n\n4. Disclaimer\nThe app is provided \"as is\" without warranties of any kind.\n\n5. Limitation of Liability\nTo the maximum extent permitted by law, we are not liable for any indirect or consequential damages.\n\n6. Governing Law\nThese terms are governed by the laws of the People's Republic of China.\n\n7. Contact\nEmail: seventiny007@126.com";
+"privacyContent" = "Privacy Policy\n\nLedScroller is designed to be offline and privacy-focused. We do not collect personal information, do not track user behavior, and we do not operate any backend servers for this app.\n\n1. Information We Collect\nWe collect NO personal information.\n- No personal information\n- No usage analytics\n- No advertising identifiers\n- No location data\n- No contact information\n\n2. Local Data Storage\nYour creations and settings are stored locally on your device (e.g., iOS UserDefaults). Data is deleted when you uninstall the app.\n\n3. Network & Third-Party Services\nLedScroller does not connect to our servers because we do not run any server-side services.\nApple services may be used for App Store distribution and for in-app purchases/subscriptions (StoreKit).\n\n4. Children's Privacy\nWe do not knowingly collect information from children under 13.\n\n5. Contact\nEmail: seventiny007@126.com";
 "restoreSuccess" = "구매 기록이 성공적으로 복원되었습니다!";
 "purchaseFailed" = "구매 실패";
 "purchaseFailedMessage" = "나중에 다시 시도해 주세요";
@@ -108,7 +108,7 @@
 /* About Messages */
 "aboutMessage" = "LedScroller - 텍스트를 빛나게 하세요\n\n전문 LED 디스플레이 시뮬레이션 앱";
 "versionMessage" = "현재 버전: 1.0\n\n사용해 주셔서 감사합니다!";
-"feedbackMessage" = "이메일을 보내주세요:\n784430005@qq.com";
+"feedbackMessage" = "이메일을 보내주세요:\nseventiny007@126.com";
 "rateMessage" = "지원해 주셔서 감사합니다!\nApp Store에서 평가해 주세요";
 
 /* Create LED */
@@ -161,7 +161,9 @@
 
 /* Special Effects */
 "loveRain" = "💖 하트 비";
-"flipClock" = "디지털 시계";
+"flipClock" = "플립 시계";
+"digitalClock" = "전자 시계";
+"stopwatch" = "스톱워치";
 "fireworks" = "불꽃놀이";
 
 /* My Creations */
@@ -187,3 +189,22 @@
 "veryFast" = "매우 빠름";
 "superFast" = "초고속";
 "ultraFast" = "극속";
+
+"feedbackContentTitle" = "Your feedback:";
+"feedbackPlaceholder" = "Tell us what you like, what to improve, or any bug you found...";
+"feedbackEmailTitle" = "Your email:";
+"feedbackEmailPlaceholder" = "Email (optional)";
+"feedbackSubmit" = "Send Email";
+"feedbackEmpty" = "Feedback content cannot be empty.";
+"feedbackThanks" = "Thank you for your valuable feedback!";
+"feedbackOpenMailTip" = "Mail app opened. Please send the email to complete your feedback.";
+"feedbackMailNotAvailable" = "Mail is not available on this device. Please configure Mail and try again.";
+"feedbackMailSetupTitle" = "Mail Not Configured";
+"feedbackMailSetupMessage" = "Mail is not available. Please send your feedback to: %s";
+"feedbackCopyEmail" = "Copy Email";
+"feedbackCopyContent" = "Copy Content";
+"copied" = "Copied";
+"rateSheetTitle" = "Enjoy LedScroller?";
+"rateSheetMessage" = "Take a few seconds to leave a review, or send us feedback to help us improve.";
+"rateSheetFeedback" = "Send Feedback";
+"rateSheetRate" = "Rate Now";

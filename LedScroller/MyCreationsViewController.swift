@@ -22,6 +22,18 @@ class MyCreationsViewController: UIViewController {
         loadCreations()
     }
 
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
+
+        // Ensure we return to portrait after any landscape-only modules.
+        AppDelegate.orientationLock = .portrait
+        if #available(iOS 16.0, *) {
+            setNeedsUpdateOfSupportedInterfaceOrientations()
+        }
+        UIDevice.current.setValue(UIInterfaceOrientation.portrait.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
+    }
+
     private func setupUI() {
         title = "creations".localized // 从"创作"改为"我的创作"
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1) // 纯黑背景
@@ -146,8 +158,19 @@ class MyCreationsViewController: UIViewController {
         let allItems = LEDDataManager.shared.loadItems()
         // 只加载用户创建的LED(排除特殊效果、模版和预设卡片)
         creations = allItems.filter {
-            !$0.isFlipClock && !$0.isDigitalClock && !$0.isFireworks && !$0.isFireworksBloom &&
-            !$0.isLoveRain && !$0.isNeonTemplate && !$0.isIdolTemplate && !$0.isLEDTemplate &&
+            !$0.isFlipClock &&
+            !$0.isDigitalClock &&
+            !$0.isStopwatch &&
+            !$0.isCountdown &&
+            !$0.isHeartGrid &&
+            !$0.isILoveU &&
+            !$0.is520 &&
+            !$0.isFireworks &&
+            !$0.isFireworksBloom &&
+            !$0.isLoveRain &&
+            !$0.isNeonTemplate &&
+            !$0.isIdolTemplate &&
+            !$0.isLEDTemplate &&
             !$0.isDefaultPreset // 排除预设卡片
         }
 

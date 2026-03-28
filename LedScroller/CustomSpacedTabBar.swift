@@ -2,9 +2,18 @@ import UIKit
 
 // 自定义 TabBar，支持精确控制标签位置
 class CustomSpacedTabBar: UITabBar {
-    
+
     private let edgeInset: CGFloat = 20 // 首页和设置距离屏幕边缘的距离
-    
+
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
+        var s = super.sizeThatFits(size)
+        // iPad needs a taller tab bar so icons/titles have breathing room.
+        if traitCollection.userInterfaceIdiom == .pad {
+            s.height = max(s.height, 92)
+        }
+        return s
+    }
+
     override func layoutSubviews() {
         super.layoutSubviews()
         

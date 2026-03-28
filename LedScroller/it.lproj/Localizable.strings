@@ -30,7 +30,7 @@
 "version" = "Versione";
 "feedback" = "Feedback";
 "rate" = "Valuta";
-"share" = "Condividi";
+"share" = "Share";
 "restorePurchase" = "Ripristina Acquisto";
 
 /* VIP Status Messages */
@@ -53,7 +53,7 @@
 /* About Messages */
 "aboutMessage" = "LedScroller - Fai brillare il tuo testo\n\nUn'applicazione professionale di simulazione display LED";
 "versionMessage" = "Versione Corrente: 1.0\n\nGrazie per l'utilizzo!";
-"feedbackMessage" = "Si prega di inviare un'email a:\n784430005@qq.com";
+"feedbackMessage" = "Si prega di inviare un'email a:\nseventiny007@126.com";
 "rateMessage" = "Grazie per il tuo supporto!\nSi prega di valutarci sull'App Store";
 
 /* Create LED */
@@ -106,7 +106,9 @@
 
 /* Special Effects */
 "loveRain" = "💖 Pioggia di Cuori";
-"flipClock" = "Orologio Digitale";
+"flipClock" = "Orologio a palette";
+"digitalClock" = "Orologio Digitale";
+"stopwatch" = "Cronometro";
 "fireworks" = "Fuochi d'Artificio";
 
 /* My Creations */
@@ -135,8 +137,8 @@
 "termsMessage" = "Grazie per aver utilizzato la nostra app. Per i termini di servizio dettagliati, visita il nostro sito web ufficiale.";
 "privacyMessage" = "Apprezziamo la tua privacy. Per l'informativa sulla privacy dettagliata, visita il nostro sito web ufficiale.";
 "loadingProducts" = "Caricamento opzioni abbonamento, riprova più tardi";
-"termsContent" = "Termini di Servizio\n\nAccettando questi termini, accetti di utilizzare questa applicazione solo per scopi personali e non commerciali. L'abbonamento VIP fornisce accesso alle funzionalità premium e si rinnova automaticamente. Per domande, contatta: 784430005@qq.com";
-"privacyContent" = "Informativa sulla Privacy\n\nRaccogliamo informazioni sul dispositivo e statistiche di utilizzo per migliorare l'app. Non condividiamo le tue informazioni personali con terze parti senza il tuo consenso. Per domande sulla privacy, contatta: 784430005@qq.com";
+"termsContent" = "Terms of Service\n\n1. Acceptance of Terms\nBy downloading, installing, or using LedScroller, you agree to be bound by these Terms of Service.\n\n2. App License\nWe grant you a limited, non-exclusive, non-transferable license to use the app on your personal devices. You may not copy, modify, reverse engineer, or use the app for unlawful purposes.\n\n3. VIP Subscription\n- Subscriptions are handled by Apple's App Store.\n- Payment will be charged to your Apple ID account at confirmation of purchase.\n- Subscriptions automatically renew unless canceled at least 24 hours before the end of the current period.\n- Manage/cancel in iOS Settings -> Apple ID -> Subscriptions, or visit:\nhttps://apps.apple.com/account/subscriptions\n\n4. Disclaimer\nThe app is provided \"as is\" without warranties of any kind.\n\n5. Limitation of Liability\nTo the maximum extent permitted by law, we are not liable for any indirect or consequential damages.\n\n6. Governing Law\nThese terms are governed by the laws of the People's Republic of China.\n\n7. Contact\nEmail: seventiny007@126.com";
+"privacyContent" = "Privacy Policy\n\nLedScroller is designed to be offline and privacy-focused. We do not collect personal information, do not track user behavior, and we do not operate any backend servers for this app.\n\n1. Information We Collect\nWe collect NO personal information.\n- No personal information\n- No usage analytics\n- No advertising identifiers\n- No location data\n- No contact information\n\n2. Local Data Storage\nYour creations and settings are stored locally on your device (e.g., iOS UserDefaults). Data is deleted when you uninstall the app.\n\n3. Network & Third-Party Services\nLedScroller does not connect to our servers because we do not run any server-side services.\nApple services may be used for App Store distribution and for in-app purchases/subscriptions (StoreKit).\n\n4. Children's Privacy\nWe do not knowingly collect information from children under 13.\n\n5. Contact\nEmail: seventiny007@126.com";
 "subscriptionMember" = "Membro Abbonamento";
 "weeklyMember" = "Membro Settimanale";
 "monthlyMember" = "Membro Mensile";
@@ -168,3 +170,22 @@
 "subscribeToUnlockAllPremiumContent" = "Abbonati per sbloccare tutti i contenuti premium";
 "useThisTemplate" = "Usa questo modello";
 "useThisTemplateLower" = "Usa questo modello";
+
+"feedbackContentTitle" = "Your feedback:";
+"feedbackPlaceholder" = "Tell us what you like, what to improve, or any bug you found...";
+"feedbackEmailTitle" = "Your email:";
+"feedbackEmailPlaceholder" = "Email (optional)";
+"feedbackSubmit" = "Send Email";
+"feedbackEmpty" = "Feedback content cannot be empty.";
+"feedbackThanks" = "Thank you for your valuable feedback!";
+"feedbackOpenMailTip" = "Mail app opened. Please send the email to complete your feedback.";
+"feedbackMailNotAvailable" = "Mail is not available on this device. Please configure Mail and try again.";
+"feedbackMailSetupTitle" = "Mail Not Configured";
+"feedbackMailSetupMessage" = "Mail is not available. Please send your feedback to: %s";
+"feedbackCopyEmail" = "Copy Email";
+"feedbackCopyContent" = "Copy Content";
+"copied" = "Copied";
+"rateSheetTitle" = "Enjoy LedScroller?";
+"rateSheetMessage" = "Take a few seconds to leave a review, or send us feedback to help us improve.";
+"rateSheetFeedback" = "Send Feedback";
+"rateSheetRate" = "Rate Now";

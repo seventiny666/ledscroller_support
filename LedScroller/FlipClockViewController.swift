@@ -29,18 +29,31 @@ class FlipClockViewController: UIViewController {
         startTimer()
     }
     
+    override var prefersStatusBarHidden: Bool { true }
+    override var shouldAutorotate: Bool { true }
+    override var supportedInterfaceOrientations: UIInterfaceOrientationMask { .landscape }
+    override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation { .landscapeRight }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        AppDelegate.orientationLock = .landscape
+        enforceLandscape()
+    }
+
     override func viewWillDisappear(_ animated: Bool) {
         super.viewWillDisappear(animated)
         timer?.invalidate()
         timer = nil
+        AppDelegate.orientationLock = .portrait
     }
-    
-    override var prefersStatusBarHidden: Bool {
-        return true
-    }
-    
-    override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
-        return .landscape
+
+    private func enforceLandscape() {
+        if #available(iOS 16.0, *) {
+            setNeedsUpdateOfSupportedInterfaceOrientations()
+        }
+        UIViewController.attemptRotationToDeviceOrientation()
+        UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+        UIViewController.attemptRotationToDeviceOrientation()
     }
     
     private func setupUI() {
@@ -123,6 +136,13 @@ class FlipClockViewController: UIViewController {
         ])
     }
     
+    override func viewWillTransition(to size: CGSize, with coordinator: UIViewControllerTransitionCoordinator) {
+        super.viewWillTransition(to: size, with: coordinator)
+        coordinator.animate(alongsideTransition: nil) { [weak self] _ in
+            self?.enforceLandscape()
+        }
+    }
+
     override func viewDidLayoutSubviews() {
         super.viewDidLayoutSubviews()
         updateClockLayoutMetrics()
@@ -255,6 +275,7 @@ class FlipDigitView: UIView {
     
     private var currentDigit: Int = 0
     private var digitView: UIView!
+    private var ghostLabel: UILabel!
     private var digitLabel: UILabel!
     private var foldGradient: CAGradientLayer?
     
@@ -294,7 +315,18 @@ class FlipDigitView: UIView {
         gradient.endPoint = CGPoint(x: 0.5, y: 1.0)
         foldGradient = gradient
         
-        // 数字标签
+        // 数字后面的浅浅数字（叠一层低透明度的同号，制造纵深感）
+        ghostLabel = UILabel()
+        ghostLabel.textColor = UIColor.white.withAlphaComponent(0.14)
+        ghostLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .bold)
+        ghostLabel.textAlignment = .center
+        ghostLabel.adjustsFontSizeToFitWidth = false
+        ghostLabel.baselineAdjustment = .alignCenters
+        ghostLabel.minimumScaleFactor = 0.2
+        ghostLabel.translatesAutoresizingMaskIntoConstraints = false
+        digitView.addSubview(ghostLabel)
+
+        // 数字标签（前景主数字）
         digitLabel = UILabel()
         digitLabel.textColor = .white
         digitLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .bold)
@@ -322,6 +354,13 @@ class FlipDigitView: UIView {
             foldLine.trailingAnchor.constraint(equalTo: digitView.trailingAnchor),
             foldLine.heightAnchor.constraint(equalToConstant: 4),
             
+            ghostLabel.centerXAnchor.constraint(equalTo: digitView.centerXAnchor, constant: 1.0),
+            ghostLabel.centerYAnchor.constraint(equalTo: digitView.centerYAnchor, constant: 1.0),
+            ghostLabel.leadingAnchor.constraint(equalTo: digitView.leadingAnchor, constant: 8),
+            ghostLabel.trailingAnchor.constraint(equalTo: digitView.trailingAnchor, constant: -8),
+            ghostLabel.topAnchor.constraint(greaterThanOrEqualTo: digitView.topAnchor, constant: 10),
+            ghostLabel.bottomAnchor.constraint(lessThanOrEqualTo: digitView.bottomAnchor, constant: -10),
+
             digitLabel.centerXAnchor.constraint(equalTo: digitView.centerXAnchor),
             digitLabel.centerYAnchor.constraint(equalTo: digitView.centerYAnchor),
             digitLabel.leadingAnchor.constraint(equalTo: digitView.leadingAnchor, constant: 8),
@@ -339,7 +378,9 @@ class FlipDigitView: UIView {
         // Size the digit font from height so it never clips vertically.
         let h = digitView.bounds.height
         // Empirically, ~70% of card height fills well with this font and avoids clipping at top/bottom.
-        digitLabel.font = .monospacedDigitSystemFont(ofSize: max(10, h * 0.66), weight: .bold)
+        let font = UIFont.monospacedDigitSystemFont(ofSize: max(10, h * 0.66), weight: .bold)
+        digitLabel.font = font
+        ghostLabel.font = font
 
         if let gradient = foldGradient {
             // Keep it between the digit text and the fold line so the line stays crisp.
@@ -354,6 +395,11 @@ class FlipDigitView: UIView {
         guard digit != currentDigit else { return }
         setDigit(digit, animated: true)
     }
+
+    // Used by static cover views / thumbnails.
+    func setStaticDigit(_ digit: Int) {
+        setDigit(digit, animated: false)
+    }
     
     private func setDigit(_ digit: Int, animated: Bool) {
         let digitText = "\(digit)"
@@ -361,6 +407,7 @@ class FlipDigitView: UIView {
         if animated {
             performFlipAnimation(to: digitText)
         } else {
+            ghostLabel.text = digitText
             digitLabel.text = digitText
         }
         
@@ -368,11 +415,12 @@ class FlipDigitView: UIView {
     }
     
     private func performFlipAnimation(to newDigit: String) {
-        // 简单的缩放+淡入淡出动画
+        // 简单的缩放+淡入淡出动画（后景浅浅数字保持在背后，不参与缩放）
         UIView.animate(withDuration: 0.15, animations: {
             self.digitLabel.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
             self.digitLabel.alpha = 0.3
         }) { _ in
+            self.ghostLabel.text = newDigit
             self.digitLabel.text = newDigit
             UIView.animate(withDuration: 0.15) {
                 self.digitLabel.transform = .identity

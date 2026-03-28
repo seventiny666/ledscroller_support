@@ -19,6 +19,8 @@ struct LEDItem: Codable {
     var isFireworksBloom: Bool // 标识是否为烟花绽放效果（第二种）
     var isFlipClock: Bool // 标识是否为翻页时钟效果
     var isDigitalClock: Bool // 标识是否为数码管数字时钟（纯显示）
+    var isStopwatch: Bool // 标识是否为秒表效果（纯显示 + 交互）
+    var isCountdown: Bool // 标识是否为倒计时效果（圆环 + 交互）
     var isLoveRain: Bool // 标识是否为爱心流星雨效果
     var isHeartGrid: Bool // 标识是否为爱心格子动画效果
     var isILoveU: Bool // 标识是否为I LOVE U动画效果
@@ -55,6 +57,8 @@ struct LEDItem: Codable {
         case isFireworksBloom
         case isFlipClock
         case isDigitalClock
+        case isStopwatch
+        case isCountdown
         case isLoveRain
         case isHeartGrid
         case isILoveU
@@ -83,6 +87,8 @@ struct LEDItem: Codable {
         isFireworksBloom = try c.decodeIfPresent(Bool.self, forKey: .isFireworksBloom) ?? false
         isFlipClock = try c.decodeIfPresent(Bool.self, forKey: .isFlipClock) ?? false
         isDigitalClock = try c.decodeIfPresent(Bool.self, forKey: .isDigitalClock) ?? false
+        isStopwatch = try c.decodeIfPresent(Bool.self, forKey: .isStopwatch) ?? false
+        isCountdown = try c.decodeIfPresent(Bool.self, forKey: .isCountdown) ?? false
         isLoveRain = try c.decodeIfPresent(Bool.self, forKey: .isLoveRain) ?? false
         isHeartGrid = try c.decodeIfPresent(Bool.self, forKey: .isHeartGrid) ?? false
         isILoveU = try c.decodeIfPresent(Bool.self, forKey: .isILoveU) ?? false
@@ -111,6 +117,8 @@ struct LEDItem: Codable {
         try c.encode(isFireworksBloom, forKey: .isFireworksBloom)
         try c.encode(isFlipClock, forKey: .isFlipClock)
         try c.encode(isDigitalClock, forKey: .isDigitalClock)
+        try c.encode(isStopwatch, forKey: .isStopwatch)
+        try c.encode(isCountdown, forKey: .isCountdown)
         try c.encode(isLoveRain, forKey: .isLoveRain)
         try c.encode(isHeartGrid, forKey: .isHeartGrid)
         try c.encode(isILoveU, forKey: .isILoveU)
@@ -137,6 +145,8 @@ struct LEDItem: Codable {
          isFireworksBloom: Bool = false,
          isFlipClock: Bool = false,
          isDigitalClock: Bool = false,
+         isStopwatch: Bool = false,
+         isCountdown: Bool = false,
          isLoveRain: Bool = false,
          isHeartGrid: Bool = false,
          isILoveU: Bool = false,
@@ -161,6 +171,8 @@ struct LEDItem: Codable {
         self.isFireworksBloom = isFireworksBloom
         self.isFlipClock = isFlipClock
         self.isDigitalClock = isDigitalClock
+        self.isStopwatch = isStopwatch
+        self.isCountdown = isCountdown
         self.isLoveRain = isLoveRain
         self.isHeartGrid = isHeartGrid
         self.isILoveU = isILoveU
@@ -330,12 +342,34 @@ class LEDDataManager {
                 id: "digital-clock-special",
                 text: "",
                 fontSize: 45,
-                textColor: "#FF2A2A",
+                textColor: "#8EFFE6",
                 backgroundColor: "#000000",
                 glowIntensity: 0,
                 scrollType: .none,
                 speed: 1.0,
                 isDigitalClock: true
+            ),
+            LEDItem(
+                id: "stopwatch-special",
+                text: "",
+                fontSize: 45,
+                textColor: "#FF2A2A",
+                backgroundColor: "#000000",
+                glowIntensity: 0,
+                scrollType: .none,
+                speed: 1.0,
+                isStopwatch: true
+            ),
+            LEDItem(
+                id: "countdown-special",
+                text: "",
+                fontSize: 45,
+                textColor: "#8EFFE6",
+                backgroundColor: "#000000",
+                glowIntensity: 0,
+                scrollType: .none,
+                speed: 1.0,
+                isCountdown: true
             )
         ]
     }

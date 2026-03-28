@@ -30,7 +30,13 @@
 		A1000034000000000000001 /* FlipClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000035000000000000001 /* FlipClockViewController.swift */; };
 		A1000036000000000000001 /* LoveRainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000037000000000000001 /* LoveRainViewController.swift */; };
 		73441E768A324FB79C3718E9 /* DigitalClockViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */; };
+		F805667FCCDE5D242F74CC98 /* StopwatchViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 597AC9E0CE7ED2F3BE92535E /* StopwatchViewController.swift */; };
+		E9C1E89BDFA0C8E7EB457287 /* FlipClockCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = FEC341355CD6D3121BA66275 /* FlipClockCoverView.swift */; };
+		449D251A46A8B9B4220A9B2C /* CountdownViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7AEE4188AB570630F62EB27D /* CountdownViewController.swift */; };
+		9E5EB6270955FDFA081E9E76 /* CountdownCoverView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 81E0E3C6FD27F558910B7ADB /* CountdownCoverView.swift */; };
 		CE3260CC34484AB8B11851A2 /* SevenSegmentClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */; };
+		462E3AF42CEC4BD1A336353E /* DSEGClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C267F69DC3DA4A12837E492E /* DSEGClockView.swift */; };
+		4BC91675BF424ABEB1524262 /* DSEG7Classic-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9E5B2D71E0EA4CBEA45B7CE9 /* DSEG7Classic-Bold.ttf */; };
 		A1000038000000000000001 /* MainTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000039000000000000001 /* MainTabBarController.swift */; };
 		A1000040000000000000001 /* TemplateSquareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000041000000000000001 /* TemplateSquareViewController.swift */; };
 		A1000042000000000000001 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000043000000000000001 /* SettingsViewController.swift */; };
@@ -44,6 +50,9 @@
 		A1000058000000000000001 /* CustomSpacedTabBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000059000000000000001 /* CustomSpacedTabBar.swift */; };
 		A1000060000000000000001 /* StoreKitManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000061000000000000001 /* StoreKitManager.swift */; };
 		A1000062000000000000001 /* PurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000063000000000000001 /* PurchaseManager.swift */; };
+		A2000001000000000000001 /* AboutViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002000000000000001 /* AboutViewController.swift */; };
+		A2000003000000000000001 /* LegalTextViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000004000000000000001 /* LegalTextViewController.swift */; };
+		A2000005000000000000001 /* FeedbackViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000006000000000000001 /* FeedbackViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -72,7 +81,13 @@
 		141382312F56825C00F73105 /* LEDDisplayViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LEDDisplayViewController.swift; sourceTree = "<group>"; };
 		141382322F56825C00F73105 /* FlipClockViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlipClockViewController.swift; sourceTree = "<group>"; };
 		D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DigitalClockViewController.swift; sourceTree = "<group>"; };
+		597AC9E0CE7ED2F3BE92535E /* StopwatchViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = StopwatchViewController.swift; sourceTree = "<group>"; };
+		FEC341355CD6D3121BA66275 /* FlipClockCoverView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FlipClockCoverView.swift; sourceTree = "<group>"; };
+		7AEE4188AB570630F62EB27D /* CountdownViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CountdownViewController.swift; sourceTree = "<group>"; };
+		81E0E3C6FD27F558910B7ADB /* CountdownCoverView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CountdownCoverView.swift; sourceTree = "<group>"; };
 		C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SevenSegmentClockView.swift; sourceTree = "<group>"; };
+		C267F69DC3DA4A12837E492E /* DSEGClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DSEGClockView.swift; sourceTree = "<group>"; };
+		9E5B2D71E0EA4CBEA45B7CE9 /* DSEG7Classic-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/DSEG7Classic-Bold.ttf; sourceTree = "<group>"; };
 		141382332F56825C00F73105 /* MainTabBarController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabBarController.swift; sourceTree = "<group>"; };
 		141382342F56825C00F73105 /* MyCreationsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyCreationsViewController.swift; sourceTree = "<group>"; };
 		141382352F56825C00F73105 /* CodeGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeGenerator.swift; sourceTree = "<group>"; };
@@ -122,6 +137,9 @@
 		A1000059000000000000001 /* CustomSpacedTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CustomSpacedTabBar.swift; sourceTree = "<group>"; };
 		A1000061000000000000001 /* StoreKitManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoreKitManager.swift; sourceTree = "<group>"; };
 		A1000063000000000000001 /* PurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PurchaseManager.swift; sourceTree = "<group>"; };
+		A2000002000000000000001 /* AboutViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AboutViewController.swift; sourceTree = "<group>"; };
+		A2000004000000000000001 /* LegalTextViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = LegalTextViewController.swift; sourceTree = "<group>"; };
+		A2000006000000000000001 /* FeedbackViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FeedbackViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -157,6 +175,8 @@
 				141382322F56825C00F73105 /* FlipClockViewController.swift */,
 				D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */,
 				C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */,
+				C267F69DC3DA4A12837E492E /* DSEGClockView.swift */,
+				9E5B2D71E0EA4CBEA45B7CE9 /* DSEG7Classic-Bold.ttf */,
 				141382332F56825C00F73105 /* MainTabBarController.swift */,
 				141382342F56825C00F73105 /* MyCreationsViewController.swift */,
 				141382352F56825C00F73105 /* CodeGenerator.swift */,
@@ -167,6 +187,9 @@
 				1413823C2F56825C00F73105 /* ConfigModel.swift */,
 				1413823D2F56825C00F73105 /* SceneDelegate.swift */,
 				1413823E2F56825C00F73105 /* SettingsViewController.swift */,
+				A2000002000000000000001 /* AboutViewController.swift */,
+				A2000004000000000000001 /* LegalTextViewController.swift */,
+				A2000006000000000000001 /* FeedbackViewController.swift */,
 				1413823F2F56825C00F73105 /* LEDPreviewViewController.swift */,
 				A1000061000000000000001 /* StoreKitManager.swift */,
 				A1000063000000000000001 /* PurchaseManager.swift */,
@@ -266,7 +289,11 @@
 				A1000033000000000000001 /* FireworksBloomViewController.swift */,
 				39329C522644F704042F521B /* FireworksShowViewController.swift */,
 				A1000035000000000000001 /* FlipClockViewController.swift */,
+				FEC341355CD6D3121BA66275 /* FlipClockCoverView.swift */,
 				D7CC83F1C2214159888A9524 /* DigitalClockViewController.swift */,
+				597AC9E0CE7ED2F3BE92535E /* StopwatchViewController.swift */,
+				7AEE4188AB570630F62EB27D /* CountdownViewController.swift */,
+				81E0E3C6FD27F558910B7ADB /* CountdownCoverView.swift */,
 				C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */,
 				A1000037000000000000001 /* LoveRainViewController.swift */,
 				A1000023000000000000001 /* LEDItem.swift */,
@@ -360,6 +387,7 @@
 				A1000017000000000000001 /* LaunchScreen.storyboard in Resources */,
 				A1000015000000000000001 /* Assets.xcassets in Resources */,
 				141382402F56825C00F73105 /* Localizable.strings in Resources */,
+				4BC91675BF424ABEB1524262 /* DSEG7Classic-Bold.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -386,12 +414,20 @@
 				A1000032000000000000001 /* FireworksBloomViewController.swift in Sources */,
 				91B594F039329C522644F704 /* FireworksShowViewController.swift in Sources */,
 				A1000034000000000000001 /* FlipClockViewController.swift in Sources */,
+				E9C1E89BDFA0C8E7EB457287 /* FlipClockCoverView.swift in Sources */,
 				73441E768A324FB79C3718E9 /* DigitalClockViewController.swift in Sources */,
+				F805667FCCDE5D242F74CC98 /* StopwatchViewController.swift in Sources */,
+				449D251A46A8B9B4220A9B2C /* CountdownViewController.swift in Sources */,
+				9E5EB6270955FDFA081E9E76 /* CountdownCoverView.swift in Sources */,
 				CE3260CC34484AB8B11851A2 /* SevenSegmentClockView.swift in Sources */,
+				462E3AF42CEC4BD1A336353E /* DSEGClockView.swift in Sources */,
 				A1000036000000000000001 /* LoveRainViewController.swift in Sources */,
 				A1000038000000000000001 /* MainTabBarController.swift in Sources */,
 				A1000040000000000000001 /* TemplateSquareViewController.swift in Sources */,
 				A1000042000000000000001 /* SettingsViewController.swift in Sources */,
+				A2000001000000000000001 /* AboutViewController.swift in Sources */,
+				A2000003000000000000001 /* LegalTextViewController.swift in Sources */,
+				A2000005000000000000001 /* FeedbackViewController.swift in Sources */,
 				A1000044000000000000001 /* MyCreationsViewController.swift in Sources */,
 				A1000046000000000000001 /* MarqueeBorderView.swift in Sources */,
 				A1000048000000000000001 /* LightBoardBorderView.swift in Sources */,
