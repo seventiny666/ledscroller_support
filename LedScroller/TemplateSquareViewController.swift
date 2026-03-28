@@ -4931,7 +4931,7 @@ class TemplateItemCell: UICollectionViewCell {
             } else if item.isStopwatch {
                 titleLabel.text = "stopwatch".localized
             } else if item.isCountdown {
-                titleLabel.text = "倒计时"
+                titleLabel.text = "countdown".localized
             } else {
                 titleLabel.text = item.text
             }
