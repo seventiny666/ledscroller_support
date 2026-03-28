@@ -47,14 +47,22 @@ final class CountdownCoverView: UIView {
 
     override func layoutSubviews() {
         super.layoutSubviews()
+
         let minSide = min(bounds.width, bounds.height)
-        let radius = minSide * 0.32
         let center = CGPoint(x: bounds.midX, y: bounds.midY)
         let start = -CGFloat.pi / 2
         let end = start + 2 * CGFloat.pi
 
+        // Make the ring a bit larger, but never clip the card.
+        let maxRadius = (minSide / 2) - (trackLayer.lineWidth / 2) - 6
+        let radius = min(maxRadius, minSide * 0.38)
+
         let path = UIBezierPath(arcCenter: center, radius: radius, startAngle: start, endAngle: end, clockwise: true)
         trackLayer.path = path.cgPath
         progressLayer.path = path.cgPath
+
+        // Keep the time text comfortably inside the ring.
+        let fontSize = max(16, minSide * 0.14)
+        timeLabel.font = .monospacedDigitSystemFont(ofSize: fontSize, weight: .bold)
     }
 }

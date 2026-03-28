@@ -38,7 +38,7 @@ final class FlipClockCoverView: UIView {
         }
 
         mainStack.axis = .horizontal
-        mainStack.alignment = .center
+        mainStack.alignment = .fill
         mainStack.distribution = .fill
         mainStack.spacing = 8
         mainStack.translatesAutoresizingMaskIntoConstraints = false
@@ -55,6 +55,7 @@ final class FlipClockCoverView: UIView {
         // Constrain the digit cards to consistent sizing within the cover.
         [hourTens, hourOnes, minuteTens, minuteOnes, secondTens, secondOnes].forEach { digit in
             digit.translatesAutoresizingMaskIntoConstraints = false
+            digit.heightAnchor.constraint(equalTo: mainStack.heightAnchor).isActive = true
             digit.widthAnchor.constraint(equalTo: digit.heightAnchor, multiplier: 0.72).isActive = true
         }
 

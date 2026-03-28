@@ -153,21 +153,26 @@ final class CountdownViewController: UIViewController {
         rightPanel.addSubview(controlsStack)
 
         func styleButton(_ b: UIButton, title: String, symbolName: String) {
+            // Match the stopwatch preview style: compact, translucent dark background.
             b.setTitle(title, for: .normal)
-            b.setTitleColor(.black, for: .normal)
-            b.titleLabel?.font = .systemFont(ofSize: 18, weight: .semibold)
+            b.setTitleColor(.white, for: .normal)
+            b.titleLabel?.font = .systemFont(ofSize: 13, weight: .semibold)
+            b.titleLabel?.numberOfLines = 1
 
             b.setImage(UIImage(systemName: symbolName), for: .normal)
-            b.tintColor = .black
+            b.tintColor = .white
             b.semanticContentAttribute = .forceLeftToRight
 
-            // Space between icon and title.
-            b.imageEdgeInsets = UIEdgeInsets(top: 0, left: -4, bottom: 0, right: 4)
-            b.titleEdgeInsets = UIEdgeInsets(top: 0, left: 4, bottom: 0, right: -4)
+            // Icon on the left, text on the right.
+            b.imageEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 6)
+            b.titleEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
+            b.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
 
-            b.backgroundColor = UIColor.white.withAlphaComponent(0.92)
-            b.contentEdgeInsets = UIEdgeInsets(top: 12, left: 18, bottom: 12, right: 18)
-            b.layer.cornerRadius = 22
+            b.backgroundColor = UIColor.white.withAlphaComponent(0.15)
+            b.layer.cornerRadius = 14
+            b.layer.masksToBounds = true
+            b.layer.borderWidth = 1
+            b.layer.borderColor = UIColor.white.withAlphaComponent(0.25).cgColor
         }
 
         styleButton(startPauseButton, title: "Start", symbolName: "play")
