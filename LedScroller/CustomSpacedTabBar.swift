@@ -3,13 +3,21 @@ import UIKit
 // 自定义 TabBar，支持精确控制标签位置
 class CustomSpacedTabBar: UITabBar {
 
-    private let edgeInset: CGFloat = 20 // 首页和设置距离屏幕边缘的距离
+    private let baseEdgeInset: CGFloat = 20 // 首页和设置距离屏幕边缘的距离
+
+    private func firstSubview<T: UIView>(ofType type: T.Type, in view: UIView) -> T? {
+        for sub in view.subviews {
+            if let match = sub as? T { return match }
+            if let match: T = firstSubview(ofType: type, in: sub) { return match }
+        }
+        return nil
+    }
 
     override func sizeThatFits(_ size: CGSize) -> CGSize {
         var s = super.sizeThatFits(size)
         // iPad needs a taller tab bar so icons/titles have breathing room.
         if traitCollection.userInterfaceIdiom == .pad {
-            s.height = max(s.height, 92)
+            s.height = max(s.height, 92 * 1.2)
         }
         return s
     }
@@ -23,7 +31,10 @@ class CustomSpacedTabBar: UITabBar {
         guard buttons.count == 5 else { return } // 确保有5个按钮（3个真实 + 2个占位）
         
         let screenWidth = bounds.width
-        let itemWidth: CGFloat = 80 // 每个标签的宽度
+        let isPad = traitCollection.userInterfaceIdiom == .pad
+        let tabScale: CGFloat = isPad ? 1.2 : 1.0
+        let edgeInset = baseEdgeInset * tabScale
+        let itemWidth: CGFloat = 80 * tabScale // 每个标签的宽度
         
         // 布局方案：
         // 首页：距离左边缘 20px
@@ -71,6 +82,16 @@ class CustomSpacedTabBar: UITabBar {
             // 强制刷新按钮内部布局，确保文字正确显示
             button.setNeedsLayout()
             button.layoutIfNeeded()
+
+            // On iPad the tab bar is taller; nudge the icon/title down so they don't stick to the top.
+            if isPad {
+                if let iconView = firstSubview(ofType: UIImageView.self, in: button) {
+                    iconView.center.y = button.bounds.height * 0.55
+                }
+                if let titleLabel = firstSubview(ofType: UILabel.self, in: button) {
+                    titleLabel.center.y = button.bounds.height * 0.83
+                }
+            }
         }
     }
 }

@@ -491,10 +491,15 @@ import StoreKit
     private func setupUI() {
         backgroundColor = .clear
         
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let padScale: CGFloat = 0.8
+        let badgeWidth: CGFloat = isPad ? 80 * padScale : 40
+        let badgeHeight: CGFloat = isPad ? 44 * padScale : 22
+
         // 传统VIP标签样式 - 金色渐变背景
         containerView.backgroundColor = UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // 金色
-        containerView.layer.cornerRadius = 8
-        containerView.layer.borderWidth = 1
+        containerView.layer.cornerRadius = badgeHeight / 2
+        containerView.layer.borderWidth = isPad ? 2 * padScale : 1
         containerView.layer.borderColor = UIColor(red: 0.8, green: 0.6, blue: 0.0, alpha: 1.0).cgColor // 深金色边框
         containerView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(containerView)
@@ -502,7 +507,7 @@ import StoreKit
         // VIP文字 - 居中显示
         vipLabel.text = "VIP"
         vipLabel.textColor = .black
-        vipLabel.font = .systemFont(ofSize: 13, weight: .bold)
+        vipLabel.font = .systemFont(ofSize: isPad ? 26 * padScale : 13, weight: .bold)
         vipLabel.textAlignment = .center
         vipLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(vipLabel)
@@ -516,9 +521,8 @@ import StoreKit
             vipLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
             vipLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
             
-            // Slightly bigger for readability on large screens (e.g. 17 Pro Max).
-            widthAnchor.constraint(equalToConstant: 40),
-            heightAnchor.constraint(equalToConstant: 22)
+            widthAnchor.constraint(equalToConstant: badgeWidth),
+            heightAnchor.constraint(equalToConstant: badgeHeight)
         ])
     }
     
@@ -3730,7 +3734,8 @@ class TemplateSquareViewController: UIViewController {
         segmentedControl.addTarget(self, action: #selector(segmentChanged), for: .valueChanged)
         
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let segFontSize: CGFloat = isPad ? 17 : 13
+        let segScale: CGFloat = isPad ? 1.2 : 1.0
+        let segFontSize: CGFloat = (isPad ? 17 : 13) * segScale
 
         // 未选中状态：白色半透明文字
         segmentedControl.setTitleTextAttributes([
@@ -3744,15 +3749,27 @@ class TemplateSquareViewController: UIViewController {
             .font: UIFont.systemFont(ofSize: segFontSize, weight: .semibold)
         ], for: .selected)
         
-        // 将分段控制器设置为导航栏的titleView
-        navigationItem.titleView = segmentedControl
-        
-        // 设置分段控制器的固定尺寸（增加高度以显示内边距效果）
+        // Put the segmented control in a container so we can offset it vertically on iPad.
+        let titleContainer = UIView()
+        titleContainer.backgroundColor = .clear
+        titleContainer.translatesAutoresizingMaskIntoConstraints = false
+        titleContainer.addSubview(segmentedControl)
+
         segmentedControl.translatesAutoresizingMaskIntoConstraints = false
+        let segWidth = (isPad ? 320 : 220) * segScale
+        let segHeight = (isPad ? 48 : 40) * segScale
+        let segYOffset: CGFloat = isPad ? 10 : 0
+
         NSLayoutConstraint.activate([
-            segmentedControl.widthAnchor.constraint(equalToConstant: isPad ? 320 : 220),
-            segmentedControl.heightAnchor.constraint(equalToConstant: isPad ? 48 : 40) // iPad needs a bigger pill
+            segmentedControl.centerXAnchor.constraint(equalTo: titleContainer.centerXAnchor),
+            segmentedControl.centerYAnchor.constraint(equalTo: titleContainer.centerYAnchor, constant: segYOffset),
+            segmentedControl.widthAnchor.constraint(equalToConstant: segWidth),
+            segmentedControl.heightAnchor.constraint(equalToConstant: segHeight),
+            titleContainer.widthAnchor.constraint(equalToConstant: segWidth),
+            titleContainer.heightAnchor.constraint(equalToConstant: segHeight + segYOffset)
         ])
+
+        navigationItem.titleView = titleContainer
         
         // 创建表格视图
         tableView = UITableView(frame: .zero, style: .grouped)
@@ -3873,12 +3890,20 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         let category = categories[indexPath.section]
         
-        // 动态计算卡片尺寸，与CollectionView的sizeForItemAt保持一致
-        // 卡片宽度 = (屏幕宽度 - 左右边距40 - 中间间距16) / 2
+        // Dynamic sizing (must match `sizeForItemAt`).
         let screenWidth = UIScreen.main.bounds.width
-        let cardWidth = (screenWidth - 56) / 2 // 左右各20px，中间16px
-        let cardHeight = cardWidth * 0.95 // 与sizeForItemAt中的比例保持一致
-        let lineSpacing: CGFloat = 16
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let interItemSpacing: CGFloat = isPad ? 24 : 16
+        let cardWidth = (screenWidth - 20 * 2 - interItemSpacing) / 2
+
+        let cardHeight: CGFloat
+        if isPad && currentTab == .popular {
+            cardHeight = cardWidth * (9.0/16.0) + (18 + 28 + 50 + 34)
+        } else {
+            cardHeight = cardWidth * 0.95
+        }
+
+        let lineSpacing: CGFloat = isPad ? 24 : 16
         
         // CollectionView is non-scrollable; the row height must fit all items.
         // 2-column grid -> rows = ceil(count / 2).
@@ -3903,7 +3928,9 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             // 创建火焰emoji标签
             let fireLabel = UILabel()
             fireLabel.text = "🔥"
-            fireLabel.font = .systemFont(ofSize: 20)
+            let isPad = UIDevice.current.userInterfaceIdiom == .pad
+            let fireIconSize: CGFloat = isPad ? 29 : 24
+            fireLabel.font = .systemFont(ofSize: isPad ? 26 : 20)
             fireLabel.translatesAutoresizingMaskIntoConstraints = false
             fireIconView.addSubview(fireLabel)
             
@@ -3911,9 +3938,10 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let label = UILabel()
             label.text = category.localizedName
             label.textColor = UIColor.white.withAlphaComponent(0.9)
-            // 根据屏幕尺寸动态调整字体大小
+            // iPad headers should be much larger to match the overall layout.
             let screenHeight = UIScreen.main.bounds.height
-            let fontSize: CGFloat = screenHeight >= 926 ? 20 : 18 // 大屏设备使用20pt
+            let baseFontSize: CGFloat = screenHeight >= 926 ? 20 : 18 // 大屏设备使用20pt
+            let fontSize: CGFloat = isPad ? baseFontSize * 1.6 : baseFontSize
             label.font = .systemFont(ofSize: fontSize, weight: .bold)
             label.translatesAutoresizingMaskIntoConstraints = false
             headerView.addSubview(label)
@@ -3921,8 +3949,8 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             NSLayoutConstraint.activate([
                 fireIconView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
                 fireIconView.topAnchor.constraint(equalTo: headerView.topAnchor),
-                fireIconView.widthAnchor.constraint(equalToConstant: 24),
-                fireIconView.heightAnchor.constraint(equalToConstant: 24),
+                fireIconView.widthAnchor.constraint(equalToConstant: fireIconSize),
+                fireIconView.heightAnchor.constraint(equalToConstant: fireIconSize),
                 
                 fireLabel.centerXAnchor.constraint(equalTo: fireIconView.centerXAnchor),
                 fireLabel.centerYAnchor.constraint(equalTo: fireIconView.centerYAnchor),
@@ -3935,9 +3963,11 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
             let label = UILabel()
             label.text = category.localizedName
             label.textColor = UIColor.white.withAlphaComponent(0.9) // 白色 0.9透明度
-            // 根据屏幕尺寸动态调整字体大小
+            // iPad headers should be much larger to match the overall layout.
             let screenHeight = UIScreen.main.bounds.height
-            let fontSize: CGFloat = screenHeight >= 926 ? 20 : 18 // 大屏设备使用20pt
+            let isPad = UIDevice.current.userInterfaceIdiom == .pad
+            let baseFontSize: CGFloat = screenHeight >= 926 ? 20 : 18 // 大屏设备使用20pt
+            let fontSize: CGFloat = isPad ? baseFontSize * 1.6 : baseFontSize
             label.font = .systemFont(ofSize: fontSize, weight: .bold)
             label.translatesAutoresizingMaskIntoConstraints = false
             headerView.addSubview(label)
@@ -3955,6 +3985,13 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         // Header包含：标题 + 标题到卡片的间距
         // 根据屏幕尺寸动态调整
         let screenHeight = UIScreen.main.bounds.height
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+
+        // iPad header font is scaled; increase height to avoid clipping.
+        if isPad {
+            return 61
+        }
+
         if screenHeight >= 926 { // iPhone 14 Pro Max及以上大屏设备
             return 42 // 大屏设备增加header高度
         } else {
@@ -4171,8 +4208,11 @@ class TemplateCategoryCell: UITableViewCell {
         
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 16
-        layout.minimumLineSpacing = 16
+
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let spacing: CGFloat = isPad ? 24 : 16
+        layout.minimumInteritemSpacing = spacing
+        layout.minimumLineSpacing = spacing
         layout.sectionInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -4427,9 +4467,20 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        // 动态计算卡片宽度，适配不同屏幕尺寸
-        // 2列布局：左右边距各20px，中间间距16px
-        let width = (collectionView.bounds.width - 56) / 2
+        // 2-column layout.
+        let flowLayout = collectionViewLayout as? UICollectionViewFlowLayout
+        let insets = flowLayout?.sectionInset ?? .zero
+        let interItemSpacing = flowLayout?.minimumInteritemSpacing ?? 16
+        let width = floor((collectionView.bounds.width - insets.left - insets.right - interItemSpacing) / 2)
+
+        // Keep the popular-card height consistent with its internal layout on iPad.
+        // Required = top(image) + image(16:9) + spacing + button + bottom.
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        if isPad && currentTab == .popular {
+            let height = width * (9.0/16.0) + (18 + 28 + 50 + 34)
+            return CGSize(width: width, height: height)
+        }
+
         let height = width * 0.95 // 保持宽高比
         return CGSize(width: width, height: height)
     }
@@ -4491,10 +4542,15 @@ class TemplateItemCell: UICollectionViewCell {
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
 
         // iPad card covers are much larger; keep the overlay text visually balanced.
-        let overlayFontSize: CGFloat = isPad ? 34 : (screenHeight >= 926 ? 22 : 20)
+        let overlayFontSize: CGFloat = isPad ? 44 : (screenHeight >= 926 ? 22 : 20)
         let titleFontSize: CGFloat = isPad ? 18 : (screenHeight >= 926 ? 15 : 13)
-        let buttonFontSize: CGFloat = isPad ? 16 : (screenHeight >= 926 ? 14 : 12)
+        let tryButtonFontSize: CGFloat = isPad ? 20 : (screenHeight >= 926 ? 14 : 12) // iPad: -4pt
         let previewFontSize: CGFloat = isPad ? 15 : (screenHeight >= 926 ? 13 : 11)
+
+        // iPad edit button: 3x height, with explicit spacing above/below.
+        let buttonHeight: CGFloat = isPad ? 50 : 14
+        let buttonTopSpacing: CGFloat = isPad ? 28 : 18
+        let buttonBottomInset: CGFloat = isPad ? 34 : 18
         
         // 封面图片上的文字（霓虹效果）
         overlayTextLabel.textColor = .white
@@ -4524,9 +4580,9 @@ class TemplateItemCell: UICollectionViewCell {
         // Create/edit template button (opens the editor/creation flow).
         tryButton.setTitle("edit".localized, for: .normal)
         tryButton.setTitleColor(.white, for: .normal)
-        tryButton.titleLabel?.font = .systemFont(ofSize: buttonFontSize, weight: .medium)
+        tryButton.titleLabel?.font = .systemFont(ofSize: tryButtonFontSize, weight: .medium)
         tryButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.3)
-        tryButton.layer.cornerRadius = 7 // 胶囊形状（高度14px的一半）
+        tryButton.layer.cornerRadius = buttonHeight / 2
         tryButton.layer.masksToBounds = true
         tryButton.layer.borderWidth = 1
         tryButton.layer.borderColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0).cgColor
@@ -4538,7 +4594,7 @@ class TemplateItemCell: UICollectionViewCell {
         previewButton.setTitleColor(.white, for: .normal)
         previewButton.titleLabel?.font = .systemFont(ofSize: previewFontSize, weight: .medium)
         previewButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)
-        previewButton.layer.cornerRadius = 7 // 胶囊形状（高度14px的一半）
+        previewButton.layer.cornerRadius = buttonHeight / 2
         previewButton.layer.masksToBounds = true
         previewButton.layer.borderWidth = 1
         previewButton.layer.borderColor = UIColor.systemPink.cgColor
@@ -4549,16 +4605,22 @@ class TemplateItemCell: UICollectionViewCell {
         vipBadgeView.translatesAutoresizingMaskIntoConstraints = false
         vipBadgeView.isHidden = true // 默认隐藏
         containerView.addSubview(vipBadgeView)
+
+        // iPad cover image needs more padding to match the larger card proportions.
+        let imageTopInset: CGFloat = isPad ? 18 : 12
+        let imageSideInset: CGFloat = isPad ? 18 : 9
         
+        let buttonTopConstraint = buttonStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: buttonTopSpacing)
+
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
             
-            imageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 12),
-            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 9),
-            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -9),
+            imageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: imageTopInset),
+            imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: imageSideInset),
+            imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -imageSideInset),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 9.0/16.0),
             
             overlayTextLabel.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
@@ -4571,15 +4633,15 @@ class TemplateItemCell: UICollectionViewCell {
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
             
-            buttonStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 18),
+            buttonTopConstraint,
             buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
             buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -40),
-            buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -18),
-            buttonStack.heightAnchor.constraint(equalToConstant: 14), // 高度14px
+            buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -buttonBottomInset),
+            buttonStack.heightAnchor.constraint(equalToConstant: buttonHeight),
             
             // VIP标签约束
-            vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
-            vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8)
+            vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: isPad ? 12 : 8),
+            vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -12 : -8)
         ])
     }
     

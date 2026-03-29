@@ -37,6 +37,10 @@
 		CE3260CC34484AB8B11851A2 /* SevenSegmentClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */; };
 		462E3AF42CEC4BD1A336353E /* DSEGClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C267F69DC3DA4A12837E492E /* DSEGClockView.swift */; };
 		4BC91675BF424ABEB1524262 /* DSEG7Classic-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9E5B2D71E0EA4CBEA45B7CE9 /* DSEG7Classic-Bold.ttf */; };
+		1139FE7592264067B9BB4E7D /* MatrixSansPrint-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 42EEDA1244E449E690AA2E94 /* MatrixSansPrint-Regular.ttf */; };
+		4E46044E45D04BF09AC7670F /* MatrixSansPrintSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D4ECDA6EB73147FB8E6D0D7F /* MatrixSansPrintSC-Regular.ttf */; };
+		2764038906434548B2C1AA1D /* MatrixSansScreen-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 935CE6D205204B78B745F208 /* MatrixSansScreen-Regular.ttf */; };
+		734A822942BC49988568E852 /* MatrixSansScreenSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 802C490BE85D4B72ADFC6D14 /* MatrixSansScreenSC-Regular.ttf */; };
 		A1000038000000000000001 /* MainTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000039000000000000001 /* MainTabBarController.swift */; };
 		A1000040000000000000001 /* TemplateSquareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000041000000000000001 /* TemplateSquareViewController.swift */; };
 		A1000042000000000000001 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000043000000000000001 /* SettingsViewController.swift */; };
@@ -88,6 +92,10 @@
 		C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SevenSegmentClockView.swift; sourceTree = "<group>"; };
 		C267F69DC3DA4A12837E492E /* DSEGClockView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DSEGClockView.swift; sourceTree = "<group>"; };
 		9E5B2D71E0EA4CBEA45B7CE9 /* DSEG7Classic-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/DSEG7Classic-Bold.ttf; sourceTree = "<group>"; };
+		42EEDA1244E449E690AA2E94 /* MatrixSansPrint-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansPrint-Regular.ttf; sourceTree = "<group>"; };
+		D4ECDA6EB73147FB8E6D0D7F /* MatrixSansPrintSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansPrintSC-Regular.ttf; sourceTree = "<group>"; };
+		935CE6D205204B78B745F208 /* MatrixSansScreen-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansScreen-Regular.ttf; sourceTree = "<group>"; };
+		802C490BE85D4B72ADFC6D14 /* MatrixSansScreenSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansScreenSC-Regular.ttf; sourceTree = "<group>"; };
 		141382332F56825C00F73105 /* MainTabBarController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabBarController.swift; sourceTree = "<group>"; };
 		141382342F56825C00F73105 /* MyCreationsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyCreationsViewController.swift; sourceTree = "<group>"; };
 		141382352F56825C00F73105 /* CodeGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeGenerator.swift; sourceTree = "<group>"; };
@@ -177,6 +185,10 @@
 				C3BE7EA9486047FA89DBE244 /* SevenSegmentClockView.swift */,
 				C267F69DC3DA4A12837E492E /* DSEGClockView.swift */,
 				9E5B2D71E0EA4CBEA45B7CE9 /* DSEG7Classic-Bold.ttf */,
+				42EEDA1244E449E690AA2E94 /* MatrixSansPrint-Regular.ttf */,
+				D4ECDA6EB73147FB8E6D0D7F /* MatrixSansPrintSC-Regular.ttf */,
+				935CE6D205204B78B745F208 /* MatrixSansScreen-Regular.ttf */,
+				802C490BE85D4B72ADFC6D14 /* MatrixSansScreenSC-Regular.ttf */,
 				141382332F56825C00F73105 /* MainTabBarController.swift */,
 				141382342F56825C00F73105 /* MyCreationsViewController.swift */,
 				141382352F56825C00F73105 /* CodeGenerator.swift */,
@@ -388,6 +400,10 @@
 				A1000015000000000000001 /* Assets.xcassets in Resources */,
 				141382402F56825C00F73105 /* Localizable.strings in Resources */,
 				4BC91675BF424ABEB1524262 /* DSEG7Classic-Bold.ttf in Resources */,
+				1139FE7592264067B9BB4E7D /* MatrixSansPrint-Regular.ttf in Resources */,
+				4E46044E45D04BF09AC7670F /* MatrixSansPrintSC-Regular.ttf in Resources */,
+				2764038906434548B2C1AA1D /* MatrixSansScreen-Regular.ttf in Resources */,
+				734A822942BC49988568E852 /* MatrixSansScreenSC-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

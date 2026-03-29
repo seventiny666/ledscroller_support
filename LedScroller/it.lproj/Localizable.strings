@@ -74,6 +74,8 @@
 "speed" = "Velocità Riproduzione";
 
 /* Font Names */
+"dotMatrix" = "Dot Matrix";
+"pixel" = "Pixel";
 "pingfang" = "PingFang";
 "heiti" = "Heiti";
 "songti" = "Songti";

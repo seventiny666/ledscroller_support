@@ -706,25 +706,33 @@ class LEDCreateViewController: UIViewController {
         // 字体选择
         addSectionLabelToView(fontTabView, text: "fontSelection".localized, yOffset: &tabYOffset)
         
-        // 创建字体选择按钮（单个圆角按钮样式）
-        let fontNames = ["pingfang".localized, "thin".localized, "medium".localized, "bold".localized]
-        let fontScrollView = UIScrollView()
-        fontScrollView.showsHorizontalScrollIndicator = false
-        fontScrollView.translatesAutoresizingMaskIntoConstraints = false
-        fontTabView.addSubview(fontScrollView)
-        
+        // 创建字体选择按钮（固定一行，不可滑动）
+        // 需求：去掉 Bold，只保留 3 个系统选项 + 2 个新字体 = 5 个。
+        let fontNames = [
+            "pingfang".localized,
+            "thin".localized,
+            "medium".localized,
+            "dotMatrix".localized,
+            "pixel".localized,
+        ]
+
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let fontButtonHeight: CGFloat = isPad ? 40 : 32
+
         let fontStack = UIStackView()
         fontStack.axis = .horizontal
-        fontStack.distribution = .equalSpacing
-        fontStack.spacing = 10
+        fontStack.distribution = .fillEqually
+        fontStack.spacing = isPad ? 12 : 8
         fontStack.translatesAutoresizingMaskIntoConstraints = false
-        fontScrollView.addSubview(fontStack)
-        
+        fontTabView.addSubview(fontStack)
+
         for (index, fontName) in fontNames.enumerated() {
             let btn = UIButton(type: .system)
             btn.setTitle(fontName, for: .normal)
             btn.setTitleColor(.white, for: .normal)
-            btn.titleLabel?.font = .systemFont(ofSize: 14, weight: .medium)
+            btn.titleLabel?.font = .systemFont(ofSize: isPad ? 16 : 14, weight: .medium)
+            btn.titleLabel?.adjustsFontSizeToFitWidth = true
+            btn.titleLabel?.minimumScaleFactor = 0.7
             btn.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.25, alpha: 1.0)
             btn.layer.cornerRadius = 8
             btn.layer.borderWidth = 0 // 默认无边框
@@ -732,29 +740,27 @@ class LEDCreateViewController: UIViewController {
             btn.tag = 600 + index // tag从600开始
             btn.addTarget(self, action: #selector(fontButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
-            
-            // 设置按钮尺寸
+
+            // 新增字体加 VIP 标签
+            if index >= 3 {
+                addVIPBadge(to: btn)
+            }
+
             NSLayoutConstraint.activate([
-                btn.widthAnchor.constraint(equalToConstant: 80),
-                btn.heightAnchor.constraint(equalToConstant: 32) // 从40减少到32
+                btn.heightAnchor.constraint(equalToConstant: fontButtonHeight)
             ])
-            
+
             fontStack.addArrangedSubview(btn)
             fontButtons.append(btn)
         }
-        
+
         NSLayoutConstraint.activate([
-            fontScrollView.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
-            fontScrollView.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
-            fontScrollView.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
-            fontScrollView.heightAnchor.constraint(equalToConstant: 32), // 从40减少到32
-            
-            fontStack.topAnchor.constraint(equalTo: fontScrollView.topAnchor),
-            fontStack.leadingAnchor.constraint(equalTo: fontScrollView.leadingAnchor),
-            fontStack.trailingAnchor.constraint(equalTo: fontScrollView.trailingAnchor),
-            fontStack.heightAnchor.constraint(equalToConstant: 32) // 从40减少到32
+            fontStack.topAnchor.constraint(equalTo: fontTabView.topAnchor, constant: tabYOffset),
+            fontStack.leadingAnchor.constraint(equalTo: fontTabView.leadingAnchor, constant: 20),
+            fontStack.trailingAnchor.constraint(equalTo: fontTabView.trailingAnchor, constant: -20),
+            fontStack.heightAnchor.constraint(equalToConstant: fontButtonHeight)
         ])
-        tabYOffset += 52 // 从60减少到52（32+20）
+        tabYOffset += (fontButtonHeight + 20)
         
         // 文字颜色（3行：第1行纯色，第2-3行渐变色）
         addSectionLabelToView(fontTabView, text: "textColor".localized, yOffset: &tabYOffset)
@@ -1573,6 +1579,26 @@ class LEDCreateViewController: UIViewController {
         ])
         yOffset += 30
     }
+
+    private func addVIPBadge(to button: UIButton) {
+        let badge = UILabel()
+        badge.text = "VIP"
+        badge.textColor = .black
+        badge.font = .systemFont(ofSize: 10, weight: .bold)
+        badge.backgroundColor = UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0)
+        badge.textAlignment = .center
+        badge.layer.cornerRadius = 8
+        badge.layer.masksToBounds = true
+        badge.translatesAutoresizingMaskIntoConstraints = false
+        button.addSubview(badge)
+
+        NSLayoutConstraint.activate([
+            badge.topAnchor.constraint(equalTo: button.topAnchor, constant: 2),
+            badge.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -2),
+            badge.widthAnchor.constraint(equalToConstant: 28),
+            badge.heightAnchor.constraint(equalToConstant: 16)
+        ])
+    }
     
     private func addSliderSectionToView(_ view: UIView, label: UILabel, slider: UISlider, yOffset: inout CGFloat) {
         label.translatesAutoresizingMaskIntoConstraints = false
@@ -2363,13 +2389,19 @@ class LEDCreateViewController: UIViewController {
         case "PingFangSC-Semibold":
             fontIndex = 2
         case "PingFangSC-Bold":
-            fontIndex = 3
+            // Bold font option was removed from the picker; map it to Semibold.
+            currentItem.fontName = "PingFangSC-Semibold"
+            fontIndex = 2
         case "STHeitiSC-Medium", "PingFangSC-Medium": // 兼容旧数据
             fontIndex = 2
         case "STSongti-SC-Regular": // 兼容旧数据
             fontIndex = 1
         case "STKaitiSC-Regular", "STKaiti": // 兼容旧数据
+            fontIndex = 2
+        case let name where name.hasPrefix("MatrixSansPrint"):
             fontIndex = 3
+        case let name where name.hasPrefix("MatrixSansScreen"):
+            fontIndex = 4
         default:
             fontIndex = 0
         }
@@ -2719,13 +2751,13 @@ class LEDCreateViewController: UIViewController {
     
     @objc private func fontButtonTapped(_ sender: UIButton) {
         let index = sender.tag - 600
-        
+
         // 更新选中状态
         for (i, btn) in fontButtons.enumerated() {
             btn.layer.borderWidth = i == index ? 3 : 0
         }
-        
-        // 设置字体（使用iOS系统中实际可用的PingFang字体系列）
+
+        // 设置字体（系统字体 + MatrixSans点阵字体）
         switch index {
         case 0:
             currentItem.fontName = "PingFangSC-Regular" // 常规
@@ -2734,11 +2766,13 @@ class LEDCreateViewController: UIViewController {
         case 2:
             currentItem.fontName = "PingFangSC-Semibold" // 半粗
         case 3:
-            currentItem.fontName = "PingFangSC-Bold" // 粗体
+            currentItem.fontName = LEDFontRenderer.dotMatrixFontName // 点阵
+        case 4:
+            currentItem.fontName = LEDFontRenderer.pixelFontName // 像素
         default:
             currentItem.fontName = "PingFangSC-Regular"
         }
-        
+
         print("🔤 选择字体: \(currentItem.fontName)")
         updatePreview()
     }
@@ -2984,29 +3018,17 @@ class LEDCreateViewController: UIViewController {
         let scaleFactor: CGFloat = 0.4
         let previewFontSize = currentItem.fontSize * scaleFactor
         
-        // 尝试使用指定字体，如果失败则使用系统字体
-        let font: UIFont
-        if let customFont = UIFont(name: currentItem.fontName, size: previewFontSize) {
-            font = customFont
-            print("✅ 成功应用字体: \(currentItem.fontName)")
-        } else {
-            // 字体加载失败，使用系统字体作为回退
-            font = .systemFont(ofSize: previewFontSize, weight: .medium)
-            print("⚠️ 字体加载失败: \(currentItem.fontName)，使用系统字体")
-        }
-        
-        // 创建带行间距的属性字符串
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = previewFontSize * 0.1  // 行间距为字体大小的0.1倍 (1.1倍行高)
-        paragraphStyle.alignment = .center
-        paragraphStyle.lineBreakMode = .byWordWrapping
-        
-        let attributedString = NSMutableAttributedString(string: displayText)
-        attributedString.addAttribute(.font, value: font, range: NSRange(location: 0, length: displayText.count))
-        attributedString.addAttribute(.foregroundColor, value: UIColor(hex: currentItem.textColor), range: NSRange(location: 0, length: displayText.count))
-        attributedString.addAttribute(.paragraphStyle, value: paragraphStyle, range: NSRange(location: 0, length: displayText.count))
-        
-        previewLabel.attributedText = attributedString
+        let attributedText = LEDFontRenderer.attributedText(
+            displayText,
+            fontName: currentItem.fontName,
+            size: previewFontSize,
+            color: UIColor(hex: currentItem.textColor),
+            alignment: .center,
+            lineSpacing: previewFontSize * 0.1
+        )
+
+        previewLabel.attributedText = attributedText
+        print("✅ 更新预览字体: \(currentItem.fontName)")
         
         // 更新背景（LED卡片、图片或颜色）
         if let imageName = selectedBackgroundImage {

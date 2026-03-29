@@ -97,7 +97,8 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         
         // Configure all layout styles (iPad may use inline/compactInline; iPhone typically uses stacked).
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let tabFontSize: CGFloat = isPad ? 14 : 11
+        let tabScale: CGFloat = isPad ? 1.2 : 1.0
+        let tabFontSize: CGFloat = (isPad ? 14 : 11) * tabScale
 
         let normalAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: UIColor.systemGray,
@@ -165,7 +166,8 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
     
     private func setupViewControllers() {
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let symbolConfig = UIImage.SymbolConfiguration(pointSize: isPad ? 22 : 17, weight: .regular)
+        let tabScale: CGFloat = isPad ? 1.2 : 1.0
+        let symbolConfig = UIImage.SymbolConfiguration(pointSize: (isPad ? 22 : 17) * tabScale, weight: .regular)
 
         func sym(_ name: String) -> UIImage? {
             UIImage(systemName: name, withConfiguration: symbolConfig)

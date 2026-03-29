@@ -188,26 +188,22 @@ class LEDFullScreenViewController: UIViewController {
             linearBorderView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
-        textLabel.text = ledItem.text
-        
-        // 统一字体大小计算：基于全屏横屏尺寸等比缩放
-        // 全屏横屏基准：852px宽度（iPhone 14 Pro横屏）
-        // fontSize值对应全屏横屏时的实际pt大小
-        let screenWidth = UIScreen.main.bounds.width
-        let screenHeight = UIScreen.main.bounds.height
-        let _ = max(screenWidth, screenHeight) // 横屏宽度（未使用，保留注释说明）
-        
-        // 直接使用fontSize值，这就是全屏横屏时的实际大小
-        let adjustedFontSize = ledItem.fontSize
-        
-        textLabel.font = UIFont(name: ledItem.fontName, size: adjustedFontSize) ?? .boldSystemFont(ofSize: adjustedFontSize)
-        textLabel.textColor = UIColor(hex: ledItem.textColor)
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0
         textLabel.adjustsFontSizeToFitWidth = true
         textLabel.minimumScaleFactor = 0.3
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
+
+        // 直接使用fontSize值，这就是全屏横屏时的实际大小
+        let adjustedFontSize = ledItem.fontSize
+        textLabel.attributedText = LEDFontRenderer.attributedText(
+            ledItem.text,
+            fontName: ledItem.fontName,
+            size: adjustedFontSize,
+            color: UIColor(hex: ledItem.textColor),
+            alignment: .center
+        )
         
         // 霓虹发光效果 (支持0-20范围)
         let glowRadius = 10 * ledItem.glowIntensity // 0-200的范围

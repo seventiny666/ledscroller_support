@@ -81,6 +81,8 @@
 "speed" = "播放速度";
 
 /* Font Names */
+"dotMatrix" = "点阵";
+"pixel" = "像素";
 "pingfang" = "蘋方";
 "heiti" = "黑體";
 "songti" = "宋體";

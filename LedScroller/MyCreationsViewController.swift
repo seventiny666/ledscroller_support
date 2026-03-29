@@ -695,8 +695,13 @@ class CreationTableCell: UITableViewCell {
         let scaleFactor = containerWidth / landscapeWidth
         let calculatedFontSize = item.fontSize * scaleFactor
 
-        ledTextLabel.font = UIFont(name: item.fontName, size: calculatedFontSize) ?? .boldSystemFont(ofSize: calculatedFontSize)
-        ledTextLabel.textColor = UIColor(hex: item.textColor)
+        ledTextLabel.attributedText = LEDFontRenderer.attributedText(
+            item.text,
+            fontName: item.fontName,
+            size: calculatedFontSize,
+            color: UIColor(hex: item.textColor),
+            alignment: .center
+        )
 
         // 霓虹效果
         ledTextLabel.layer.shadowColor = UIColor(hex: item.textColor).cgColor

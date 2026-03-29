@@ -47,9 +47,10 @@ class LEDSquareViewController: UIViewController {
         
         // 集合视图布局
         let layout = UICollectionViewFlowLayout()
-        layout.minimumInteritemSpacing = 17 // 横向间距17px
-        layout.minimumLineSpacing = 17 // 纵向间距17px
-        layout.sectionInset = UIEdgeInsets(top: 20, left: 26, bottom: 20, right: 26) // 左右边距26px
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        layout.minimumInteritemSpacing = isPad ? 30 : 17 // iPad needs more breathing room
+        layout.minimumLineSpacing = isPad ? 30 : 17
+        layout.sectionInset = UIEdgeInsets(top: 20, left: 26, bottom: 20, right: 26) // keep existing edge insets
         
         let width = (view.bounds.width - 30) / 2 // 宽度计算：(屏幕宽度 - 30) / 2
         layout.itemSize = CGSize(width: width, height: width * 0.6)
@@ -294,9 +295,13 @@ class LEDCell: UICollectionViewCell {
     
     func configure(with item: LEDItem) {
         containerView.backgroundColor = UIColor(hex: item.backgroundColor)
-        textLabel.text = item.text
-        textLabel.font = UIFont(name: item.fontName, size: 24) ?? .boldSystemFont(ofSize: 24)
-        textLabel.textColor = UIColor(hex: item.textColor)
+        textLabel.attributedText = LEDFontRenderer.attributedText(
+            item.text,
+            fontName: item.fontName,
+            size: 24,
+            color: UIColor(hex: item.textColor),
+            alignment: .center
+        )
         
         // 清理旧的效果，但保留textLabel和clockTitleLabel
         containerView.subviews.forEach { subview in

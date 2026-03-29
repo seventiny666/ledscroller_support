@@ -18,6 +18,10 @@
 	<key>UIAppFonts</key>
 	<array>
 		<string>DSEG7Classic-Bold.ttf</string>
+		<string>MatrixSansPrint-Regular.ttf</string>
+		<string>MatrixSansPrintSC-Regular.ttf</string>
+		<string>MatrixSansScreen-Regular.ttf</string>
+		<string>MatrixSansScreenSC-Regular.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

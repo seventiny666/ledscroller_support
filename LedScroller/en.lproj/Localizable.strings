@@ -149,6 +149,8 @@
 "speed" = "Playback Speed";
 
 /* Font Names */
+"dotMatrix" = "Dot Matrix";
+"pixel" = "Pixel";
 "pingfang" = "Regular";
 "thin" = "Light";
 "medium" = "Semibold";

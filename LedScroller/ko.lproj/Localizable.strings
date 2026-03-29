@@ -129,6 +129,8 @@
 "speed" = "재생 속도";
 
 /* Font Names */
+"dotMatrix" = "Dot Matrix";
+"pixel" = "Pixel";
 "pingfang" = "PingFang";
 "heiti" = "Heiti";
 "songti" = "Songti";

@@ -150,6 +150,8 @@
 "speed" = "播放速度";
 
 /* Font Names */
+"dotMatrix" = "点阵";
+"pixel" = "像素";
 "pingfang" = "常规";
 "thin" = "细体";
 "medium" = "半粗";

@@ -183,6 +183,105 @@ struct LEDItem: Codable {
     }
 }
 
+struct LEDFontRenderer {
+    static let dotMatrixFontName = "MatrixSansPrint-Regular"
+    static let pixelFontName = "MatrixSansScreen-Regular"
+
+    private static let dotMatrixLower = "MatrixSansPrint-Regular"
+    private static let dotMatrixUpper = "MatrixSansPrintSC-Regular"
+    private static let pixelLower = "MatrixSansScreen-Regular"
+    private static let pixelUpper = "MatrixSansScreenSC-Regular"
+
+    static func isMatrixSans(_ fontName: String) -> Bool {
+        fontName.hasPrefix("MatrixSansPrint") || fontName.hasPrefix("MatrixSansScreen")
+    }
+
+    static func attributedText(
+        _ text: String,
+        fontName: String,
+        size: CGFloat,
+        color: UIColor,
+        alignment: NSTextAlignment = .center,
+        lineSpacing: CGFloat? = nil
+    ) -> NSAttributedString {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.alignment = alignment
+        paragraphStyle.lineBreakMode = .byWordWrapping
+        if let lineSpacing {
+            paragraphStyle.lineSpacing = lineSpacing
+        }
+
+        if let (lowerName, upperName) = matrixFontNames(for: fontName),
+           let lowerFont = UIFont(name: lowerName, size: size),
+           let upperFont = UIFont(name: upperName, size: size) {
+            return matrixAttributedText(
+                text,
+                lowerFont: lowerFont,
+                upperFont: upperFont,
+                color: color,
+                paragraphStyle: paragraphStyle
+            )
+        }
+
+        let font = UIFont(name: fontName, size: size) ?? .systemFont(ofSize: size, weight: .medium)
+        return NSAttributedString(
+            string: text,
+            attributes: [
+                .font: font,
+                .foregroundColor: color,
+                .paragraphStyle: paragraphStyle,
+            ]
+        )
+    }
+
+    private static func matrixFontNames(for fontName: String) -> (String, String)? {
+        if fontName.hasPrefix("MatrixSansPrint") {
+            return (dotMatrixLower, dotMatrixUpper)
+        }
+        if fontName.hasPrefix("MatrixSansScreen") {
+            return (pixelLower, pixelUpper)
+        }
+        return nil
+    }
+
+    private static func matrixAttributedText(
+        _ text: String,
+        lowerFont: UIFont,
+        upperFont: UIFont,
+        color: UIColor,
+        paragraphStyle: NSParagraphStyle
+    ) -> NSAttributedString {
+        let attributed = NSMutableAttributedString(string: text)
+        let fullRange = NSRange(location: 0, length: (text as NSString).length)
+        attributed.addAttributes(
+            [
+                .foregroundColor: color,
+                .paragraphStyle: paragraphStyle,
+            ],
+            range: fullRange
+        )
+
+        var location = 0
+        for ch in text {
+            let s = String(ch)
+            let len = (s as NSString).length
+            let range = NSRange(location: location, length: len)
+            let font = isLowercaseAsciiLetter(s) ? lowerFont : upperFont
+            attributed.addAttribute(.font, value: font, range: range)
+            location += len
+        }
+
+        return attributed
+    }
+
+    private static func isLowercaseAsciiLetter(_ s: String) -> Bool {
+        guard let scalar = s.unicodeScalars.first, s.unicodeScalars.count == 1 else {
+            return false
+        }
+        return (97...122).contains(Int(scalar.value))
+    }
+}
+
 // 数据持久化管理
 class LEDDataManager {
     static let shared = LEDDataManager()
