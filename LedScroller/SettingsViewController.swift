@@ -398,7 +398,15 @@ class SettingsViewController: UIViewController {
         feedbackButton.setTitle("rateSheetFeedback".localized, for: .normal)
         feedbackButton.setTitleColor(.white, for: .normal)
         feedbackButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        feedbackButton.backgroundColor = .systemCyan
+        if #available(iOS 15.0, *) {
+            if #available(iOS 15.0, *) {
+                feedbackButton.backgroundColor = .systemCyan
+            } else {
+                feedbackButton.backgroundColor = .cyan
+            }
+        } else {
+            feedbackButton.backgroundColor = .cyan
+        }
         feedbackButton.layer.cornerRadius = 18
         feedbackButton.translatesAutoresizingMaskIntoConstraints = false
         feedbackButton.addAction(UIAction { [weak self] _ in

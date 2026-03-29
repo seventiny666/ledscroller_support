@@ -133,7 +133,15 @@ final class FeedbackViewController: UIViewController, MFMailComposeViewControlle
         submitButton.setTitle("feedbackSubmit".localized, for: .normal)
         submitButton.setTitleColor(.white, for: .normal)
         submitButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        submitButton.backgroundColor = .systemCyan
+        if #available(iOS 15.0, *) {
+            if #available(iOS 15.0, *) {
+                submitButton.backgroundColor = .systemCyan
+            } else {
+                submitButton.backgroundColor = .cyan
+            }
+        } else {
+            submitButton.backgroundColor = .cyan
+        }
         submitButton.layer.cornerRadius = 22
         submitButton.addTarget(self, action: #selector(submitTapped), for: .touchUpInside)
 
