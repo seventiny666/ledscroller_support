@@ -943,12 +943,9 @@ class LEDCreateViewController: UIViewController {
             neonRow2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
             neonRow2.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
-        tabYOffset += buttonHeight + 20
-        
-        // 偶像应援（8个，2行，每行4个）
-        addSectionLabelToView(backgroundTabView, text: "idol".localized, yOffset: &tabYOffset)
-        
-        // 偶像第一行（0-3）
+        tabYOffset += buttonHeight + 10
+
+        // 将 Idol Screen 卡片并入 Neon Screen 模块（不显示 Idol 标题）。
         let idolRow1 = createTemplateStack(category: "idol", startIndex: 0, count: 4, tag: 510, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
         backgroundTabView.addSubview(idolRow1)
         NSLayoutConstraint.activate([
@@ -958,8 +955,7 @@ class LEDCreateViewController: UIViewController {
             idolRow1.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
         tabYOffset += buttonHeight + 10
-        
-        // 偶像第二行（4-7）
+
         let idolRow2 = createTemplateStack(category: "idol", startIndex: 4, count: 4, tag: 514, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
         backgroundTabView.addSubview(idolRow2)
         NSLayoutConstraint.activate([

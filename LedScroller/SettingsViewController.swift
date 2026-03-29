@@ -358,37 +358,119 @@ class SettingsViewController: UIViewController {
     }
 
     private func presentRateSheet(sourceView: UIView?) {
-        let alert = UIAlertController(
-            title: "rateSheetTitle".localized,
-            message: "rateSheetMessage".localized,
-            preferredStyle: .actionSheet
-        )
+        // Custom sheet so we can control width, button layout, and colors.
+        showCustomRateAlert()
+    }
 
-        alert.addAction(UIAlertAction(title: "rateSheetFeedback".localized, style: .default) { [weak self] _ in
-            guard let self else { return }
+    private func showCustomRateAlert() {
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+
+        let alertView = UIView()
+        alertView.backgroundColor = UIColor(red: 0.15, green: 0.15, blue: 0.15, alpha: 1)
+        alertView.layer.cornerRadius = 16
+        alertView.translatesAutoresizingMaskIntoConstraints = false
+
+        // Close button
+        let closeButton = UIButton(type: .system)
+        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+        closeButton.tintColor = .white
+        closeButton.translatesAutoresizingMaskIntoConstraints = false
+        closeButton.addTarget(self, action: #selector(dismissCustomRateAlert), for: .touchUpInside)
+
+        let titleLabel = UILabel()
+        titleLabel.text = "rateSheetTitle".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 20, weight: .bold)
+        titleLabel.textAlignment = .center
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let messageLabel = UILabel()
+        messageLabel.text = "rateSheetMessage".localized
+        messageLabel.textColor = UIColor.white.withAlphaComponent(0.8)
+        messageLabel.font = .systemFont(ofSize: 16)
+        messageLabel.textAlignment = .center
+        messageLabel.numberOfLines = 0
+        messageLabel.translatesAutoresizingMaskIntoConstraints = false
+
+        let feedbackButton = UIButton(type: .system)
+        feedbackButton.setTitle("rateSheetFeedback".localized, for: .normal)
+        feedbackButton.setTitleColor(.white, for: .normal)
+        feedbackButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        feedbackButton.backgroundColor = .systemCyan
+        feedbackButton.layer.cornerRadius = 18
+        feedbackButton.translatesAutoresizingMaskIntoConstraints = false
+        feedbackButton.addAction(UIAction { [weak self] _ in
+            self?.dismissCustomRateAlert()
             let vc = FeedbackViewController()
             vc.hidesBottomBarWhenPushed = true
-            self.navigationController?.pushViewController(vc, animated: true)
-        })
+            self?.navigationController?.pushViewController(vc, animated: true)
+        }, for: .touchUpInside)
 
-        alert.addAction(UIAlertAction(title: "rateSheetRate".localized, style: .default) { [weak self] _ in
+        let rateButton = UIButton(type: .system)
+        rateButton.setTitle("rateSheetRate".localized, for: .normal)
+        rateButton.setTitleColor(.white, for: .normal)
+        rateButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
+        rateButton.backgroundColor = .systemPink
+        rateButton.layer.cornerRadius = 18
+        rateButton.translatesAutoresizingMaskIntoConstraints = false
+        rateButton.addAction(UIAction { [weak self] _ in
+            self?.dismissCustomRateAlert()
             self?.requestReviewOrOpenAppStore()
-        })
+        }, for: .touchUpInside)
 
-        alert.addAction(UIAlertAction(title: "cancel".localized, style: .cancel))
+        let buttonStack = UIStackView(arrangedSubviews: [feedbackButton, rateButton])
+        buttonStack.axis = .horizontal
+        buttonStack.distribution = .fillEqually
+        buttonStack.spacing = 12
+        buttonStack.translatesAutoresizingMaskIntoConstraints = false
 
-        // iPad requires a popover anchor for action sheets.
-        if let popover = alert.popoverPresentationController {
-            popover.sourceView = sourceView ?? view
-            if let sourceView {
-                popover.sourceRect = sourceView.bounds
-            } else {
-                popover.sourceRect = CGRect(x: view.bounds.midX, y: view.bounds.maxY - 1, width: 1, height: 1)
-            }
-            popover.permittedArrowDirections = []
-        }
+        view.addSubview(overlayView)
+        overlayView.addSubview(alertView)
+        alertView.addSubview(closeButton)
+        alertView.addSubview(titleLabel)
+        alertView.addSubview(messageLabel)
+        alertView.addSubview(buttonStack)
 
-        present(alert, animated: true)
+        overlayView.tag = 9998
+
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let alertWidth: CGFloat = isPad ? 420 : 360
+
+        NSLayoutConstraint.activate([
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            alertView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
+            alertView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
+            alertView.widthAnchor.constraint(equalToConstant: alertWidth),
+
+            closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 12),
+            closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -12),
+            closeButton.widthAnchor.constraint(equalToConstant: 24),
+            closeButton.heightAnchor.constraint(equalToConstant: 24),
+
+            titleLabel.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 22),
+            titleLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
+            messageLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+            messageLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+
+            buttonStack.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 20),
+            buttonStack.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
+            buttonStack.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
+            buttonStack.heightAnchor.constraint(equalToConstant: 44),
+            buttonStack.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -20),
+        ])
+    }
+
+    @objc private func dismissCustomRateAlert() {
+        view.viewWithTag(9998)?.removeFromSuperview()
     }
 
     private func requestReviewOrOpenAppStore() {

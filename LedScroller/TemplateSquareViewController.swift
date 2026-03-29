@@ -3702,8 +3702,8 @@ class TemplateSquareViewController: UIViewController {
     private func updateCategories() {
         switch currentTab {
         case .popular:
-            // 热门模版：霓虹灯看板、偶像应援、LED横幅
-            categories = [.neon, .idol, .ledScreen]
+            // 热门模版：霓虹灯看板 + LED横幅（Idol 合并到 Neon）
+            categories = [.neon, .ledScreen]
         case .animation:
             // 动画模版：热门动画、数字时钟
             categories = [.popularAnimation, .clock]
@@ -4334,8 +4334,10 @@ class TemplateCategoryCell: UITableViewCell {
             return presetItems + userItems
 
         case .neon:
-            return Self.createPlaceholderItems(category: "neon", count: 4)
+            // Merge Idol cards into Neon section on iPad home.
+            return Self.createPlaceholderItems(category: "neon", count: 4) + Self.createPlaceholderItems(category: "idol", count: 4)
         case .idol:
+            // Hidden from the category list; kept for compatibility.
             return Self.createPlaceholderItems(category: "idol", count: 4)
         case .ledScreen:
             return Self.createPlaceholderItems(category: "led", count: 4)
