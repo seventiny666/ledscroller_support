@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "clock_1.jpeg",
+      "filename" : "flip_clock_cover.png",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "clock_1@2x.jpeg",
+      "filename" : "flip_clock_cover@2x.png",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "clock_1@3x.jpeg",
+      "filename" : "flip_clock_cover@3x.png",
       "idiom" : "universal",
       "scale" : "3x"
     }

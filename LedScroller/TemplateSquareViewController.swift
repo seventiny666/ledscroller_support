@@ -4857,23 +4857,11 @@ class TemplateItemCell: UICollectionViewCell {
             // 隐藏文字标签
             overlayTextLabel.isHidden = true
         }
-
-        // 翻页时钟封面：用真实的翻页卡片样式（静态显示）
+        // 翻页时钟封面：静态图片（避免小卡片内复杂布局导致裁切/压缩异常）
         if item.isFlipClock {
-            imageView.image = nil
-            imageView.backgroundColor = UIColor.black
-
-            let flipCoverView = FlipClockCoverView()
-            flipCoverView.translatesAutoresizingMaskIntoConstraints = false
-            imageView.addSubview(flipCoverView)
-
-            NSLayoutConstraint.activate([
-                flipCoverView.topAnchor.constraint(equalTo: imageView.topAnchor),
-                flipCoverView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
-                flipCoverView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
-                flipCoverView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
-            ])
-
+            imageView.image = UIImage(named: "flip_clock_cover")
+            imageView.contentMode = .scaleAspectFill
+            imageView.backgroundColor = .black
             overlayTextLabel.isHidden = true
         }
 
