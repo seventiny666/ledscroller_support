@@ -4,6 +4,7 @@ import UIKit
 struct LEDItem: Codable {
     var id: String
     var text: String
+    var isTextWrapEnabled: Bool
     var fontSize: CGFloat
     var textColor: String
     var backgroundColor: String
@@ -42,6 +43,7 @@ struct LEDItem: Codable {
     enum CodingKeys: String, CodingKey {
         case id
         case text
+        case isTextWrapEnabled
         case fontSize
         case textColor
         case backgroundColor
@@ -72,6 +74,7 @@ struct LEDItem: Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         id = try c.decode(String.self, forKey: .id)
         text = try c.decode(String.self, forKey: .text)
+        isTextWrapEnabled = try c.decodeIfPresent(Bool.self, forKey: .isTextWrapEnabled) ?? true
         fontSize = try c.decode(CGFloat.self, forKey: .fontSize)
         textColor = try c.decode(String.self, forKey: .textColor)
         backgroundColor = try c.decode(String.self, forKey: .backgroundColor)
@@ -102,6 +105,7 @@ struct LEDItem: Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(id, forKey: .id)
         try c.encode(text, forKey: .text)
+        try c.encode(isTextWrapEnabled, forKey: .isTextWrapEnabled)
         try c.encode(fontSize, forKey: .fontSize)
         try c.encode(textColor, forKey: .textColor)
         try c.encode(backgroundColor, forKey: .backgroundColor)
@@ -130,6 +134,7 @@ struct LEDItem: Codable {
     
     init(id: String = UUID().uuidString,
          text: String = "", // 默认为空
+         isTextWrapEnabled: Bool = true,
          fontSize: CGFloat = 60,
          textColor: String = "#FF00FF",
          backgroundColor: String = "#201F1F",
@@ -156,6 +161,7 @@ struct LEDItem: Codable {
          createdAt: Date = Date()) {
         self.id = id
         self.text = text
+        self.isTextWrapEnabled = isTextWrapEnabled
         self.fontSize = fontSize
         self.textColor = textColor
         self.backgroundColor = backgroundColor
@@ -187,13 +193,53 @@ struct LEDFontRenderer {
     static let dotMatrixFontName = "MatrixSansPrint-Regular"
     static let pixelFontName = "MatrixSansScreen-Regular"
 
+    // VIP MatrixSans variants (match bundled TTF + postscript name)
+    static let matFontName = "MatrixSans-Regular"
+    static let rasterFontName = "MatrixSansRaster-Regular"
+    static let smoothFontName = "MatrixSansSmooth-Regular"
+    static let videoFontName = "MatrixSansVideo-Regular"
+
+    /// Apply a neon-like glow that tracks the text color.
+    /// Intensity is expected to be in 0...20 (slider range).
+    static func applyNeonGlow(to layer: CALayer, color: UIColor, intensity: CGFloat, fontSize: CGFloat) {
+        // User expectation: the slider controls glow *opacity* (brightness), not the blur radius.
+        let t = max(0, min(intensity / 20.0, 1.0))
+        if t <= 0 {
+            layer.shadowOpacity = 0
+            layer.shadowRadius = 0
+            return
+        }
+
+        layer.masksToBounds = false
+        layer.shadowColor = color.cgColor
+        layer.shadowOffset = .zero
+
+        // Fixed blur radius (does not change with the slider).
+        // Keep it reasonable even for very large font sizes (e.g. 320/520).
+        let radius = min(max(4, fontSize * 0.08), 10)
+        layer.shadowRadius = radius
+
+        // Opacity controls perceived glow strength. sqrt() makes low values more noticeable.
+        layer.shadowOpacity = Float(pow(Double(t), 0.5))
+    }
+
     private static let dotMatrixLower = "MatrixSansPrint-Regular"
     private static let dotMatrixUpper = "MatrixSansPrintSC-Regular"
     private static let pixelLower = "MatrixSansScreen-Regular"
     private static let pixelUpper = "MatrixSansScreenSC-Regular"
 
+    private static let matLower = "MatrixSans-Regular"
+    private static let matUpper = "MatrixSansSC-Regular"
+    private static let rasterLower = "MatrixSansRaster-Regular"
+    private static let rasterUpper = "MatrixSansRasterSC-Regular"
+    private static let smoothLower = "MatrixSansSmooth-Regular"
+    private static let smoothUpper = "MatrixSansSmoothSC-Regular"
+    private static let videoLower = "MatrixSansVideo-Regular"
+    private static let videoUpper = "MatrixSansVideoSC-Regular"
+
     static func isMatrixSans(_ fontName: String) -> Bool {
-        fontName.hasPrefix("MatrixSansPrint") || fontName.hasPrefix("MatrixSansScreen")
+        // All MatrixSans variants start with this prefix.
+        fontName.hasPrefix("MatrixSans")
     }
 
     static func attributedText(
@@ -202,11 +248,12 @@ struct LEDFontRenderer {
         size: CGFloat,
         color: UIColor,
         alignment: NSTextAlignment = .center,
+        lineBreakMode: NSLineBreakMode = .byWordWrapping,
         lineSpacing: CGFloat? = nil
     ) -> NSAttributedString {
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.alignment = alignment
-        paragraphStyle.lineBreakMode = .byWordWrapping
+        paragraphStyle.lineBreakMode = lineBreakMode
         if let lineSpacing {
             paragraphStyle.lineSpacing = lineSpacing
         }
@@ -240,6 +287,19 @@ struct LEDFontRenderer {
         }
         if fontName.hasPrefix("MatrixSansScreen") {
             return (pixelLower, pixelUpper)
+        }
+        if fontName.hasPrefix("MatrixSansRaster") {
+            return (rasterLower, rasterUpper)
+        }
+        if fontName.hasPrefix("MatrixSansSmooth") {
+            return (smoothLower, smoothUpper)
+        }
+        if fontName.hasPrefix("MatrixSansVideo") {
+            return (videoLower, videoUpper)
+        }
+        if fontName.hasPrefix("MatrixSans") {
+            // Mat
+            return (matLower, matUpper)
         }
         return nil
     }
@@ -340,23 +400,29 @@ class LEDDataManager {
             LEDItem(
                 id: "happy-birthday-default",
                 text: "HAPPY BIRTHDAY",
-                fontSize: 50,
-                textColor: "#FF1493",
+                fontSize: 80,
+                textColor: "#FFD700", // textColors row 2, first
                 backgroundColor: "#201F1F",
+                backgroundImageName: "neon_8", // Neon Screen row 2, col 4
                 glowIntensity: 3.5,
-                scrollType: .scrollLeft,
+                scrollType: .none,
                 speed: 1.5,
+                fontName: LEDFontRenderer.rasterFontName,
+                borderStyle: 2, // Marquee Border row 1, col 3
                 isDefaultPreset: true
             ),
             LEDItem(
                 id: "happy-new-year-default",
                 text: "HAPPY NEW YEAR",
-                fontSize: 48,
-                textColor: "#FFD700",
+                fontSize: 74,
+                textColor: "#FFFFFF",
                 backgroundColor: "#201F1F",
-                glowIntensity: 3.0,
-                scrollType: .scrollRight,
-                speed: 1.8,
+                backgroundImageName: "idol_6", // Neon Screen row 4, col 2 (idol_6)
+                glowIntensity: 3.5,
+                scrollType: .none,
+                speed: 1.0,
+                fontName: LEDFontRenderer.rasterFontName,
+                borderStyle: 11, // Marquee Border row 3, last (style12)
                 isDefaultPreset: true
             ),
             LEDItem(
@@ -372,13 +438,16 @@ class LEDDataManager {
             ),
             LEDItem(
                 id: "marry-me-default",
-                text: "MARRY ME",
-                fontSize: 60,
-                textColor: "#FF00FF",
+                text: "Marry Me",
+                fontSize: 110,
+                textColor: "#FF00FF", // textColors row 1, col 6
                 backgroundColor: "#201F1F",
-                glowIntensity: 5.0,
-                scrollType: .none,
+                backgroundImageName: "neon_8", // Neon Screen row 2, col 4
+                glowIntensity: 3.5,
+                scrollType: .blink,
                 speed: 1.0,
+                fontName: LEDFontRenderer.pixelFontName,
+                linearBorderStyle: 4, // Linear Border row 2, col 2 (purple)
                 isDefaultPreset: true
             ),
             LEDItem(

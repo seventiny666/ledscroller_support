@@ -41,6 +41,14 @@
 		4E46044E45D04BF09AC7670F /* MatrixSansPrintSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = D4ECDA6EB73147FB8E6D0D7F /* MatrixSansPrintSC-Regular.ttf */; };
 		2764038906434548B2C1AA1D /* MatrixSansScreen-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 935CE6D205204B78B745F208 /* MatrixSansScreen-Regular.ttf */; };
 		734A822942BC49988568E852 /* MatrixSansScreenSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 802C490BE85D4B72ADFC6D14 /* MatrixSansScreenSC-Regular.ttf */; };
+		DBF3DB785ECE29C9170B25A9 /* MatrixSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = CF69F94B07909929304E8A8C /* MatrixSans-Regular.ttf */; };
+		06373203C2F389792BB50AA0 /* MatrixSansSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 3289679FA62BAE2039C920E5 /* MatrixSansSC-Regular.ttf */; };
+		75E810BAC0A1B0DAD9CE809B /* MatrixSansRaster-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 90EFBE6C14A78DC2A3B8ADE2 /* MatrixSansRaster-Regular.ttf */; };
+		E36F92EE459D12734D88129C /* MatrixSansRasterSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = E0D064CC3FE1862896856982 /* MatrixSansRasterSC-Regular.ttf */; };
+		6388EE05B9099D9E063860B6 /* MatrixSansSmooth-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 409A16896275C9E9A022851B /* MatrixSansSmooth-Regular.ttf */; };
+		BCE68CD1A3FFBC135CBD3669 /* MatrixSansSmoothSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 95352A37C54E77FFCC7DAE9E /* MatrixSansSmoothSC-Regular.ttf */; };
+		B25870F6E2BC8F206EE4AE6C /* MatrixSansVideo-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0DB148A20D228B355A48C1B7 /* MatrixSansVideo-Regular.ttf */; };
+		330E1B52D0274FEF6E1E28E2 /* MatrixSansVideoSC-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = DF3F74D1FDCB8DF7B84E81A0 /* MatrixSansVideoSC-Regular.ttf */; };
 		A1000038000000000000001 /* MainTabBarController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000039000000000000001 /* MainTabBarController.swift */; };
 		A1000040000000000000001 /* TemplateSquareViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000041000000000000001 /* TemplateSquareViewController.swift */; };
 		A1000042000000000000001 /* SettingsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1000043000000000000001 /* SettingsViewController.swift */; };
@@ -96,6 +104,14 @@
 		D4ECDA6EB73147FB8E6D0D7F /* MatrixSansPrintSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansPrintSC-Regular.ttf; sourceTree = "<group>"; };
 		935CE6D205204B78B745F208 /* MatrixSansScreen-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansScreen-Regular.ttf; sourceTree = "<group>"; };
 		802C490BE85D4B72ADFC6D14 /* MatrixSansScreenSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansScreenSC-Regular.ttf; sourceTree = "<group>"; };
+		CF69F94B07909929304E8A8C /* MatrixSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSans-Regular.ttf; sourceTree = "<group>"; };
+		3289679FA62BAE2039C920E5 /* MatrixSansSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansSC-Regular.ttf; sourceTree = "<group>"; };
+		90EFBE6C14A78DC2A3B8ADE2 /* MatrixSansRaster-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansRaster-Regular.ttf; sourceTree = "<group>"; };
+		E0D064CC3FE1862896856982 /* MatrixSansRasterSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansRasterSC-Regular.ttf; sourceTree = "<group>"; };
+		409A16896275C9E9A022851B /* MatrixSansSmooth-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansSmooth-Regular.ttf; sourceTree = "<group>"; };
+		95352A37C54E77FFCC7DAE9E /* MatrixSansSmoothSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansSmoothSC-Regular.ttf; sourceTree = "<group>"; };
+		0DB148A20D228B355A48C1B7 /* MatrixSansVideo-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansVideo-Regular.ttf; sourceTree = "<group>"; };
+		DF3F74D1FDCB8DF7B84E81A0 /* MatrixSansVideoSC-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = Fonts/MatrixSansVideoSC-Regular.ttf; sourceTree = "<group>"; };
 		141382332F56825C00F73105 /* MainTabBarController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MainTabBarController.swift; sourceTree = "<group>"; };
 		141382342F56825C00F73105 /* MyCreationsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = MyCreationsViewController.swift; sourceTree = "<group>"; };
 		141382352F56825C00F73105 /* CodeGenerator.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CodeGenerator.swift; sourceTree = "<group>"; };
@@ -189,6 +205,14 @@
 				D4ECDA6EB73147FB8E6D0D7F /* MatrixSansPrintSC-Regular.ttf */,
 				935CE6D205204B78B745F208 /* MatrixSansScreen-Regular.ttf */,
 				802C490BE85D4B72ADFC6D14 /* MatrixSansScreenSC-Regular.ttf */,
+				CF69F94B07909929304E8A8C /* MatrixSans-Regular.ttf */,
+				3289679FA62BAE2039C920E5 /* MatrixSansSC-Regular.ttf */,
+				90EFBE6C14A78DC2A3B8ADE2 /* MatrixSansRaster-Regular.ttf */,
+				E0D064CC3FE1862896856982 /* MatrixSansRasterSC-Regular.ttf */,
+				409A16896275C9E9A022851B /* MatrixSansSmooth-Regular.ttf */,
+				95352A37C54E77FFCC7DAE9E /* MatrixSansSmoothSC-Regular.ttf */,
+				0DB148A20D228B355A48C1B7 /* MatrixSansVideo-Regular.ttf */,
+				DF3F74D1FDCB8DF7B84E81A0 /* MatrixSansVideoSC-Regular.ttf */,
 				141382332F56825C00F73105 /* MainTabBarController.swift */,
 				141382342F56825C00F73105 /* MyCreationsViewController.swift */,
 				141382352F56825C00F73105 /* CodeGenerator.swift */,
@@ -404,6 +428,14 @@
 				4E46044E45D04BF09AC7670F /* MatrixSansPrintSC-Regular.ttf in Resources */,
 				2764038906434548B2C1AA1D /* MatrixSansScreen-Regular.ttf in Resources */,
 				734A822942BC49988568E852 /* MatrixSansScreenSC-Regular.ttf in Resources */,
+				DBF3DB785ECE29C9170B25A9 /* MatrixSans-Regular.ttf in Resources */,
+				06373203C2F389792BB50AA0 /* MatrixSansSC-Regular.ttf in Resources */,
+				75E810BAC0A1B0DAD9CE809B /* MatrixSansRaster-Regular.ttf in Resources */,
+				E36F92EE459D12734D88129C /* MatrixSansRasterSC-Regular.ttf in Resources */,
+				6388EE05B9099D9E063860B6 /* MatrixSansSmooth-Regular.ttf in Resources */,
+				BCE68CD1A3FFBC135CBD3669 /* MatrixSansSmoothSC-Regular.ttf in Resources */,
+				B25870F6E2BC8F206EE4AE6C /* MatrixSansVideo-Regular.ttf in Resources */,
+				330E1B52D0274FEF6E1E28E2 /* MatrixSansVideoSC-Regular.ttf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -260,8 +260,10 @@ class LEDCell: UICollectionViewCell {
         
         textLabel.textAlignment = .center
         textLabel.numberOfLines = 0
-        textLabel.adjustsFontSizeToFitWidth = true
-        textLabel.minimumScaleFactor = 0.5
+        textLabel.lineBreakMode = .byWordWrapping
+        // Do NOT auto-scale text; font size strictly follows the slider.
+        textLabel.adjustsFontSizeToFitWidth = false
+        textLabel.minimumScaleFactor = 1.0
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(textLabel)
         
@@ -295,12 +297,18 @@ class LEDCell: UICollectionViewCell {
     
     func configure(with item: LEDItem) {
         containerView.backgroundColor = UIColor(hex: item.backgroundColor)
+
+        let wrapEnabled = item.isTextWrapEnabled
+        textLabel.numberOfLines = wrapEnabled ? 0 : 1
+        textLabel.lineBreakMode = wrapEnabled ? .byWordWrapping : .byClipping
+
         textLabel.attributedText = LEDFontRenderer.attributedText(
             item.text,
             fontName: item.fontName,
             size: 24,
             color: UIColor(hex: item.textColor),
-            alignment: .center
+            alignment: .center,
+            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping
         )
         
         // 清理旧的效果，但保留textLabel和clockTitleLabel

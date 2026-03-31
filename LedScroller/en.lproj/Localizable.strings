@@ -149,11 +149,15 @@
 "speed" = "Playback Speed";
 
 /* Font Names */
-"dotMatrix" = "Dot Matrix";
+"dotMatrix" = "Dot";
 "pixel" = "Pixel";
+"mat" = "Mat";
+"raster" = "Raster";
+"smooth" = "Smooth";
+"video" = "Video";
 "pingfang" = "Regular";
 "thin" = "Light";
-"medium" = "Semibold";
+"medium" = "Bold";
 "bold" = "Bold";
 
 /* Scroll Types */

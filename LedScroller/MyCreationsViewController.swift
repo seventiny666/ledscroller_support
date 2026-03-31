@@ -695,12 +695,20 @@ class CreationTableCell: UITableViewCell {
         let scaleFactor = containerWidth / landscapeWidth
         let calculatedFontSize = item.fontSize * scaleFactor
 
+        let wrapEnabled = item.isTextWrapEnabled
+        ledTextLabel.numberOfLines = wrapEnabled ? 0 : 1
+        ledTextLabel.lineBreakMode = wrapEnabled ? .byWordWrapping : .byClipping
+        // Do NOT auto-scale text; font size strictly follows the slider.
+        ledTextLabel.adjustsFontSizeToFitWidth = false
+        ledTextLabel.minimumScaleFactor = 1.0
+
         ledTextLabel.attributedText = LEDFontRenderer.attributedText(
             item.text,
             fontName: item.fontName,
             size: calculatedFontSize,
             color: UIColor(hex: item.textColor),
-            alignment: .center
+            alignment: .center,
+            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping
         )
 
         // 霓虹效果

@@ -104,9 +104,9 @@ class MarqueeBorderView: UIView {
             safeInset = 20
             cornerRadius = 40
         case .cardCover:
-            dotSize = 10
-            safeInset = 12
-            cornerRadius = 12
+            dotSize = 8 // cover dots: 2pt smaller diameter; keep fullScreen unchanged
+            safeInset = 6 // closer to edge, still within safe inset
+            cornerRadius = 8
         }
         
         // 计算边框路径（圆角矩形）- 确保边框居中

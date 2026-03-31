@@ -150,11 +150,15 @@
 "speed" = "播放速度";
 
 /* Font Names */
-"dotMatrix" = "点阵";
+"dotMatrix" = "Dot";
 "pixel" = "像素";
+"mat" = "Mat";
+"raster" = "Raster";
+"smooth" = "Smooth";
+"video" = "Video";
 "pingfang" = "常规";
 "thin" = "细体";
-"medium" = "半粗";
+"medium" = "粗体";
 "bold" = "粗体";
 
 /* Scroll Types */

@@ -4334,8 +4334,19 @@ class TemplateCategoryCell: UITableViewCell {
             return presetItems + userItems
 
         case .neon:
+            // Hot templates: show 2 greeting presets first, then Neon + Idol.
+            var items: [LEDItem] = []
+            let headPresetIds: [String] = ["marry-me-default", "happy-new-year-default", "happy-birthday-default"]
+            for id in headPresetIds {
+                if let preset = allItems.first(where: { $0.id == id }) {
+                    items.append(preset)
+                }
+            }
+
             // Merge Idol cards into Neon section on iPad home.
-            return Self.createPlaceholderItems(category: "neon", count: 4) + Self.createPlaceholderItems(category: "idol", count: 4)
+            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 4))
+            items.append(contentsOf: Self.createPlaceholderItems(category: "idol", count: 4))
+            return items
         case .idol:
             // Hidden from the category list; kept for compatibility.
             return Self.createPlaceholderItems(category: "idol", count: 4)
@@ -4625,7 +4636,6 @@ class TemplateItemCell: UICollectionViewCell {
             imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -imageSideInset),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 9.0/16.0),
             
-            overlayTextLabel.centerXAnchor.constraint(equalTo: imageView.centerXAnchor),
             overlayTextLabel.centerYAnchor.constraint(equalTo: imageView.centerYAnchor),
             overlayTextLabel.leadingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: 8),
             overlayTextLabel.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: -8),
@@ -4677,9 +4687,21 @@ class TemplateItemCell: UICollectionViewCell {
     func configure(with item: LEDItem, tab: TemplateTab) {
         currentItem = item
         
-        // 移除之前可能添加的所有自定义视图
+        // 移除之前可能添加的所有自定义视图 / 边框视图
         imageView.subviews.forEach { subview in
-            if subview is HeartGridView || subview is ILoveUView || subview is View520 || subview is LoveRainCoverView || subview is FireworksCoverView || subview is FireworksBloomCoverView || subview is SevenSegmentClockView || subview is DSEGClockView || subview is FlipClockCoverView || subview is CountdownCoverView {
+            if subview is HeartGridView ||
+                subview is ILoveUView ||
+                subview is View520 ||
+                subview is LoveRainCoverView ||
+                subview is FireworksCoverView ||
+                subview is FireworksBloomCoverView ||
+                subview is SevenSegmentClockView ||
+                subview is DSEGClockView ||
+                subview is FlipClockCoverView ||
+                subview is CountdownCoverView ||
+                subview is MarqueeBorderView ||
+                subview is LightBoardBorderView ||
+                subview is LinearBorderView {
                 subview.removeFromSuperview()
             }
         }
@@ -4859,8 +4881,20 @@ class TemplateItemCell: UICollectionViewCell {
         }
         // 翻页时钟封面：静态图片（避免小卡片内复杂布局导致裁切/压缩异常）
         if item.isFlipClock {
-            imageView.image = UIImage(named: "flip_clock_cover")
-            imageView.contentMode = .scaleAspectFill
+            // If the asset can't be found (e.g. target membership/catalog build issue), fail loudly
+            // instead of silently showing a black tile.
+            let cover = UIImage(named: "flip_clock_cover")
+            assert(cover != nil, "Missing asset: flip_clock_cover")
+
+            if let cover {
+                imageView.image = cover
+                imageView.contentMode = .scaleAspectFill
+            } else {
+                // Fallback: still show *something* in Release builds.
+                imageView.image = UIImage(systemName: "clock")
+                imageView.contentMode = .scaleAspectFit
+            }
+
             imageView.backgroundColor = .black
             overlayTextLabel.isHidden = true
         }
@@ -4956,7 +4990,42 @@ class TemplateItemCell: UICollectionViewCell {
             // 热门模版：只显示试用按钮，隐藏预览按钮和标题
             // 特殊动画（爱心格子、I LOVE U、520、爱心流星雨、烟花、烟花绽放）不显示文字
             if !item.isHeartGrid && !item.isILoveU && !item.is520 && !item.isLoveRain && !item.isFireworks && !item.isFireworksBloom {
-                overlayTextLabel.text = item.text
+                if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" {
+                    // Only special-case these covers. Keep other Popular covers unchanged.
+                    let isPad = UIDevice.current.userInterfaceIdiom == .pad
+                    let screenHeight = UIScreen.main.bounds.height
+
+                    // Marry Me cover text should be smaller; other greeting cards keep current sizing.
+                    let baseOverlayFontSize: CGFloat
+                    let capSize: CGFloat
+                    if item.id == "marry-me-default" {
+                        baseOverlayFontSize = isPad ? 32 : (screenHeight >= 926 ? 16 : 14)
+                        capSize = isPad ? 46 : 22
+                    } else {
+                        baseOverlayFontSize = isPad ? 40 : (screenHeight >= 926 ? 20 : 18)
+                        capSize = isPad ? 56 : 28
+                    }
+
+                    let overlaySize = min(max(baseOverlayFontSize, item.fontSize * 0.40), capSize)
+
+                    // Force 1-line cover title for this card.
+                    overlayTextLabel.numberOfLines = 1
+                    overlayTextLabel.lineBreakMode = .byClipping
+                    overlayTextLabel.adjustsFontSizeToFitWidth = true
+                    overlayTextLabel.minimumScaleFactor = 0.5
+
+                    overlayTextLabel.attributedText = LEDFontRenderer.attributedText(
+                        item.text,
+                        fontName: item.fontName,
+                        size: overlaySize,
+                        color: UIColor(hex: item.textColor),
+                        alignment: .center,
+                        lineBreakMode: .byClipping
+                    )
+                } else {
+                    overlayTextLabel.attributedText = nil
+                    overlayTextLabel.text = item.text
+                }
                 overlayTextLabel.isHidden = false
             }
             titleLabel.isHidden = true
@@ -4974,7 +5043,7 @@ class TemplateItemCell: UICollectionViewCell {
                 tryButton.layer.cornerRadius = tryButton.bounds.height / 2
             }
         } else {
-            // 动画模版：显示标题（卡片下方），隐藏按钮和封面文字
+            // 动画模版：默认显示标题（卡片下方），隐藏按钮和封面文字
             overlayTextLabel.isHidden = true
             if item.isFlipClock {
                 titleLabel.text = "flipClock".localized
@@ -4989,6 +5058,40 @@ class TemplateItemCell: UICollectionViewCell {
             }
             titleLabel.isHidden = false
             buttonStack.isHidden = true
+
+            // Special-case: show cover text on the cover image too.
+            if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" {
+                let isPad = UIDevice.current.userInterfaceIdiom == .pad
+                let screenHeight = UIScreen.main.bounds.height
+
+                let baseOverlayFontSize: CGFloat
+                let capSize: CGFloat
+                if item.id == "marry-me-default" {
+                    baseOverlayFontSize = isPad ? 32 : (screenHeight >= 926 ? 16 : 14)
+                    capSize = isPad ? 46 : 22
+                } else {
+                    baseOverlayFontSize = isPad ? 40 : (screenHeight >= 926 ? 20 : 18)
+                    capSize = isPad ? 56 : 28
+                }
+
+                let overlaySize = min(max(baseOverlayFontSize, item.fontSize * 0.40), capSize)
+
+                overlayTextLabel.numberOfLines = 1
+                overlayTextLabel.lineBreakMode = .byClipping
+                overlayTextLabel.adjustsFontSizeToFitWidth = true
+                overlayTextLabel.minimumScaleFactor = 0.5
+
+                overlayTextLabel.attributedText = LEDFontRenderer.attributedText(
+                    item.text,
+                    fontName: item.fontName,
+                    size: overlaySize,
+                    color: UIColor(hex: item.textColor),
+                    alignment: .center,
+                    lineBreakMode: .byClipping
+                )
+                overlayTextLabel.isHidden = false
+                titleLabel.isHidden = true
+            }
         }
         
         // 封面图片上的文字添加霓虹效果
@@ -5007,8 +5110,55 @@ class TemplateItemCell: UICollectionViewCell {
                 imageView.image = nil
                 imageView.backgroundColor = UIColor(hex: item.backgroundColor)
             }
+
+            // Only special-case these cover backgrounds.
+            if (item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default"), let bgName = item.backgroundImageName, let bgImage = UIImage(named: bgName) {
+                imageView.image = bgImage
+                imageView.contentMode = .scaleAspectFill
+                imageView.backgroundColor = UIColor(hex: item.backgroundColor)
+            }
         }
         
+        // Only special-case these cover borders.
+        if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" {
+            if let borderStyle = item.borderStyle {
+                let borderView = MarqueeBorderView(displayMode: .cardCover)
+                borderView.setStyle(MarqueeBorderStyle(rawValue: borderStyle) ?? .style1)
+                borderView.setAnimated(true)
+                borderView.translatesAutoresizingMaskIntoConstraints = false
+                imageView.addSubview(borderView)
+                NSLayoutConstraint.activate([
+                    borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                    borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                    borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                    borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+                ])
+            }
+            if let lightBoardStyle = item.lightBoardStyle {
+                let borderView = LightBoardBorderView(displayMode: .cardCover)
+                borderView.setStyle(LightBoardBorderStyle(rawValue: lightBoardStyle) ?? .style1)
+                borderView.translatesAutoresizingMaskIntoConstraints = false
+                imageView.addSubview(borderView)
+                NSLayoutConstraint.activate([
+                    borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                    borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                    borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                    borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+                ])
+            }
+            if let linearBorderStyle = item.linearBorderStyle {
+                let borderView = LinearBorderView(style: LinearBorderStyle(rawValue: linearBorderStyle) ?? .red, displayMode: .cardCover)
+                borderView.translatesAutoresizingMaskIntoConstraints = false
+                imageView.addSubview(borderView)
+                NSLayoutConstraint.activate([
+                    borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                    borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                    borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                    borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+                ])
+            }
+        }
+
         // 显示或隐藏VIP标签
         vipBadgeView.isHidden = !item.isVIPRequired
         if item.isVIPRequired {
@@ -5043,8 +5193,8 @@ extension LEDItem {
         } else if isLEDTemplate {
             return "led_\(id.replacingOccurrences(of: "led-", with: ""))"
         } else if isFlipClock {
-            // 翻页时钟使用 clock_1
-            return "clock_1"
+            // 翻页时钟封面使用静态资源（动画首帧/渲染不稳定时避免黑屏）
+            return "flip_clock_cover"
         } else if isDigitalClock {
             // 数码管时钟的封面使用自定义绘制（不依赖图片），这里返回 nil
             return nil

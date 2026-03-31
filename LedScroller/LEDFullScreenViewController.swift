@@ -189,9 +189,12 @@ class LEDFullScreenViewController: UIViewController {
         ])
         
         textLabel.textAlignment = .center
-        textLabel.numberOfLines = 0
-        textLabel.adjustsFontSizeToFitWidth = true
-        textLabel.minimumScaleFactor = 0.3
+        let wrapEnabled = ledItem.isTextWrapEnabled
+        textLabel.numberOfLines = wrapEnabled ? 0 : 1
+        textLabel.lineBreakMode = wrapEnabled ? .byWordWrapping : .byClipping
+        // Do NOT auto-scale text; font size strictly follows the slider.
+        textLabel.adjustsFontSizeToFitWidth = false
+        textLabel.minimumScaleFactor = 1.0
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
 
@@ -202,17 +205,17 @@ class LEDFullScreenViewController: UIViewController {
             fontName: ledItem.fontName,
             size: adjustedFontSize,
             color: UIColor(hex: ledItem.textColor),
-            alignment: .center
+            alignment: .center,
+            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping
         )
         
-        // 霓虹发光效果 (支持0-20范围)
-        let glowRadius = 10 * ledItem.glowIntensity // 0-200的范围
-        let glowOpacity = min(ledItem.glowIntensity / 20.0, 1.0) // 归一化到0-1
-        
-        textLabel.layer.shadowColor = UIColor(hex: ledItem.textColor).cgColor
-        textLabel.layer.shadowRadius = glowRadius
-        textLabel.layer.shadowOpacity = Float(glowOpacity)
-        textLabel.layer.shadowOffset = .zero
+        // 霓虹发光效果（与文字颜色一致，强度0-20）
+        LEDFontRenderer.applyNeonGlow(
+            to: textLabel.layer,
+            color: UIColor(hex: ledItem.textColor),
+            intensity: ledItem.glowIntensity,
+            fontSize: adjustedFontSize
+        )
         
         NSLayoutConstraint.activate([
             textLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
@@ -312,7 +315,8 @@ class LEDFullScreenViewController: UIViewController {
             ledItem.isNeonTemplate || ledItem.isIdolTemplate || ledItem.isLEDTemplate ||
             ledItem.isFlipClock || ledItem.isDigitalClock ||
             ledItem.isHeartGrid || ledItem.isILoveU || ledItem.is520 ||
-            ledItem.isLoveRain || ledItem.isFireworks || ledItem.isFireworksBloom
+            ledItem.isLoveRain || ledItem.isFireworks || ledItem.isFireworksBloom ||
+            ledItem.id == "happy-birthday-default" || ledItem.id == "happy-new-year-default" || ledItem.id == "marry-me-default"
 
         guard isTemplateItem else {
             useTemplateButton.isHidden = true

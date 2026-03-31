@@ -105,9 +105,12 @@ class LEDPreviewViewController: UIViewController {
         let calculatedFontSize = ledItem.fontSize * scaleFactor
         
         textLabel.textAlignment = .center
-        textLabel.numberOfLines = 0
-        textLabel.adjustsFontSizeToFitWidth = false  // 禁用自动调整字体大小
-        textLabel.lineBreakMode = .byWordWrapping     // 按单词换行
+        let wrapEnabled = ledItem.isTextWrapEnabled
+        textLabel.numberOfLines = wrapEnabled ? 0 : 1
+        // Do NOT auto-scale text; font size strictly follows the slider.
+        textLabel.adjustsFontSizeToFitWidth = false
+        textLabel.minimumScaleFactor = 1.0
+        textLabel.lineBreakMode = wrapEnabled ? .byWordWrapping : .byClipping
         textLabel.translatesAutoresizingMaskIntoConstraints = false
 
         textLabel.attributedText = LEDFontRenderer.attributedText(
@@ -116,7 +119,8 @@ class LEDPreviewViewController: UIViewController {
             size: calculatedFontSize,
             color: UIColor(hex: ledItem.textColor),
             alignment: .center,
-            lineSpacing: calculatedFontSize * 0.1
+            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping,
+            lineSpacing: wrapEnabled ? (calculatedFontSize * 0.015) : nil
         )
         previewContainer.addSubview(textLabel)
 

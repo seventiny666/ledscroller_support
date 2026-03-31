@@ -22,6 +22,14 @@
 		<string>MatrixSansPrintSC-Regular.ttf</string>
 		<string>MatrixSansScreen-Regular.ttf</string>
 		<string>MatrixSansScreenSC-Regular.ttf</string>
+		<string>MatrixSans-Regular.ttf</string>
+		<string>MatrixSansSC-Regular.ttf</string>
+		<string>MatrixSansRaster-Regular.ttf</string>
+		<string>MatrixSansRasterSC-Regular.ttf</string>
+		<string>MatrixSansSmooth-Regular.ttf</string>
+		<string>MatrixSansSmoothSC-Regular.ttf</string>
+		<string>MatrixSansVideo-Regular.ttf</string>
+		<string>MatrixSansVideoSC-Regular.ttf</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
