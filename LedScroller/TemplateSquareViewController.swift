@@ -475,26 +475,36 @@ import StoreKit
 
 // MARK: - VIP标签视图
 @objc class VIPBadgeView: UIView {
-    
+
     private let containerView = UIView()
     private let vipLabel = UILabel()
-    
+    private let badgeSize: CGSize
+
+    override var intrinsicContentSize: CGSize {
+        badgeSize
+    }
+
     override init(frame: CGRect) {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let padScale: CGFloat = 0.8
+        let w: CGFloat = isPad ? 80 * padScale : 40
+        let h: CGFloat = isPad ? 44 * padScale : 22
+        badgeSize = CGSize(width: w, height: h)
+
         super.init(frame: frame)
         setupUI()
     }
-    
+
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
-    
+
     private func setupUI() {
         backgroundColor = .clear
-        
+
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let padScale: CGFloat = 0.8
-        let badgeWidth: CGFloat = isPad ? 80 * padScale : 40
-        let badgeHeight: CGFloat = isPad ? 44 * padScale : 22
+        let badgeHeight: CGFloat = badgeSize.height
 
         // 传统VIP标签样式 - 金色渐变背景
         containerView.backgroundColor = UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // 金色
@@ -517,12 +527,9 @@ import StoreKit
             containerView.leadingAnchor.constraint(equalTo: leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: bottomAnchor),
-            
+
             vipLabel.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
-            vipLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            
-            widthAnchor.constraint(equalToConstant: badgeWidth),
-            heightAnchor.constraint(equalToConstant: badgeHeight)
+            vipLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor)
         ])
     }
     
@@ -4016,8 +4023,8 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
     }
     
     private func handleItemTap(_ item: LEDItem) {
-        // 检查是否需要VIP且用户不是VIP
-        if item.isVIPRequired && !PurchaseManager.shared.isVIP() {
+        // 检查是否需要VIP且用户不是VIP（基于模版实际内容）
+        if item.requiresVIPByContent && !PurchaseManager.shared.isVIP() {
             showVIPPreview(for: item)
             return
         }
@@ -4289,6 +4296,8 @@ class TemplateCategoryCell: UITableViewCell {
             }
 
             // Move these four cards from Other -> Popular Animation.
+            // 注释掉第5-8个卡片，只保留前4个动画特效
+            /*
             let movedPresetIds: [String] = [
                 "happy-birthday-default",
                 "happy-new-year-default",
@@ -4300,6 +4309,7 @@ class TemplateCategoryCell: UITableViewCell {
                     items.append(preset)
                 }
             }
+            */
 
             return items
 
@@ -4319,13 +4329,8 @@ class TemplateCategoryCell: UITableViewCell {
             return items
 
         case .other:
-            let movedPresetIds = Set([
-                "happy-birthday-default",
-                "happy-new-year-default",
-                "merry-christmas-default",
-                "marry-me-default"
-            ])
-            let presetItems = allItems.filter { $0.isDefaultPreset && !movedPresetIds.contains($0.id) }
+            // 这些预设卡片现在回到 Other 分类，因为从动画模块移除了
+            let presetItems = allItems.filter { $0.isDefaultPreset }
             let userItems = allItems.filter {
                 !$0.isFlipClock && !$0.isDigitalClock && !$0.isStopwatch && !$0.isCountdown && !$0.isNeonTemplate && !$0.isIdolTemplate &&
                 !$0.isLEDTemplate && !$0.isDefaultPreset &&
@@ -4336,15 +4341,17 @@ class TemplateCategoryCell: UITableViewCell {
         case .neon:
             // Hot templates: show 2 greeting presets first, then Neon + Idol.
             var items: [LEDItem] = []
-            let headPresetIds: [String] = ["marry-me-default", "happy-new-year-default", "happy-birthday-default"]
+            let headPresetIds: [String] = ["marry-me-default", "merry-christmas-default", "happy-new-year-default", "happy-birthday-default"]
             for id in headPresetIds {
-                if let preset = allItems.first(where: { $0.id == id }) {
+                if var preset = allItems.first(where: { $0.id == id }) {
+                    // Update VIP flag based on actual content (fonts, borders, backgrounds)
+                    preset.isVIPRequired = preset.requiresVIPByContent
                     items.append(preset)
                 }
             }
 
             // Merge Idol cards into Neon section on iPad home.
-            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 4))
+            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 18)) // 从20减少到18
             items.append(contentsOf: Self.createPlaceholderItems(category: "idol", count: 4))
             return items
         case .idol:
@@ -4366,7 +4373,13 @@ class TemplateCategoryCell: UITableViewCell {
         let texts: [String]
         switch category {
         case "neon":
-            texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
+            texts = [
+                "Drink Juice", "Dance party!", "Nice Day", "party hard",
+                "Good Vibes", "Let's Go!", "Stay Cool", "Be Happy",
+                "Dream Big", "Shine On", "Feel Good", "Live Free",
+                "Rock On", "Stay Wild", "Keep Going", // 移除 Be Bold (neon_15)
+                "Love Life", "Stay True", "Be You" // 移除 Enjoy (neon_20)
+            ]
         case "idol":
             texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
         case "led":
@@ -4396,35 +4409,52 @@ class TemplateCategoryCell: UITableViewCell {
             let text = i <= texts.count ? texts[i - 1] : "TEXT \(i)"
             let imageName = "\(category)_\(i)" // 例如：neon_1, idol_2, led_3
             
-            // 根据需求设置VIP标识
-            var isVIPRequired = false
-            switch category {
-            case "neon":
-                // 霓虹灯屏幕模块的第1、2、3个需要VIP
-                isVIPRequired = (i <= 3)
-            case "idol":
-                // 偶像屏幕模块的第1、2个需要VIP
-                isVIPRequired = (i <= 2)
-            case "led":
-                // LED屏幕的全部卡片需要VIP
-                isVIPRequired = true
-            default:
-                isVIPRequired = false
+            // 特殊配置
+            var borderStyle: Int? = nil
+            var linearBorderStyle: Int? = nil
+            var fontName = "PingFangSC-Semibold" // 默认粗体字体
+            var textColor = "#FFFFFF" // 默认白色
+            
+            if category == "neon" {
+                if i == 1 {
+                    // neon_1: 线性边框（VIP）
+                    linearBorderStyle = 0
+                } else if i == 2 {
+                    // neon_2: 线性边框（VIP）
+                    linearBorderStyle = 1
+                } else if i == 3 {
+                    // neon_3: 跑马灯边框（VIP）
+                    borderStyle = 0
+                } else if i == 4 {
+                    // neon_4: 跑马灯边框（VIP）
+                    borderStyle = 1
+                } else if i == 9 {
+                    // neon_9 (Dream Big): 线性边框（VIP）
+                    linearBorderStyle = 0 // red
+                } else if i == 18 {
+                    // neon_18 (Be You): 线性边框（VIP） + raster 字体
+                    fontName = LEDFontRenderer.rasterFontName
+                    textColor = "#00FF00"
+                    linearBorderStyle = 1 // green
+                }
             }
             
-            let item = LEDItem(
+            var item = LEDItem(
                 id: "\(category)-\(i)",
                 text: text,
                 fontSize: 120, // 进一步增加字体大小到120pt，全屏预览更醒目
-                textColor: "#FFFFFF", // 白色
+                textColor: textColor,
                 backgroundColor: "#1a1a2e",
                 backgroundImageName: imageName, // 添加背景图片
                 glowIntensity: 3.0,
                 scrollType: scrollType,
                 speed: speed,
-                fontName: "PingFangSC-Semibold", // 设置为粗体字体
-                isVIPRequired: isVIPRequired
+                fontName: fontName,
+                borderStyle: borderStyle,
+                linearBorderStyle: linearBorderStyle
             )
+            // 根据实际内容更新 VIP 标识（字体、边框等）
+            item.isVIPRequired = item.requiresVIPByContent
             items.append(item)
         }
         return items
@@ -4446,8 +4476,8 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
         if currentTab == .popular {
             // 热门模版：只有试用按钮
             cell.onTryTapped = { [weak self] item in
-                // 检查是否需要VIP且用户不是VIP
-                if item.isVIPRequired && !PurchaseManager.shared.isVIP() {
+                // 检查是否需要VIP且用户不是VIP（基于模版实际内容）
+                if item.requiresVIPByContent && !PurchaseManager.shared.isVIP() {
                     self?.onVIPSubscriptionNeeded?()
                     return
                 }
@@ -4617,7 +4647,9 @@ class TemplateItemCell: UICollectionViewCell {
         // VIP标签（右上角）
         vipBadgeView.translatesAutoresizingMaskIntoConstraints = false
         vipBadgeView.isHidden = true // 默认隐藏
-        containerView.addSubview(vipBadgeView)
+        // Ensure the VIP badge always stays above border/cover overlays.
+        vipBadgeView.layer.zPosition = 10_000
+        contentView.addSubview(vipBadgeView)
 
         // iPad cover image needs more padding to match the larger card proportions.
         let imageTopInset: CGFloat = isPad ? 18 : 12
@@ -4651,9 +4683,11 @@ class TemplateItemCell: UICollectionViewCell {
             buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -buttonBottomInset),
             buttonStack.heightAnchor.constraint(equalToConstant: buttonHeight),
             
-            // VIP标签约束
+            // VIP标签约束（放在contentView上，保证压过所有封面/边框视图）
             vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: isPad ? 12 : 8),
-            vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -12 : -8)
+            vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -12 : -8),
+            vipBadgeView.widthAnchor.constraint(equalToConstant: isPad ? 64 : 40),
+            vipBadgeView.heightAnchor.constraint(equalToConstant: isPad ? 35 : 22)
         ])
     }
     
@@ -4990,15 +5024,15 @@ class TemplateItemCell: UICollectionViewCell {
             // 热门模版：只显示试用按钮，隐藏预览按钮和标题
             // 特殊动画（爱心格子、I LOVE U、520、爱心流星雨、烟花、烟花绽放）不显示文字
             if !item.isHeartGrid && !item.isILoveU && !item.is520 && !item.isLoveRain && !item.isFireworks && !item.isFireworksBloom {
-                if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" {
-                    // Only special-case these covers. Keep other Popular covers unchanged.
+                // 所有 neon 和 idol 卡片都显示封面文字
+                if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" || item.id == "merry-christmas-default" || item.isNeonTemplate || item.isIdolTemplate {
                     let isPad = UIDevice.current.userInterfaceIdiom == .pad
                     let screenHeight = UIScreen.main.bounds.height
 
-                    // Marry Me cover text should be smaller; other greeting cards keep current sizing.
+                    // Marry Me 和 Merry Christmas 封面文字应该更小
                     let baseOverlayFontSize: CGFloat
                     let capSize: CGFloat
-                    if item.id == "marry-me-default" {
+                    if item.id == "marry-me-default" || item.id == "merry-christmas-default" {
                         baseOverlayFontSize = isPad ? 32 : (screenHeight >= 926 ? 16 : 14)
                         capSize = isPad ? 46 : 22
                     } else {
@@ -5008,9 +5042,15 @@ class TemplateItemCell: UICollectionViewCell {
 
                     let overlaySize = min(max(baseOverlayFontSize, item.fontSize * 0.40), capSize)
 
-                    // Force 1-line cover title for this card.
-                    overlayTextLabel.numberOfLines = 1
-                    overlayTextLabel.lineBreakMode = .byClipping
+                    // Merry Christmas 需要两行显示
+                    if item.id == "merry-christmas-default" {
+                        overlayTextLabel.numberOfLines = 2
+                        overlayTextLabel.lineBreakMode = .byWordWrapping
+                    } else {
+                        // Force 1-line cover title for other cards.
+                        overlayTextLabel.numberOfLines = 1
+                        overlayTextLabel.lineBreakMode = .byClipping
+                    }
                     overlayTextLabel.adjustsFontSizeToFitWidth = true
                     overlayTextLabel.minimumScaleFactor = 0.5
 
@@ -5020,7 +5060,7 @@ class TemplateItemCell: UICollectionViewCell {
                         size: overlaySize,
                         color: UIColor(hex: item.textColor),
                         alignment: .center,
-                        lineBreakMode: .byClipping
+                        lineBreakMode: item.id == "merry-christmas-default" ? .byWordWrapping : .byClipping
                     )
                 } else {
                     overlayTextLabel.attributedText = nil
@@ -5060,13 +5100,13 @@ class TemplateItemCell: UICollectionViewCell {
             buttonStack.isHidden = true
 
             // Special-case: show cover text on the cover image too.
-            if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" {
+            if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" || item.id == "merry-christmas-default" || item.isNeonTemplate || item.isIdolTemplate {
                 let isPad = UIDevice.current.userInterfaceIdiom == .pad
                 let screenHeight = UIScreen.main.bounds.height
 
                 let baseOverlayFontSize: CGFloat
                 let capSize: CGFloat
-                if item.id == "marry-me-default" {
+                if item.id == "marry-me-default" || item.id == "merry-christmas-default" {
                     baseOverlayFontSize = isPad ? 32 : (screenHeight >= 926 ? 16 : 14)
                     capSize = isPad ? 46 : 22
                 } else {
@@ -5076,8 +5116,14 @@ class TemplateItemCell: UICollectionViewCell {
 
                 let overlaySize = min(max(baseOverlayFontSize, item.fontSize * 0.40), capSize)
 
-                overlayTextLabel.numberOfLines = 1
-                overlayTextLabel.lineBreakMode = .byClipping
+                // Merry Christmas 需要两行显示
+                if item.id == "merry-christmas-default" {
+                    overlayTextLabel.numberOfLines = 2
+                    overlayTextLabel.lineBreakMode = .byWordWrapping
+                } else {
+                    overlayTextLabel.numberOfLines = 1
+                    overlayTextLabel.lineBreakMode = .byClipping
+                }
                 overlayTextLabel.adjustsFontSizeToFitWidth = true
                 overlayTextLabel.minimumScaleFactor = 0.5
 
@@ -5087,7 +5133,7 @@ class TemplateItemCell: UICollectionViewCell {
                     size: overlaySize,
                     color: UIColor(hex: item.textColor),
                     alignment: .center,
-                    lineBreakMode: .byClipping
+                    lineBreakMode: item.id == "merry-christmas-default" ? .byWordWrapping : .byClipping
                 )
                 overlayTextLabel.isHidden = false
                 titleLabel.isHidden = true
@@ -5112,56 +5158,58 @@ class TemplateItemCell: UICollectionViewCell {
             }
 
             // Only special-case these cover backgrounds.
-            if (item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default"), let bgName = item.backgroundImageName, let bgImage = UIImage(named: bgName) {
+            if (item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" || item.id == "merry-christmas-default"), let bgName = item.backgroundImageName, let bgImage = UIImage(named: bgName) {
                 imageView.image = bgImage
                 imageView.contentMode = .scaleAspectFill
                 imageView.backgroundColor = UIColor(hex: item.backgroundColor)
             }
         }
         
-        // Only special-case these cover borders.
-        if item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" {
-            if let borderStyle = item.borderStyle {
-                let borderView = MarqueeBorderView(displayMode: .cardCover)
-                borderView.setStyle(MarqueeBorderStyle(rawValue: borderStyle) ?? .style1)
-                borderView.setAnimated(true)
-                borderView.translatesAutoresizingMaskIntoConstraints = false
-                imageView.addSubview(borderView)
-                NSLayoutConstraint.activate([
-                    borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
-                    borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
-                    borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
-                    borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
-                ])
-            }
-            if let lightBoardStyle = item.lightBoardStyle {
-                let borderView = LightBoardBorderView(displayMode: .cardCover)
-                borderView.setStyle(LightBoardBorderStyle(rawValue: lightBoardStyle) ?? .style1)
-                borderView.translatesAutoresizingMaskIntoConstraints = false
-                imageView.addSubview(borderView)
-                NSLayoutConstraint.activate([
-                    borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
-                    borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
-                    borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
-                    borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
-                ])
-            }
-            if let linearBorderStyle = item.linearBorderStyle {
-                let borderView = LinearBorderView(style: LinearBorderStyle(rawValue: linearBorderStyle) ?? .red, displayMode: .cardCover)
-                borderView.translatesAutoresizingMaskIntoConstraints = false
-                imageView.addSubview(borderView)
-                NSLayoutConstraint.activate([
-                    borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
-                    borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
-                    borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
-                    borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
-                ])
-            }
+        // 显示所有卡片的边框（不仅限于特定ID）
+        if let borderStyle = item.borderStyle {
+            let borderView = MarqueeBorderView(displayMode: .cardCover)
+            borderView.setStyle(MarqueeBorderStyle(rawValue: borderStyle) ?? .style1)
+            borderView.setAnimated(true)
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(borderView)
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+        }
+        if let lightBoardStyle = item.lightBoardStyle {
+            let borderView = LightBoardBorderView(displayMode: .cardCover)
+            borderView.setStyle(LightBoardBorderStyle(rawValue: lightBoardStyle) ?? .style1)
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(borderView)
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
+        }
+        if let linearBorderStyle = item.linearBorderStyle {
+            let borderView = LinearBorderView(style: LinearBorderStyle(rawValue: linearBorderStyle) ?? .red, displayMode: .cardCover)
+            borderView.translatesAutoresizingMaskIntoConstraints = false
+            imageView.addSubview(borderView)
+            NSLayoutConstraint.activate([
+                borderView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                borderView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+            ])
         }
 
-        // 显示或隐藏VIP标签
-        vipBadgeView.isHidden = !item.isVIPRequired
-        if item.isVIPRequired {
+        // 显示或隐藏VIP标签：基于模版实际使用的VIP内容（背景/边框等）
+        let needsVIP = item.requiresVIPByContent
+        // Safety: keep the badge above any border/cover overlays.
+        contentView.bringSubviewToFront(vipBadgeView)
+        vipBadgeView.isHidden = !needsVIP
+        vipBadgeView.alpha = needsVIP ? 1.0 : 0.0
+        if needsVIP {
             vipBadgeView.startShimmering()
         } else {
             vipBadgeView.stopShimmering()

@@ -1011,6 +1011,39 @@ class LEDCreateViewController: UIViewController {
             neonRow2.heightAnchor.constraint(equalToConstant: buttonHeight)
         ])
         tabYOffset += buttonHeight + 10
+        
+        // 霓虹灯第三行（8-11）
+        let neonRow3 = createTemplateStack(category: "neon", startIndex: 8, count: 4, tag: 530, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(neonRow3)
+        NSLayoutConstraint.activate([
+            neonRow3.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            neonRow3.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            neonRow3.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            neonRow3.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
+        tabYOffset += buttonHeight + 10
+        
+        // 霓虹灯第四行（12-15）
+        let neonRow4 = createTemplateStack(category: "neon", startIndex: 12, count: 4, tag: 534, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(neonRow4)
+        NSLayoutConstraint.activate([
+            neonRow4.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            neonRow4.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            neonRow4.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            neonRow4.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
+        tabYOffset += buttonHeight + 10
+        
+        // 霓虹灯第五行（16-19）
+        let neonRow5 = createTemplateStack(category: "neon", startIndex: 16, count: 4, tag: 538, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
+        backgroundTabView.addSubview(neonRow5)
+        NSLayoutConstraint.activate([
+            neonRow5.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
+            neonRow5.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
+            neonRow5.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
+            neonRow5.heightAnchor.constraint(equalToConstant: buttonHeight)
+        ])
+        tabYOffset += buttonHeight + 10
 
         // 将 Idol Screen 卡片并入 Neon Screen 模块（不显示 Idol 标题）。
         let idolRow1 = createTemplateStack(category: "idol", startIndex: 0, count: 4, tag: 510, buttonWidth: buttonWidth, buttonHeight: buttonHeight)
@@ -3074,13 +3107,22 @@ class LEDCreateViewController: UIViewController {
         var category = ""
         var index = 0
         
-        if sender.tag >= 520 {
+        if sender.tag >= 530 && sender.tag < 542 {
+            // 霓虹灯看板（新增的第3-5行）
+            category = "neon"
+            index = sender.tag - 530 + 8 + 1 // 530对应neon_9，所以是8+1
+            updateColorButtonSelection(tag: 530, selectedIndex: sender.tag - 530)
+            updateColorButtonSelection(tag: 500, selectedIndex: -1)
+            updateColorButtonSelection(tag: 510, selectedIndex: -1)
+            updateColorButtonSelection(tag: 520, selectedIndex: -1)
+        } else if sender.tag >= 520 {
             // LED横幅
             category = "led"
             index = sender.tag - 520 + 1
             updateColorButtonSelection(tag: 520, selectedIndex: sender.tag - 520)
             updateColorButtonSelection(tag: 500, selectedIndex: -1)
             updateColorButtonSelection(tag: 510, selectedIndex: -1)
+            updateColorButtonSelection(tag: 530, selectedIndex: -1)
         } else if sender.tag >= 510 {
             // 偶像应援
             category = "idol"
@@ -3088,13 +3130,15 @@ class LEDCreateViewController: UIViewController {
             updateColorButtonSelection(tag: 510, selectedIndex: sender.tag - 510)
             updateColorButtonSelection(tag: 500, selectedIndex: -1)
             updateColorButtonSelection(tag: 520, selectedIndex: -1)
+            updateColorButtonSelection(tag: 530, selectedIndex: -1)
         } else {
-            // 霓虹灯看板
+            // 霓虹灯看板（前2行）
             category = "neon"
             index = sender.tag - 500 + 1
             updateColorButtonSelection(tag: 500, selectedIndex: sender.tag - 500)
             updateColorButtonSelection(tag: 510, selectedIndex: -1)
             updateColorButtonSelection(tag: 520, selectedIndex: -1)
+            updateColorButtonSelection(tag: 530, selectedIndex: -1)
         }
         
         // 保存选中的背景图片名称
@@ -3411,34 +3455,7 @@ class LEDCreateViewController: UIViewController {
     
     // 检查是否使用了VIP功能
     private func hasVIPContent() -> Bool {
-        // 检查背景：LED屏幕全部、霓虹灯屏幕前3个、偶像屏幕后4个
-        if let backgroundImageName = currentItem.backgroundImageName {
-            if backgroundImageName.hasPrefix("led_") {
-                // LED屏幕的全部需要VIP
-                return true
-            } else if backgroundImageName.hasPrefix("neon_") {
-                // 霓虹灯屏幕的前3个需要VIP
-                if let numberStr = backgroundImageName.split(separator: "_").last,
-                   let number = Int(numberStr) {
-                    return number <= 3
-                }
-            } else if backgroundImageName.hasPrefix("idol_") {
-                // 偶像屏幕的后4个需要VIP（5-8）
-                if let numberStr = backgroundImageName.split(separator: "_").last,
-                   let number = Int(numberStr) {
-                    return number >= 5
-                }
-            }
-        }
-        
-        // 检查边框：全部边框都需要VIP
-        if currentItem.borderStyle != nil || 
-           currentItem.lightBoardStyle != nil || 
-           currentItem.linearBorderStyle != nil {
-            return true
-        }
-        
-        return false
+        currentItem.requiresVIPByContent
     }
     
     private func showVIPConfirmDialog() {

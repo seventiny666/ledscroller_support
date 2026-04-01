@@ -132,6 +132,49 @@ struct LEDItem: Codable {
         try c.encode(createdAt, forKey: .createdAt)
     }
     
+    // Derived VIP gate based on the same rules used by the editor (background + borders).
+    // This keeps the home/template VIP badge consistent with what actually requires subscription.
+    var requiresVIPByContent: Bool {
+        if let name = backgroundImageName {
+            if name.hasPrefix("led_") {
+                return true
+            }
+            if name.hasPrefix("neon_"),
+               let numberStr = name.split(separator: "_").last,
+               let number = Int(numberStr) {
+                return number <= 3
+            }
+            if name.hasPrefix("idol_"),
+               let numberStr = name.split(separator: "_").last,
+               let number = Int(numberStr) {
+                return number >= 5
+            }
+        }
+
+        // Font rules: keep consistent with the editor's font picker VIP badges.
+        // In LEDCreateViewController, indices >= 3 are marked VIP.
+        // Those correspond to: dotMatrix, pixel, mat, raster, smooth, video.
+        // (pingfang/thin/medium are free)
+        let vipFontNames: Set<String> = [
+            LEDFontRenderer.dotMatrixFontName,
+            LEDFontRenderer.pixelFontName,
+            LEDFontRenderer.matFontName,
+            LEDFontRenderer.rasterFontName,
+            LEDFontRenderer.smoothFontName,
+            LEDFontRenderer.videoFontName
+        ]
+        if vipFontNames.contains(fontName) {
+            return true
+        }
+
+        // Any border selection is VIP.
+        if borderStyle != nil || lightBoardStyle != nil || linearBorderStyle != nil {
+            return true
+        }
+
+        return false
+    }
+
     init(id: String = UUID().uuidString,
          text: String = "", // 默认为空
          isTextWrapEnabled: Bool = true,
@@ -427,13 +470,16 @@ class LEDDataManager {
             ),
             LEDItem(
                 id: "merry-christmas-default",
-                text: "MERRY CHRISTMAS",
-                fontSize: 46,
-                textColor: "#FF4500",
-                backgroundColor: "#201F1F",
-                glowIntensity: 2.8,
-                scrollType: .scrollLeft,
-                speed: 1.2,
+                text: "Merry\nChristmas!",
+                fontSize: 90,
+                textColor: "#00FFFF", // textColors row 1, col 7 (cyan)
+                backgroundColor: "#000000", // 黑色背景
+                backgroundImageName: "neon_18", // Neon Screen row 5, col 2
+                glowIntensity: 3.5,
+                scrollType: .blink,
+                speed: 1.0,
+                fontName: LEDFontRenderer.rasterFontName,
+                linearBorderStyle: 2, // Linear Border row 2, col 3 (blue)
                 isDefaultPreset: true
             ),
             LEDItem(

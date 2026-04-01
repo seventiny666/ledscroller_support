@@ -482,7 +482,7 @@ class CreationTableCell: UITableViewCell {
     private var ledCardView: LEDScreenCardView? // LED卡片背景视图
     private let borderView = MarqueeBorderView(displayMode: .cardCover) // 跑马灯边框视图
     private let lightBoardView = LightBoardBorderView(displayMode: .cardCover) // 灯牌边框视图
-    private let linearBorderView = LinearBorderView() // 线性边框视图
+    private let linearBorderView = LinearBorderView(displayMode: .cardCover) // 线性边框视图
     private let ledTextLabel = UILabel() // 改名避免与UITableViewCell的textLabel冲突
     private let timeLabel = UILabel() // 时间标签(放在卡片下面)
 
