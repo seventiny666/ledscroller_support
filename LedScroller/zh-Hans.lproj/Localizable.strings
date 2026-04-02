@@ -186,6 +186,8 @@
 "background" = "背景";
 "border" = "边框";
 "gradientBackground" = "渐变背景";
+"ledBorder" = "LED边框";
+"linearBorder" = "线性边框";
 "marqueeBorder" = "跑马灯边框";
 "marqueeBorderDesc" = "圆角矩形LED圆点边框跑马灯，一圈圆点流动发光";
 "lightBoardBorder" = "灯牌边框";

@@ -3,6 +3,7 @@ import UIKit
 // 线性边框样式枚举
 enum LinearBorderStyle: Int, CaseIterable {
     case red = 0, green, blue, yellow, purple, cyan, orange, white
+    case pink, gold, coral, teal
     
     var color: UIColor {
         switch self {
@@ -14,6 +15,11 @@ enum LinearBorderStyle: Int, CaseIterable {
         case .cyan: return UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0)
         case .orange: return UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0)
         case .white: return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+        // 新增4个颜色 - 第三行
+        case .pink: return UIColor(red: 1.0, green: 0.08, blue: 0.58, alpha: 1.0) // Deep Pink #FF1493
+        case .gold: return UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // Gold #FFD700
+        case .coral: return UIColor(red: 1.0, green: 0.39, blue: 0.28, alpha: 1.0) // Tomato #FF6347
+        case .teal: return UIColor(red: 0.0, green: 0.81, blue: 0.82, alpha: 1.0) // Dark Turquoise #00CED1
         }
     }
     
@@ -28,6 +34,11 @@ enum LinearBorderStyle: Int, CaseIterable {
         case .cyan: return UIColor(red: 0.4, green: 1.0, blue: 1.0, alpha: 1.0)
         case .orange: return UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
         case .white: return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
+        // 新增4个颜色的亮色版本
+        case .pink: return UIColor(red: 1.0, green: 0.4, blue: 0.7, alpha: 1.0) // 亮粉色
+        case .gold: return UIColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 1.0) // 亮金色
+        case .coral: return UIColor(red: 1.0, green: 0.6, blue: 0.5, alpha: 1.0) // 亮珊瑚色
+        case .teal: return UIColor(red: 0.3, green: 0.9, blue: 0.9, alpha: 1.0) // 亮青绿色
         }
     }
 }

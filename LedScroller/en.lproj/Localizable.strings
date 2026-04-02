@@ -148,6 +148,12 @@
 "scrollType" = "Scroll Type";
 "speed" = "Playback Speed";
 
+/* Border Types */
+"ledBorder" = "LED Border";
+"linearBorder" = "Linear Border";
+"marqueeBorder" = "Marquee Border";
+"lightBoardBorder" = "LightBoard Border";
+
 /* Font Names */
 "dotMatrix" = "Dot";
 "pixel" = "Pixel";
@@ -182,7 +188,7 @@
 "popular" = "Popular";
 "animation" = "Animation";
 "font" = "Font";
-"background" = "Background";
+"background" = "BG";
 "gradientBackground" = "Gradient Background";
 
 /* Presets */

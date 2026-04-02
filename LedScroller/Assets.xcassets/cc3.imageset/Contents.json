@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "led_1.jpg",
+      "filename" : "cc3.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "led_1@2x.jpg",
+      "filename" : "cc3@2x.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "led_1@3x.jpg",
+      "filename" : "cc3@3x.jpg",
       "idiom" : "universal",
       "scale" : "3x"
     }

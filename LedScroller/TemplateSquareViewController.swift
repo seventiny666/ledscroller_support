@@ -3709,8 +3709,8 @@ class TemplateSquareViewController: UIViewController {
     private func updateCategories() {
         switch currentTab {
         case .popular:
-            // 热门模版：霓虹灯看板 + LED横幅（Idol 合并到 Neon）
-            categories = [.neon, .ledScreen]
+            // 热门模版：霓虹灯看板（移除了 LED横幅模块）
+            categories = [.neon]
         case .animation:
             // 动画模版：热门动画、数字时钟
             categories = [.popularAnimation, .clock]
@@ -4351,7 +4351,7 @@ class TemplateCategoryCell: UITableViewCell {
             }
 
             // Merge Idol cards into Neon section on iPad home.
-            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 18)) // 从20减少到18
+            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 16)) // 移除 Let's Go, Rock On, Stay Cool
             items.append(contentsOf: Self.createPlaceholderItems(category: "idol", count: 4))
             return items
         case .idol:
@@ -4374,16 +4374,16 @@ class TemplateCategoryCell: UITableViewCell {
         switch category {
         case "neon":
             texts = [
-                "Drink Juice", "Dance party!", "Nice Day", "party hard",
-                "Good Vibes", "Let's Go!", "Stay Cool", "Be Happy",
+                "Drink Juice", "Dance party!", "Nice Day", "I LOVE U",
+                "Good Vibes", "Be Happy",
                 "Dream Big", "Shine On", "Feel Good", "Live Free",
-                "Rock On", "Stay Wild", "Keep Going", // 移除 Be Bold (neon_15)
+                "Stay Wild", "Keep Going", // 移除 Rock On (neon_13)
                 "Love Life", "Stay True", "Be You" // 移除 Enjoy (neon_20)
             ]
         case "idol":
             texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
         case "led":
-            texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
+            texts = ["Drink Juice", "Dance party!", "Nice Day", "I LOVE U"]
         default:
             texts = ["TEXT 1", "TEXT 2", "TEXT 3", "TEXT 4"]
         }
@@ -4412,9 +4412,12 @@ class TemplateCategoryCell: UITableViewCell {
             // 特殊配置
             var borderStyle: Int? = nil
             var linearBorderStyle: Int? = nil
+            var ledBorderImageIndex: Int? = nil // LED边框图片索引
             var fontName = "PingFangSC-Semibold" // 默认粗体字体
             var textColor = "#FFFFFF" // 默认白色
             
+            // neon_4 (I LOVE U) 特殊配置：像素字体 + led_2背景 + 线性边框第二行第二个
+            var fontSize: CGFloat = 120 // 默认字体大小
             if category == "neon" {
                 // neon_1-3: 无边框（免费）
                 if i == 1 {
@@ -4424,8 +4427,21 @@ class TemplateCategoryCell: UITableViewCell {
                 } else if i == 3 {
                     // neon_3: 无边框（免费）
                 } else if i == 4 {
-                    // neon_4: 跑马灯边框（VIP）
-                    borderStyle = 1
+                    // neon_4 (I LOVE U): 像素字体 + led_2背景 + 线性边框第二行第二个 + 字体140
+                    fontName = LEDFontRenderer.pixelFontName // 像素字体
+                    linearBorderStyle = 5 // 线性边框第二行第二个 (第一行: 0-3, 第二行: 4-7)
+                    fontSize = 140 // 字体大小140
+                } else if i == 5 {
+                    // neon_5 (Good Vibes): cc1背景 + LED Border第一行第二个
+                    ledBorderImageIndex = 1 // LED Border 第一行第二个 (索引1)
+                } else if i == 6 {
+                    // neon_6 (Be Happy): 深粉色文字 + cc8背景 + 跑马灯边框第一个 + video字体
+                    textColor = "#FF1493" // 深粉色（第2行第2个）
+                    borderStyle = 0 // 跑马灯边框第一个
+                    fontName = LEDFontRenderer.videoFontName // video字体
+                } else if i == 8 {
+                    // neon_8 (Shine On): LED Border 第二行第二个
+                    ledBorderImageIndex = 5 // LED Border 第二行第二个 (索引5)
                 } else if i == 9 {
                     // neon_9 (Dream Big): 线性边框（VIP）
                     linearBorderStyle = 0 // red
@@ -4435,21 +4451,45 @@ class TemplateCategoryCell: UITableViewCell {
                     textColor = "#00FF00"
                     linearBorderStyle = 1 // green
                 }
+            } else if category == "led" {
+                // LED屏幕模板特殊配置
+                if i == 4 {
+                    // led_4 (I LOVE U): 像素字体 + led_2背景 + 线性边框第二行第二个 + 字体140
+                    fontName = LEDFontRenderer.pixelFontName // 像素字体
+                    linearBorderStyle = 5 // 线性边框第二行第二个
+                    fontSize = 140 // 字体大小140
+                }
+            }
+            
+            // neon_4 和 led_4 使用 led_1 背景（led_2图片本身带有边框效果，不合适）
+            // neon_5 (Good Vibes) 使用 cc1 背景（LED Screen 第一行第一个）
+            // neon_6 (Be Happy) 使用 cc8 背景（LED Screen 第二行最后一个）
+            let actualImageName: String?
+            if (category == "led" && i == 4) || (category == "neon" && i == 4) {
+                actualImageName = "led_1" // 使用 led_1 替代 led_2（led_2图片本身带有边框效果）
+            } else if category == "neon" && i == 5 {
+                actualImageName = "cc1" // Good Vibes 使用 cc1 背景
+            } else if category == "neon" && i == 6 {
+                actualImageName = "cc8" // Be Happy 使用 cc8 背景
+            } else {
+                actualImageName = imageName
             }
             
             var item = LEDItem(
                 id: "\(category)-\(i)",
                 text: text,
-                fontSize: 120, // 进一步增加字体大小到120pt，全屏预览更醒目
+                fontSize: fontSize,
                 textColor: textColor,
                 backgroundColor: "#1a1a2e",
-                backgroundImageName: imageName, // 添加背景图片
+                backgroundImageName: actualImageName, // 使用实际背景图片名称
                 glowIntensity: 3.0,
                 scrollType: scrollType,
                 speed: speed,
                 fontName: fontName,
                 borderStyle: borderStyle,
-                linearBorderStyle: linearBorderStyle
+                lightBoardStyle: nil,
+                linearBorderStyle: linearBorderStyle,
+                ledBorderImageIndex: ledBorderImageIndex
             )
             // 根据实际内容更新 VIP 标识（字体、边框等）
             item.isVIPRequired = item.requiresVIPByContent
@@ -4458,6 +4498,7 @@ class TemplateCategoryCell: UITableViewCell {
         return items
     }
 }
+
 
 // MARK: - UICollectionViewDelegate & DataSource
 extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
@@ -4733,7 +4774,8 @@ class TemplateItemCell: UICollectionViewCell {
                 subview is CountdownCoverView ||
                 subview is MarqueeBorderView ||
                 subview is LightBoardBorderView ||
-                subview is LinearBorderView {
+                subview is LinearBorderView ||
+                subview.tag == 999 { // LED Border ImageView 使用 tag 标识
                 subview.removeFromSuperview()
             }
         }
@@ -5147,18 +5189,14 @@ class TemplateItemCell: UICollectionViewCell {
         
         // 尝试加载图片，如果没有则使用占位颜色（特殊动画除外）
         if !item.isHeartGrid && !item.isILoveU && !item.is520 && !item.isLoveRain && !item.isFireworks && !item.isFireworksBloom {
-            if let imageName = item.imageName, !imageName.isEmpty {
+            // 优先使用backgroundImageName，其次使用imageName
+            let imageToLoad = item.backgroundImageName ?? item.imageName
+            if let imageName = imageToLoad, !imageName.isEmpty {
                 imageView.image = UIImage(named: imageName)
+                imageView.contentMode = .scaleAspectFill
             } else {
                 // 使用占位颜色
                 imageView.image = nil
-                imageView.backgroundColor = UIColor(hex: item.backgroundColor)
-            }
-
-            // Only special-case these cover backgrounds.
-            if (item.id == "happy-birthday-default" || item.id == "happy-new-year-default" || item.id == "marry-me-default" || item.id == "merry-christmas-default"), let bgName = item.backgroundImageName, let bgImage = UIImage(named: bgName) {
-                imageView.image = bgImage
-                imageView.contentMode = .scaleAspectFill
                 imageView.backgroundColor = UIColor(hex: item.backgroundColor)
             }
         }
@@ -5199,6 +5237,25 @@ class TemplateItemCell: UICollectionViewCell {
                 borderView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
                 borderView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
             ])
+        }
+        // LED Border 图片边框
+        if let ledBorderImageIndex = item.ledBorderImageIndex,
+           ledBorderImageIndex >= 1 && ledBorderImageIndex <= 8 {
+            let imageName = "line_\(ledBorderImageIndex)"
+            if let image = UIImage(named: imageName) {
+                let borderImageView = UIImageView(image: image)
+                borderImageView.contentMode = .scaleToFill
+                borderImageView.clipsToBounds = true
+                borderImageView.tag = 999 // 用于标识 LED Border ImageView
+                borderImageView.translatesAutoresizingMaskIntoConstraints = false
+                imageView.addSubview(borderImageView)
+                NSLayoutConstraint.activate([
+                    borderImageView.topAnchor.constraint(equalTo: imageView.topAnchor),
+                    borderImageView.leadingAnchor.constraint(equalTo: imageView.leadingAnchor),
+                    borderImageView.trailingAnchor.constraint(equalTo: imageView.trailingAnchor),
+                    borderImageView.bottomAnchor.constraint(equalTo: imageView.bottomAnchor)
+                ])
+            }
         }
 
         // 显示或隐藏VIP标签：基于模版实际使用的VIP内容（背景/边框等）

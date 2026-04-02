@@ -388,8 +388,8 @@ class LEDCreateViewController: UIViewController {
     // Gradient colors removed per requirement (use solid colors only).
     private let gradientColors: [[String]] = []
 
-    // Linear border selection UI order: put white first.
-    private let linearBorderDisplayOrder: [LinearBorderStyle] = [.white, .red, .green, .blue, .yellow, .purple, .cyan, .orange]
+    // Linear border selection UI order: put white first, then add new colors.
+    private let linearBorderDisplayOrder: [LinearBorderStyle] = [.white, .red, .green, .blue, .yellow, .purple, .cyan, .orange, .pink, .gold, .coral, .teal]
     
     private let bgColors = [
         "#000000", // 黑色
@@ -1073,7 +1073,7 @@ class LEDCreateViewController: UIViewController {
         var tabYOffset: CGFloat = 20 // 增加顶部间距20px，让内容不要太贴近Tab切换控件
 
         // LED边框图片（8个图片，2行布局：4-4）
-        addSectionLabelToView(borderTabView, text: "LED边框", yOffset: &tabYOffset)
+        addSectionLabelToView(borderTabView, text: "ledBorder".localized, yOffset: &tabYOffset)
 
         // 第1行（图片1-4）
         let ledBorderRow1 = createLEDBorderImageStack(startIndex: 1, count: 4, tag: 900)
@@ -1169,8 +1169,8 @@ class LEDCreateViewController: UIViewController {
         ])
         tabYOffset += 70
         
-        // 线性边框（8个颜色，2行布局：4-4）
-        addSectionLabelToView(borderTabView, text: "线性边框", yOffset: &tabYOffset)
+        // 线性边框（12个颜色，3行布局：4-4-4）
+        addSectionLabelToView(borderTabView, text: "linearBorder".localized, yOffset: &tabYOffset)
         
         // 第1行（颜色0-3：红、绿、蓝、黄）
         let linearRow1 = createLinearBorderStack(startIndex: 0, count: 4, tag: 800)
@@ -1191,6 +1191,17 @@ class LEDCreateViewController: UIViewController {
             linearRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
             linearRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
             linearRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 60
+        
+        // 第3行（颜色8-11：粉、金、珊瑚、青绿）
+        let linearRow3 = createLinearBorderStack(startIndex: 8, count: 4, tag: 808)
+        borderTabView.addSubview(linearRow3)
+        NSLayoutConstraint.activate([
+            linearRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            linearRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            linearRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
+            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
     }
 
@@ -1226,13 +1237,15 @@ class LEDCreateViewController: UIViewController {
                 borderView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
             ])
             
-            // 所有跑马灯边框都需要VIP标签
-            let vipBadge = createVIPBadge()
-            btn.addSubview(vipBadge)
-            NSLayoutConstraint.activate([
-                vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
-                vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
-            ])
+            // 只有第二行和第三行（索引4-11）需要VIP标签，第一行（索引0-3）免费
+            if styleIndex >= 4 {
+                let vipBadge = createVIPBadge()
+                btn.addSubview(vipBadge)
+                NSLayoutConstraint.activate([
+                    vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
+                    vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
+                ])
+            }
             
             return btn
         }
@@ -1329,6 +1342,7 @@ class LEDCreateViewController: UIViewController {
             currentItem.lightBoardStyle = styleIndex
             currentItem.borderStyle = nil // 清除跑马灯边框
             currentItem.linearBorderStyle = nil // 清除线性边框
+            currentItem.ledBorderImageIndex = nil // 清除LED边框图片
             
             // 更新选中状态
             for i in 0..<12 {
@@ -1349,6 +1363,14 @@ class LEDCreateViewController: UIViewController {
             // 清除线性边框的选中状态
             for i in 0..<8 {
                 if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除LED边框图片的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(900 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1381,6 +1403,7 @@ class LEDCreateViewController: UIViewController {
             currentItem.borderStyle = styleIndex
             currentItem.lightBoardStyle = nil // 清除灯牌边框
             currentItem.linearBorderStyle = nil // 清除线性边框
+            currentItem.ledBorderImageIndex = nil // 清除LED边框图片
             
             // 更新选中状态
             for i in 0..<12 {
@@ -1401,6 +1424,14 @@ class LEDCreateViewController: UIViewController {
             // 清除线性边框的选中状态
             for i in 0..<8 {
                 if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除LED边框图片的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(900 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -1532,8 +1563,8 @@ class LEDCreateViewController: UIViewController {
             // 取消选择
             currentItem.linearBorderStyle = nil
             
-            // 清除所有按钮的选中状态
-            for i in 0..<8 {
+            // 清除所有按钮的选中状态（12个按钮）
+            for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
@@ -1544,9 +1575,10 @@ class LEDCreateViewController: UIViewController {
             currentItem.linearBorderStyle = styleIndex
             currentItem.borderStyle = nil // 清除跑马灯边框
             currentItem.lightBoardStyle = nil // 清除灯牌边框
+            currentItem.ledBorderImageIndex = nil // 清除LED边框图片
             
-            // 更新选中状态
-            for i in 0..<8 {
+            // 更新选中状态（12个按钮）
+            for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     let raw = linearBorderDisplayOrder[i].rawValue
                     button.layer.borderWidth = (raw == styleIndex) ? 3 : 2
@@ -1565,6 +1597,14 @@ class LEDCreateViewController: UIViewController {
             // 清除灯牌边框的选中状态
             for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除LED边框图片的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(900 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -2200,23 +2240,29 @@ class LEDCreateViewController: UIViewController {
         let buttons: [UIButton]
         
         if category == "led" {
-            // LED屏幕使用特殊的自定义卡片（8种颜色）
+            // LED屏幕使用cc1-cc8图片素材
             buttons = (0..<8).map { index -> UIButton in
                 let btn = UIButton(type: .system)
                 
-                // 创建LED屏幕卡片视图
-                let ledCardView = LEDScreenCardView(style: LEDScreenCardView.LEDScreenStyle(rawValue: index) ?? .red)
-                ledCardView.translatesAutoresizingMaskIntoConstraints = false
-                ledCardView.isUserInteractionEnabled = false // 禁用用户交互，让触摸事件穿透到按钮
-                btn.addSubview(ledCardView)
-                
-                // LED卡片视图填充按钮
-                NSLayoutConstraint.activate([
-                    ledCardView.topAnchor.constraint(equalTo: btn.topAnchor),
-                    ledCardView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
-                    ledCardView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
-                    ledCardView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
-                ])
+                // 加载cc1-cc8图片
+                let imageName = "cc\(index + 1)"
+                if let image = UIImage(named: imageName) {
+                    btn.setBackgroundImage(image, for: .normal)
+                    btn.imageView?.contentMode = .scaleAspectFill
+                } else {
+                    btn.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+                    let label = UILabel()
+                    label.text = "\(index + 1)"
+                    label.textColor = .white
+                    label.font = .boldSystemFont(ofSize: 16)
+                    label.textAlignment = .center
+                    label.translatesAutoresizingMaskIntoConstraints = false
+                    btn.addSubview(label)
+                    NSLayoutConstraint.activate([
+                        label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                        label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                    ])
+                }
                 
                 btn.layer.cornerRadius = 8
                 btn.layer.borderWidth = 2
@@ -2359,31 +2405,31 @@ class LEDCreateViewController: UIViewController {
         let buttons: [UIButton]
         
         if category == "led" {
-            // LED屏幕使用特殊的自定义卡片（8种颜色）
+            // LED屏幕使用cc1-cc8图片素材
             buttons = (0..<count).map { i -> UIButton in
                 let index = startIndex + i
                 let btn = UIButton(type: .system)
                 
-                // 创建LED屏幕卡片视图
-                let ledCardView = LEDScreenCardView(style: LEDScreenCardView.LEDScreenStyle(rawValue: index) ?? .red)
-                ledCardView.translatesAutoresizingMaskIntoConstraints = false
-                ledCardView.isUserInteractionEnabled = false
-                btn.addSubview(ledCardView)
-                
-                NSLayoutConstraint.activate([
-                    ledCardView.topAnchor.constraint(equalTo: btn.topAnchor),
-                    ledCardView.leadingAnchor.constraint(equalTo: btn.leadingAnchor),
-                    ledCardView.trailingAnchor.constraint(equalTo: btn.trailingAnchor),
-                    ledCardView.bottomAnchor.constraint(equalTo: btn.bottomAnchor)
-                ])
-                
-                // LED屏幕全部需要VIP标签
-                let vipBadge = createVIPBadge()
-                btn.addSubview(vipBadge)
-                NSLayoutConstraint.activate([
-                    vipBadge.topAnchor.constraint(equalTo: btn.topAnchor, constant: 4),
-                    vipBadge.trailingAnchor.constraint(equalTo: btn.trailingAnchor, constant: -4)
-                ])
+                // 加载cc1-cc8图片
+                let imageName = "cc\(index + 1)"
+                if let image = UIImage(named: imageName) {
+                    btn.setBackgroundImage(image, for: .normal)
+                    btn.imageView?.contentMode = .scaleAspectFill
+                } else {
+                    // 占位符
+                    btn.backgroundColor = UIColor(red: 0.2, green: 0.2, blue: 0.2, alpha: 1.0)
+                    let label = UILabel()
+                    label.text = "\(index + 1)"
+                    label.textColor = .white
+                    label.font = .boldSystemFont(ofSize: 16)
+                    label.textAlignment = .center
+                    label.translatesAutoresizingMaskIntoConstraints = false
+                    btn.addSubview(label)
+                    NSLayoutConstraint.activate([
+                        label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                        label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                    ])
+                }
                 
                 btn.layer.cornerRadius = 8
                 btn.layer.borderWidth = 2
@@ -2590,6 +2636,38 @@ class LEDCreateViewController: UIViewController {
         // 加载背景图片
         selectedBackgroundImage = currentItem.backgroundImageName
         
+        // 恢复背景图片选中状态
+        if let bgImageName = selectedBackgroundImage {
+            if bgImageName.hasPrefix("cc") {
+                // LED屏幕cc背景(cc1-cc8)
+                if let ccNumStr = bgImageName.dropFirst(2).first,
+                   let ccNum = Int(String(ccNumStr)) {
+                    let selectedIdx = ccNum - 1
+                    updateColorButtonSelection(tag: 520, selectedIndex: selectedIdx)
+                    // 清除背景颜色选中
+                    updateColorButtonSelection(tag: 200, selectedIndex: -1)
+                }
+            } else if bgImageName.hasPrefix("neon_") {
+                if let indexStr = bgImageName.split(separator: "_").last,
+                   let index = Int(indexStr) {
+                    if index <= 8 {
+                        // 霓虹灯前2行
+                        updateColorButtonSelection(tag: 500, selectedIndex: index - 1)
+                    } else {
+                        // 霓虹灯第3-5行
+                        updateColorButtonSelection(tag: 530, selectedIndex: index - 9)
+                    }
+                    updateColorButtonSelection(tag: 200, selectedIndex: -1)
+                }
+            } else if bgImageName.hasPrefix("idol_") {
+                if let indexStr = bgImageName.split(separator: "_").last,
+                   let index = Int(indexStr) {
+                    updateColorButtonSelection(tag: 510, selectedIndex: index - 1)
+                    updateColorButtonSelection(tag: 200, selectedIndex: -1)
+                }
+            }
+        }
+        
         // 查找文字颜色
         if let textColorIndex = textColors.firstIndex(of: currentItem.textColor) {
             selectedTextColorIndex = textColorIndex
@@ -2759,7 +2837,7 @@ class LEDCreateViewController: UIViewController {
 
         // 更新线性边框按钮选中状态（显示顺序可能与 rawValue 不同）
         if let linearBorderStyle = currentItem.linearBorderStyle {
-            for i in 0..<8 {
+            for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     let raw = linearBorderDisplayOrder[i].rawValue
                     button.layer.borderWidth = (raw == linearBorderStyle) ? 3 : 2
@@ -3271,13 +3349,16 @@ class LEDCreateViewController: UIViewController {
             updateColorButtonSelection(tag: 510, selectedIndex: -1)
             updateColorButtonSelection(tag: 520, selectedIndex: -1)
         } else if sender.tag >= 520 {
-            // LED横幅
-            category = "led"
-            index = sender.tag - 520 + 1
+            // LED屏幕 - 使用cc1-cc8图片素材
+            category = "led" // 设置category避免被后面的逻辑覆盖
+            let ccIndex = sender.tag - 520 + 1
+            selectedBackgroundImage = "cc\(ccIndex)"
             updateColorButtonSelection(tag: 520, selectedIndex: sender.tag - 520)
             updateColorButtonSelection(tag: 500, selectedIndex: -1)
             updateColorButtonSelection(tag: 510, selectedIndex: -1)
             updateColorButtonSelection(tag: 530, selectedIndex: -1)
+            updateColorButtonSelection(tag: 200, selectedIndex: -1) // 清除背景颜色选中
+            selectedBgColorIndex = -1
         } else if sender.tag >= 510 {
             // 偶像应援
             category = "idol"
@@ -3296,9 +3377,11 @@ class LEDCreateViewController: UIViewController {
             updateColorButtonSelection(tag: 530, selectedIndex: -1)
         }
         
-        // 保存选中的背景图片名称
-        let imageName = "\(category)_\(index)"
-        selectedBackgroundImage = imageName
+        // 保存选中的背景图片名称（LED已在上方直接设置）
+        if category != "led" {
+            let imageName = "\(category)_\(index)"
+            selectedBackgroundImage = imageName
+        }
         
         // 清除其他背景选择
         updateColorButtonSelection(tag: 200, selectedIndex: -1)
@@ -3312,16 +3395,18 @@ class LEDCreateViewController: UIViewController {
         // 更新预览文字
         let displayText = textField.text?.isEmpty == false ? textField.text! : "previewText".localized
 
-        // Wrap behavior: default on (multi-line). When off: single line and clip.
-        // Do NOT auto-scale text; font size strictly follows the slider.
-        previewLabel.adjustsFontSizeToFitWidth = false
-        previewLabel.minimumScaleFactor = 1.0
+        // Wrap behavior: default on (multi-line). When off: single line with auto-scaling.
         if currentItem.isTextWrapEnabled {
             previewLabel.numberOfLines = 0
             previewLabel.lineBreakMode = .byWordWrapping
+            previewLabel.adjustsFontSizeToFitWidth = false
+            previewLabel.minimumScaleFactor = 1.0
         } else {
             previewLabel.numberOfLines = 1
             previewLabel.lineBreakMode = .byClipping
+            // 启用自适应缩放，让文字在容器内完整显示
+            previewLabel.adjustsFontSizeToFitWidth = true
+            previewLabel.minimumScaleFactor = 0.3 // 最小缩放到30%
         }
         
         // 计算预览字体大小：按“预览容器高度 / 横屏全屏可用高度”的比例缩放。
@@ -3345,7 +3430,7 @@ class LEDCreateViewController: UIViewController {
             alignment: .center,
             lineBreakMode: currentItem.isTextWrapEnabled ? .byWordWrapping : .byClipping,
             // Slightly tighter spacing for LED-style multi-line text.
-            lineSpacing: currentItem.isTextWrapEnabled ? (previewFontSize * 0.015) : nil
+            lineSpacing: currentItem.isTextWrapEnabled ? (previewFontSize * 0.008) : nil
         )
 
         previewLabel.attributedText = attributedText
@@ -3391,7 +3476,7 @@ class LEDCreateViewController: UIViewController {
                     }
                 }
             } else if let image = UIImage(named: imageName) {
-                // 显示普通背景图片
+                // 显示普通背景图片（包括cc1-cc8）
                 print("显示背景图片: \(imageName)")
                 
                 // 移除LED卡片视图
@@ -3403,6 +3488,15 @@ class LEDCreateViewController: UIViewController {
                 previewContainer.backgroundColor = .clear
                 // 清除背景渐变层
                 previewContainer.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer && $0 !== previewBackgroundImageView.layer })
+            } else {
+                // 背景图片名存在但加载失败，回退到背景颜色
+                print("⚠️ 背景图片加载失败: \(imageName)，使用背景颜色")
+                previewLEDCardView?.removeFromSuperview()
+                previewLEDCardView = nil
+                previewBackgroundImageView.image = nil
+                previewBackgroundImageView.isHidden = true
+                previewContainer.layer.sublayers?.removeAll(where: { $0 is CAGradientLayer && $0 !== previewBackgroundImageView.layer })
+                previewContainer.backgroundColor = UIColor(hex: currentItem.backgroundColor)
             }
         } else {
             // 显示背景颜色
@@ -3512,7 +3606,7 @@ class LEDCreateViewController: UIViewController {
             let imageName = "line_\(ledBorderImageIndex)"
             if let image = UIImage(named: imageName) {
                 let borderImageView = UIImageView(image: image)
-                borderImageView.contentMode = .scaleAspectFit // 保持边框完整显示
+                borderImageView.contentMode = .scaleToFill // 拉伸填满整个预览区域，不裁剪
                 borderImageView.clipsToBounds = true
                 borderImageView.translatesAutoresizingMaskIntoConstraints = false
                 borderImageView.tag = 9999 // 用于标识LED边框图片视图
@@ -3570,7 +3664,8 @@ class LEDCreateViewController: UIViewController {
                 fontName: currentItem.fontName,
                 borderStyle: currentItem.borderStyle, // 保存跑马灯边框
                 lightBoardStyle: currentItem.lightBoardStyle, // 保存灯牌边框
-                linearBorderStyle: currentItem.linearBorderStyle // 保存线性边框
+                linearBorderStyle: currentItem.linearBorderStyle, // 保存线性边框
+                ledBorderImageIndex: currentItem.ledBorderImageIndex // 保存LED边框图片
             )
             items.insert(newItem, at: 0)
         } else if let editingItem = editingItem,

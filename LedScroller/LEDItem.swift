@@ -141,8 +141,13 @@ struct LEDItem: Codable {
     var requiresVIPByContent: Bool {
         // Check background first - only return true if background requires VIP
         if let name = backgroundImageName {
-            if name.hasPrefix("led_") {
-                return true
+            if name.hasPrefix("led_"),
+               let numberStr = name.split(separator: "_").last,
+               let number = Int(numberStr) {
+                // led_1-4 免费，led_5+ 需要VIP
+                if number >= 5 {
+                    return true
+                }
             }
             if name.hasPrefix("neon_"),
                let numberStr = name.split(separator: "_").last,
@@ -181,8 +186,13 @@ struct LEDItem: Codable {
             return true
         }
 
-        // Any border selection is VIP.
-        if borderStyle != nil || lightBoardStyle != nil || linearBorderStyle != nil {
+        // Border rules: first 4 marquee borders are free, rest require VIP
+        if let style = borderStyle, style >= 4 {
+            return true
+        }
+        
+        // LightBoard and Linear borders always require VIP
+        if lightBoardStyle != nil || linearBorderStyle != nil {
             return true
         }
 
@@ -194,7 +204,7 @@ struct LEDItem: Codable {
          isTextWrapEnabled: Bool = true,
          fontSize: CGFloat = 60,
          textColor: String = "#FF00FF",
-         backgroundColor: String = "#201F1F",
+         backgroundColor: String = "#000000",
          backgroundImageName: String? = nil, // 背景图片名称
          glowIntensity: CGFloat = 2.5, // 默认2.5 (0-5范围)
          scrollType: ScrollType = .none,

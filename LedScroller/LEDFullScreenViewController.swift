@@ -7,6 +7,11 @@ import UIKit
 // LED全屏显示页面
 class LEDFullScreenViewController: UIViewController {
     
+    enum CloseInteractionMode {
+        case tapToDismiss
+        case tapToRevealActions
+    }
+    
     private let ledItem: LEDItem
     private let backgroundImageView = UIImageView() // 背景图片视图
     private var ledCardView: LEDScreenCardView? // LED卡片背景视图
@@ -18,12 +23,18 @@ class LEDFullScreenViewController: UIViewController {
 
     // Top-right close button (tap to dismiss)
     private let closeButton = UIButton(type: .system)
+    private let closeInteractionMode: CloseInteractionMode
+    private let actionOverlayView = UIVisualEffectView(effect: UIBlurEffect(style: .dark))
+    private let exitPreviewButton = UIButton(type: .system)
+    private let continuePreviewButton = UIButton(type: .system)
+    private let topMaskView = UIView() // 顶部半透明黑色遮罩
 
     // VIP template action
     private let useTemplateButton = UIButton(type: .system)
     
-    init(ledItem: LEDItem) {
+    init(ledItem: LEDItem, closeInteractionMode: CloseInteractionMode = .tapToDismiss) {
         self.ledItem = ledItem
+        self.closeInteractionMode = closeInteractionMode
         super.init(nibName: nil, bundle: nil)
     }
     
@@ -80,33 +91,11 @@ class LEDFullScreenViewController: UIViewController {
         let imageNameToUse = ledItem.backgroundImageName ?? ledItem.imageName
         
         if let imageName = imageNameToUse, !imageName.isEmpty {
-            // 检查是否是LED屏幕背景
-            if imageName.hasPrefix("led_") {
-                // 显示LED卡片背景
-                if let indexStr = imageName.split(separator: "_").last,
-                   let index = Int(indexStr),
-                   index >= 1 && index <= 8 {
-                    let styleIndex = index - 1
-                    if let style = LEDScreenCardView.LEDScreenStyle(rawValue: styleIndex) {
-                        let ledCard = LEDScreenCardView(style: style)
-                        ledCard.translatesAutoresizingMaskIntoConstraints = false
-                        view.addSubview(ledCard)
-                        
-                        NSLayoutConstraint.activate([
-                            ledCard.topAnchor.constraint(equalTo: view.topAnchor),
-                            ledCard.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-                            ledCard.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-                            ledCard.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-                        ])
-                        
-                        ledCardView = ledCard
-                        view.backgroundColor = .clear
-                    }
-                }
-            } else if let image = UIImage(named: imageName) {
-                // 显示普通背景图片
+            // 尝试加载图片（包括 led_ 背景也使用图片）
+            if let image = UIImage(named: imageName) {
+                // 显示背景图片
                 backgroundImageView.image = image
-                backgroundImageView.contentMode = .scaleAspectFill
+                backgroundImageView.contentMode = .scaleToFill // 拉伸填满整个屏幕，不裁剪
                 backgroundImageView.clipsToBounds = true
                 backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
                 view.addSubview(backgroundImageView)
@@ -146,7 +135,7 @@ class LEDFullScreenViewController: UIViewController {
         
         // LED边框图片视图
         let ledBorderImageView = UIImageView()
-        ledBorderImageView.contentMode = .scaleAspectFit // 保持边框完整显示
+        ledBorderImageView.contentMode = .scaleToFill // 拉伸填满整个屏幕，不裁剪
         ledBorderImageView.clipsToBounds = true
         ledBorderImageView.translatesAutoresizingMaskIntoConstraints = false
         ledBorderImageView.isHidden = true // 默认隐藏
@@ -234,7 +223,8 @@ class LEDFullScreenViewController: UIViewController {
             size: adjustedFontSize,
             color: UIColor(hex: ledItem.textColor),
             alignment: .center,
-            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping
+            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping,
+            lineSpacing: wrapEnabled ? (adjustedFontSize * 0.008) : nil
         )
         
         // 霓虹发光效果（与文字颜色一致，强度0-20）
@@ -252,29 +242,86 @@ class LEDFullScreenViewController: UIViewController {
             textLabel.trailingAnchor.constraint(lessThanOrEqualTo: view.trailingAnchor, constant: -20)
         ])
         
-        // Close button (top-right)
-        closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
-        closeButton.tintColor = .white
-        closeButton.translatesAutoresizingMaskIntoConstraints = false
-        closeButton.addTarget(self, action: #selector(dismissView), for: .touchUpInside)
-        view.addSubview(closeButton)
-        view.bringSubviewToFront(closeButton)
+        if closeInteractionMode == .tapToDismiss {
+            // Close button (top-right)
+            closeButton.setImage(UIImage(systemName: "xmark"), for: .normal)
+            closeButton.tintColor = .white
+            closeButton.translatesAutoresizingMaskIntoConstraints = false
+            closeButton.addTarget(self, action: #selector(dismissView), for: .touchUpInside)
+            view.addSubview(closeButton)
+            view.bringSubviewToFront(closeButton)
 
-        NSLayoutConstraint.activate([
-            closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
-            closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            closeButton.widthAnchor.constraint(equalToConstant: 32),
-            closeButton.heightAnchor.constraint(equalToConstant: 32)
-        ])
+            NSLayoutConstraint.activate([
+                closeButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 12),
+                closeButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+                closeButton.widthAnchor.constraint(equalToConstant: 32),
+                closeButton.heightAnchor.constraint(equalToConstant: 32)
+            ])
+        } else {
+            setupActionOverlay()
+        }
 
         // 屏幕常亮
         UIApplication.shared.isIdleTimerDisabled = true
     }
     
     private func setupGestures() {
-        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(dismissView))
+        let tapGesture = UITapGestureRecognizer(target: self, action: #selector(handleScreenTap))
         tapGesture.cancelsTouchesInView = false // don't swallow button taps
         view.addGestureRecognizer(tapGesture)
+    }
+    
+    private func setupActionOverlay() {
+        // 全屏半透明黑色遮罩（0.5透明度）
+        topMaskView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
+        topMaskView.translatesAutoresizingMaskIntoConstraints = false
+        topMaskView.isHidden = true
+        topMaskView.alpha = 0
+        view.addSubview(topMaskView)
+        
+        NSLayoutConstraint.activate([
+            topMaskView.topAnchor.constraint(equalTo: view.topAnchor),
+            topMaskView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            topMaskView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            topMaskView.bottomAnchor.constraint(equalTo: view.bottomAnchor) // 覆盖整个屏幕
+        ])
+        
+        // 按钮容器（横排居中显示）- 直接放在遮罩上
+        let stack = UIStackView(arrangedSubviews: [exitPreviewButton, continuePreviewButton])
+        stack.axis = .horizontal
+        stack.spacing = 20 // 两个按钮间隔20pt
+        stack.distribution = .fillEqually
+        stack.translatesAutoresizingMaskIntoConstraints = false
+
+        configureOverlayButton(exitPreviewButton, title: "退出预览", isPrimary: false, action: #selector(exitPreviewTapped))
+        configureOverlayButton(continuePreviewButton, title: "继续预览", isPrimary: true, action: #selector(continuePreviewTapped))
+
+        topMaskView.addSubview(stack)
+
+        NSLayoutConstraint.activate([
+            stack.centerXAnchor.constraint(equalTo: topMaskView.centerXAnchor),
+            stack.centerYAnchor.constraint(equalTo: topMaskView.centerYAnchor), // 居中显示
+            stack.heightAnchor.constraint(equalToConstant: 50),
+
+            exitPreviewButton.widthAnchor.constraint(equalToConstant: 140),
+            continuePreviewButton.widthAnchor.constraint(equalToConstant: 140)
+        ])
+    }
+
+    private func configureOverlayButton(_ button: UIButton, title: String, isPrimary: Bool, action: Selector) {
+        button.setTitle(title, for: .normal)
+        button.setTitleColor(.white, for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        button.layer.cornerRadius = 18
+        button.layer.masksToBounds = true
+        button.backgroundColor = isPrimary
+            ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.25)
+            : UIColor.white.withAlphaComponent(0.12)
+        button.layer.borderWidth = 1
+        button.layer.borderColor = isPrimary
+            ? UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.9).cgColor
+            : UIColor.white.withAlphaComponent(0.2).cgColor
+        button.addTarget(self, action: action, for: .touchUpInside)
     }
     
     private func startAnimation() {
@@ -401,6 +448,38 @@ class LEDFullScreenViewController: UIViewController {
             let nav = UINavigationController(rootViewController: createVC)
             nav.modalPresentationStyle = .fullScreen
             opener.present(nav, animated: true)
+        }
+    }
+
+    @objc private func handleScreenTap() {
+        switch closeInteractionMode {
+        case .tapToDismiss:
+            dismissView()
+        case .tapToRevealActions:
+            setActionOverlayVisible(topMaskView.isHidden)
+        }
+    }
+
+    @objc private func exitPreviewTapped() {
+        dismissView()
+    }
+
+    @objc private func continuePreviewTapped() {
+        setActionOverlayVisible(false)
+    }
+
+    private func setActionOverlayVisible(_ visible: Bool) {
+        if visible {
+            topMaskView.isHidden = false
+            UIView.animate(withDuration: 0.2) {
+                self.topMaskView.alpha = 1
+            }
+        } else {
+            UIView.animate(withDuration: 0.2, animations: {
+                self.topMaskView.alpha = 0
+            }) { _ in
+                self.topMaskView.isHidden = true
+            }
         }
     }
 

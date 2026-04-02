@@ -299,7 +299,7 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
 
         // 延迟一点再present,让方向切换更流畅
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            let displayVC = LEDFullScreenViewController(ledItem: item)
+            let displayVC = LEDFullScreenViewController(ledItem: item, closeInteractionMode: .tapToRevealActions)
             displayVC.modalPresentationStyle = .fullScreen
             displayVC.modalTransitionStyle = .crossDissolve // 使用淡入淡出过渡,更流畅
             self.present(displayVC, animated: true)
@@ -513,8 +513,8 @@ class CreationTableCell: UITableViewCell {
 
         // 预览区域
         previewView.layer.cornerRadius = 18 // 增大圆角从12到18
-        previewView.layer.borderWidth = 2
-        previewView.layer.borderColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0).cgColor
+        previewView.layer.borderWidth = 0
+        previewView.layer.borderColor = UIColor.clear.cgColor
         previewView.clipsToBounds = true
         previewView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(previewView)
@@ -542,7 +542,7 @@ class CreationTableCell: UITableViewCell {
         previewView.addSubview(linearBorderView)
         
         // LED边框图片视图
-        ledBorderImageView.contentMode = .scaleAspectFit // 保持边框完整显示
+        ledBorderImageView.contentMode = .scaleToFill // 拉伸填满整个区域，不裁剪
         ledBorderImageView.clipsToBounds = true
         ledBorderImageView.translatesAutoresizingMaskIntoConstraints = false
         ledBorderImageView.isHidden = true // 默认隐藏
@@ -724,11 +724,20 @@ class CreationTableCell: UITableViewCell {
         let calculatedFontSize = item.fontSize * scaleFactor
 
         let wrapEnabled = item.isTextWrapEnabled
-        ledTextLabel.numberOfLines = wrapEnabled ? 0 : 1
-        ledTextLabel.lineBreakMode = wrapEnabled ? .byWordWrapping : .byClipping
-        // Do NOT auto-scale text; font size strictly follows the slider.
-        ledTextLabel.adjustsFontSizeToFitWidth = false
-        ledTextLabel.minimumScaleFactor = 1.0
+        
+        // 关键修复：未开启换行时，强制单行并启用自适应缩放
+        if wrapEnabled {
+            ledTextLabel.numberOfLines = 0
+            ledTextLabel.lineBreakMode = .byWordWrapping
+            ledTextLabel.adjustsFontSizeToFitWidth = false
+            ledTextLabel.minimumScaleFactor = 1.0
+        } else {
+            ledTextLabel.numberOfLines = 1
+            ledTextLabel.lineBreakMode = .byClipping
+            // 启用自适应缩放，让文字在容器内完整显示
+            ledTextLabel.adjustsFontSizeToFitWidth = true
+            ledTextLabel.minimumScaleFactor = 0.3 // 最小缩放到30%
+        }
 
         ledTextLabel.attributedText = LEDFontRenderer.attributedText(
             item.text,
@@ -736,7 +745,8 @@ class CreationTableCell: UITableViewCell {
             size: calculatedFontSize,
             color: UIColor(hex: item.textColor),
             alignment: .center,
-            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping
+            lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping,
+            lineSpacing: wrapEnabled ? (calculatedFontSize * 0.008) : nil
         )
 
         // 霓虹效果

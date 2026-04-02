@@ -136,7 +136,7 @@ class LEDPreviewViewController: UIViewController {
             color: UIColor(hex: ledItem.textColor),
             alignment: .center,
             lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping,
-            lineSpacing: wrapEnabled ? (calculatedFontSize * 0.015) : nil
+            lineSpacing: wrapEnabled ? (calculatedFontSize * 0.008) : nil
         )
         previewContainer.addSubview(textLabel)
 

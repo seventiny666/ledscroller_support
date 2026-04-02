@@ -1,17 +1,17 @@
 {
   "images" : [
     {
-      "filename" : "neon_6.jpg",
+      "filename" : "cc4.jpg",
       "idiom" : "universal",
       "scale" : "1x"
     },
     {
-      "filename" : "neon_6@2x.jpg",
+      "filename" : "cc4@2x.jpg",
       "idiom" : "universal",
       "scale" : "2x"
     },
     {
-      "filename" : "neon_6@3x.jpg",
+      "filename" : "cc4@3x.jpg",
       "idiom" : "universal",
       "scale" : "3x"
     }
