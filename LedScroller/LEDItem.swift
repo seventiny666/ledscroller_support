@@ -135,6 +135,7 @@ struct LEDItem: Codable {
     // Derived VIP gate based on the same rules used by the editor (background + borders).
     // This keeps the home/template VIP badge consistent with what actually requires subscription.
     var requiresVIPByContent: Bool {
+        // Check background first - only return true if background requires VIP
         if let name = backgroundImageName {
             if name.hasPrefix("led_") {
                 return true
@@ -142,12 +143,18 @@ struct LEDItem: Codable {
             if name.hasPrefix("neon_"),
                let numberStr = name.split(separator: "_").last,
                let number = Int(numberStr) {
-                return number <= 3
+                if number <= 3 {
+                    return true  // neon_1, neon_2, neon_3 need VIP
+                }
+                // neon_4+ doesn't need VIP, continue checking other conditions
             }
             if name.hasPrefix("idol_"),
                let numberStr = name.split(separator: "_").last,
                let number = Int(numberStr) {
-                return number >= 5
+                if number >= 5 {
+                    return true  // idol_5+ need VIP
+                }
+                // idol_1-4 don't need VIP, continue checking other conditions
             }
         }
 

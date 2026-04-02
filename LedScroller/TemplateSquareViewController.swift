@@ -4649,7 +4649,7 @@ class TemplateItemCell: UICollectionViewCell {
         vipBadgeView.isHidden = true // 默认隐藏
         // Ensure the VIP badge always stays above border/cover overlays.
         vipBadgeView.layer.zPosition = 10_000
-        contentView.addSubview(vipBadgeView)
+        containerView.addSubview(vipBadgeView) // 添加到containerView而不是contentView
 
         // iPad cover image needs more padding to match the larger card proportions.
         let imageTopInset: CGFloat = isPad ? 18 : 12
@@ -5206,7 +5206,7 @@ class TemplateItemCell: UICollectionViewCell {
         // 显示或隐藏VIP标签：基于模版实际使用的VIP内容（背景/边框等）
         let needsVIP = item.requiresVIPByContent
         // Safety: keep the badge above any border/cover overlays.
-        contentView.bringSubviewToFront(vipBadgeView)
+        containerView.bringSubviewToFront(vipBadgeView)
         vipBadgeView.isHidden = !needsVIP
         vipBadgeView.alpha = needsVIP ? 1.0 : 0.0
         if needsVIP {

@@ -7,6 +7,7 @@ class LEDPreviewViewController: UIViewController {
     private let backgroundImageView = UIImageView()
     private let borderView = MarqueeBorderView(displayMode: .preview) // 跑马灯边框视图
     private let lightBoardView = LightBoardBorderView(displayMode: .preview) // 灯牌边框视图
+    private let linearBorderView = LinearBorderView(displayMode: .preview) // 线性边框视图
     private let textLabel = UILabel()
     private let editButton = UIButton(type: .system)
     private let previewButton = UIButton(type: .system)
@@ -68,6 +69,11 @@ class LEDPreviewViewController: UIViewController {
         lightBoardView.isHidden = true // 默认隐藏
         previewContainer.addSubview(lightBoardView)
         
+        // 线性边框视图
+        linearBorderView.translatesAutoresizingMaskIntoConstraints = false
+        linearBorderView.isHidden = true // 默认隐藏
+        previewContainer.addSubview(linearBorderView)
+        
         // 设置背景（图片或颜色）
         if let imageName = ledItem.imageName, !imageName.isEmpty, let image = UIImage(named: imageName) {
             backgroundImageView.image = image
@@ -82,15 +88,25 @@ class LEDPreviewViewController: UIViewController {
             borderView.setStyle(style)
             borderView.isHidden = false
             lightBoardView.isHidden = true
+            linearBorderView.isHidden = true
         } else if let lightBoardStyleIndex = ledItem.lightBoardStyle,
                   lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
             let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
             lightBoardView.setStyle(style)
             lightBoardView.isHidden = false
             borderView.isHidden = true
+            linearBorderView.isHidden = true
+        } else if let linearBorderStyleIndex = ledItem.linearBorderStyle,
+                  linearBorderStyleIndex >= 0 && linearBorderStyleIndex < LinearBorderStyle.allCases.count {
+            let style = LinearBorderStyle.allCases[linearBorderStyleIndex]
+            linearBorderView.setStyle(style)
+            linearBorderView.isHidden = false
+            borderView.isHidden = true
+            lightBoardView.isHidden = true
         } else {
             borderView.isHidden = true
             lightBoardView.isHidden = true
+            linearBorderView.isHidden = true
         }
         
         // LED文字 - 统一字体大小计算：基于全屏横屏尺寸等比缩放
@@ -199,6 +215,12 @@ class LEDPreviewViewController: UIViewController {
             lightBoardView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
             lightBoardView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
             lightBoardView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
+            
+            // 线性边框视图填满预览容器
+            linearBorderView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+            linearBorderView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+            linearBorderView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+            linearBorderView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor),
             
             // 文字居中显示
             textLabel.centerXAnchor.constraint(equalTo: previewContainer.centerXAnchor),

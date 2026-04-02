@@ -3394,7 +3394,8 @@ class LEDCreateViewController: UIViewController {
                 speed: currentItem.speed,
                 fontName: currentItem.fontName,
                 borderStyle: currentItem.borderStyle, // 保存跑马灯边框
-                lightBoardStyle: currentItem.lightBoardStyle // 保存灯牌边框
+                lightBoardStyle: currentItem.lightBoardStyle, // 保存灯牌边框
+                linearBorderStyle: currentItem.linearBorderStyle // 保存线性边框
             )
             items.insert(newItem, at: 0)
         } else if let editingItem = editingItem,

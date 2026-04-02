@@ -228,6 +228,7 @@ class LEDCell: UICollectionViewCell {
     private let containerView = UIView()
     private let textLabel = UILabel()
     private let clockTitleLabel = UILabel() // 翻页时钟标题标签
+    private let vipBadgeView = VIPBadgeView() // VIP标签
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -240,14 +241,17 @@ class LEDCell: UICollectionViewCell {
     
     override func prepareForReuse() {
         super.prepareForReuse()
-        // 清理烟花静态粒子，但保留textLabel和clockTitleLabel
+        // 清理烟花静态粒子，但保留textLabel、clockTitleLabel和vipBadgeView
         containerView.subviews.forEach { subview in
-            if subview != textLabel && subview != clockTitleLabel {
+            if subview != textLabel && subview != clockTitleLabel && subview != vipBadgeView {
                 subview.removeFromSuperview()
             }
         }
         // 隐藏时钟标题
         clockTitleLabel.isHidden = true
+        // 重置VIP标签
+        vipBadgeView.isHidden = true
+        vipBadgeView.alpha = 0
     }
     
     private func setupUI() {
@@ -276,6 +280,12 @@ class LEDCell: UICollectionViewCell {
         clockTitleLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(clockTitleLabel)
         
+        // 设置VIP标签
+        vipBadgeView.translatesAutoresizingMaskIntoConstraints = false
+        vipBadgeView.isHidden = true // 默认隐藏
+        vipBadgeView.layer.zPosition = 10_000 // 确保在最上层
+        containerView.addSubview(vipBadgeView)
+        
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -291,7 +301,13 @@ class LEDCell: UICollectionViewCell {
             clockTitleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             clockTitleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
             clockTitleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -8),
-            clockTitleLabel.heightAnchor.constraint(equalToConstant: 20)
+            clockTitleLabel.heightAnchor.constraint(equalToConstant: 20),
+            
+            // VIP标签约束 - 右上角
+            vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 8),
+            vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -8),
+            vipBadgeView.widthAnchor.constraint(equalToConstant: 40),
+            vipBadgeView.heightAnchor.constraint(equalToConstant: 22)
         ])
     }
     
@@ -311,9 +327,9 @@ class LEDCell: UICollectionViewCell {
             lineBreakMode: wrapEnabled ? .byWordWrapping : .byClipping
         )
         
-        // 清理旧的效果，但保留textLabel和clockTitleLabel
+        // 清理旧的效果，但保留textLabel、clockTitleLabel和vipBadgeView
         containerView.subviews.forEach { subview in
-            if subview != textLabel && subview != clockTitleLabel {
+            if subview != textLabel && subview != clockTitleLabel && subview != vipBadgeView {
                 subview.removeFromSuperview()
             }
         }
@@ -351,6 +367,18 @@ class LEDCell: UICollectionViewCell {
             textLabel.layer.shadowRadius = 10 * item.glowIntensity
             textLabel.layer.shadowOpacity = Float(item.glowIntensity)
             textLabel.layer.shadowOffset = .zero
+        }
+        
+        // 显示或隐藏VIP标签：基于LED实际使用的VIP内容（背景/边框等）
+        let needsVIP = item.requiresVIPByContent
+        // 确保VIP标签在最上层
+        containerView.bringSubviewToFront(vipBadgeView)
+        vipBadgeView.isHidden = !needsVIP
+        vipBadgeView.alpha = needsVIP ? 1.0 : 0.0
+        if needsVIP {
+            vipBadgeView.startShimmering()
+        } else {
+            vipBadgeView.stopShimmering()
         }
     }
     
