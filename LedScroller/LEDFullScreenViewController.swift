@@ -144,6 +144,14 @@ class LEDFullScreenViewController: UIViewController {
         linearBorderView.isHidden = true // 默认隐藏
         view.addSubview(linearBorderView)
         
+        // LED边框图片视图
+        let ledBorderImageView = UIImageView()
+        ledBorderImageView.contentMode = .scaleAspectFit // 保持边框完整显示
+        ledBorderImageView.clipsToBounds = true
+        ledBorderImageView.translatesAutoresizingMaskIntoConstraints = false
+        ledBorderImageView.isHidden = true // 默认隐藏
+        view.addSubview(ledBorderImageView)
+        
         if let borderStyleIndex = ledItem.borderStyle,
            borderStyleIndex >= 0 && borderStyleIndex < MarqueeBorderStyle.allCases.count {
             let style = MarqueeBorderStyle.allCases[borderStyleIndex]
@@ -151,6 +159,7 @@ class LEDFullScreenViewController: UIViewController {
             borderView.isHidden = false
             lightBoardView.isHidden = true
             linearBorderView.isHidden = true
+            ledBorderImageView.isHidden = true
         } else if let lightBoardStyleIndex = ledItem.lightBoardStyle,
                   lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
             let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
@@ -158,6 +167,7 @@ class LEDFullScreenViewController: UIViewController {
             lightBoardView.isHidden = false
             borderView.isHidden = true
             linearBorderView.isHidden = true
+            ledBorderImageView.isHidden = true
         } else if let linearBorderStyleIndex = ledItem.linearBorderStyle,
                   linearBorderStyleIndex >= 0 && linearBorderStyleIndex < LinearBorderStyle.allCases.count {
             let style = LinearBorderStyle.allCases[linearBorderStyleIndex]
@@ -165,10 +175,23 @@ class LEDFullScreenViewController: UIViewController {
             linearBorderView.isHidden = false
             borderView.isHidden = true
             lightBoardView.isHidden = true
+            ledBorderImageView.isHidden = true
+        } else if let ledBorderImageIndex = ledItem.ledBorderImageIndex,
+                  ledBorderImageIndex >= 1 && ledBorderImageIndex <= 8 {
+            // LED边框图片
+            let imageName = "line_\(ledBorderImageIndex)"
+            if let image = UIImage(named: imageName) {
+                ledBorderImageView.image = image
+                ledBorderImageView.isHidden = false
+                borderView.isHidden = true
+                lightBoardView.isHidden = true
+                linearBorderView.isHidden = true
+            }
         } else {
             borderView.isHidden = true
             lightBoardView.isHidden = true
             linearBorderView.isHidden = true
+            ledBorderImageView.isHidden = true
         }
         
         NSLayoutConstraint.activate([
@@ -185,7 +208,12 @@ class LEDFullScreenViewController: UIViewController {
             linearBorderView.topAnchor.constraint(equalTo: view.topAnchor),
             linearBorderView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             linearBorderView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            linearBorderView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            linearBorderView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            ledBorderImageView.topAnchor.constraint(equalTo: view.topAnchor),
+            ledBorderImageView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            ledBorderImageView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            ledBorderImageView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
         
         textLabel.textAlignment = .center

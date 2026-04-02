@@ -483,6 +483,7 @@ class CreationTableCell: UITableViewCell {
     private let borderView = MarqueeBorderView(displayMode: .cardCover) // 跑马灯边框视图
     private let lightBoardView = LightBoardBorderView(displayMode: .cardCover) // 灯牌边框视图
     private let linearBorderView = LinearBorderView(displayMode: .cardCover) // 线性边框视图
+    private let ledBorderImageView = UIImageView() // LED边框图片视图
     private let ledTextLabel = UILabel() // 改名避免与UITableViewCell的textLabel冲突
     private let timeLabel = UILabel() // 时间标签(放在卡片下面)
 
@@ -539,7 +540,14 @@ class CreationTableCell: UITableViewCell {
         linearBorderView.translatesAutoresizingMaskIntoConstraints = false
         linearBorderView.isHidden = true // 默认隐藏
         previewView.addSubview(linearBorderView)
-
+        
+        // LED边框图片视图
+        ledBorderImageView.contentMode = .scaleAspectFit // 保持边框完整显示
+        ledBorderImageView.clipsToBounds = true
+        ledBorderImageView.translatesAutoresizingMaskIntoConstraints = false
+        ledBorderImageView.isHidden = true // 默认隐藏
+        previewView.addSubview(ledBorderImageView)
+        
         // 预览文字
         ledTextLabel.textAlignment = .center
         ledTextLabel.numberOfLines = 2
@@ -591,7 +599,12 @@ class CreationTableCell: UITableViewCell {
             linearBorderView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
             linearBorderView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
             linearBorderView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
-
+            
+            ledBorderImageView.topAnchor.constraint(equalTo: previewView.topAnchor),
+            ledBorderImageView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
+            ledBorderImageView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
+            ledBorderImageView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor),
+            
             ledTextLabel.centerXAnchor.constraint(equalTo: previewView.centerXAnchor),
             ledTextLabel.centerYAnchor.constraint(equalTo: previewView.centerYAnchor),
             ledTextLabel.leadingAnchor.constraint(equalTo: previewView.leadingAnchor, constant: 16),
@@ -663,6 +676,7 @@ class CreationTableCell: UITableViewCell {
             borderView.isHidden = false
             lightBoardView.isHidden = true
             linearBorderView.isHidden = true
+            ledBorderImageView.isHidden = true
         } else if let lightBoardStyleIndex = item.lightBoardStyle,
                   lightBoardStyleIndex >= 0 && lightBoardStyleIndex < LightBoardBorderStyle.allCases.count {
             let style = LightBoardBorderStyle.allCases[lightBoardStyleIndex]
@@ -670,6 +684,7 @@ class CreationTableCell: UITableViewCell {
             lightBoardView.isHidden = false
             borderView.isHidden = true
             linearBorderView.isHidden = true
+            ledBorderImageView.isHidden = true
         } else if let linearBorderStyleIndex = item.linearBorderStyle,
                   linearBorderStyleIndex >= 0 && linearBorderStyleIndex < LinearBorderStyle.allCases.count {
             let style = LinearBorderStyle.allCases[linearBorderStyleIndex]
@@ -677,10 +692,23 @@ class CreationTableCell: UITableViewCell {
             linearBorderView.isHidden = false
             borderView.isHidden = true
             lightBoardView.isHidden = true
+            ledBorderImageView.isHidden = true
+        } else if let ledBorderImageIndex = item.ledBorderImageIndex,
+                  ledBorderImageIndex >= 1 && ledBorderImageIndex <= 8 {
+            // LED边框图片
+            let imageName = "line_\(ledBorderImageIndex)"
+            if let image = UIImage(named: imageName) {
+                ledBorderImageView.image = image
+                ledBorderImageView.isHidden = false
+                borderView.isHidden = true
+                lightBoardView.isHidden = true
+                linearBorderView.isHidden = true
+            }
         } else {
             borderView.isHidden = true
             lightBoardView.isHidden = true
             linearBorderView.isHidden = true
+            ledBorderImageView.isHidden = true
         }
 
         ledTextLabel.text = item.text

@@ -16,6 +16,7 @@ struct LEDItem: Codable {
     var borderStyle: Int? // 跑马灯边框样式索引（0-11对应12种样式，nil表示无边框）
     var lightBoardStyle: Int? // 灯牌边框样式索引（0-7对应8种样式，nil表示无边框）
     var linearBorderStyle: Int? // 线性边框样式索引（0-7对应8种颜色，nil表示无边框）
+    var ledBorderImageIndex: Int? // LED边框图片索引（1-8对应line_1到line_8，nil表示无边框）
     var isFireworks: Bool // 标识是否为烟花效果
     var isFireworksBloom: Bool // 标识是否为烟花绽放效果（第二种）
     var isFlipClock: Bool // 标识是否为翻页时钟效果
@@ -55,6 +56,7 @@ struct LEDItem: Codable {
         case borderStyle
         case lightBoardStyle
         case linearBorderStyle
+        case ledBorderImageIndex
         case isFireworks
         case isFireworksBloom
         case isFlipClock
@@ -86,6 +88,7 @@ struct LEDItem: Codable {
         borderStyle = try c.decodeIfPresent(Int.self, forKey: .borderStyle)
         lightBoardStyle = try c.decodeIfPresent(Int.self, forKey: .lightBoardStyle)
         linearBorderStyle = try c.decodeIfPresent(Int.self, forKey: .linearBorderStyle)
+        ledBorderImageIndex = try c.decodeIfPresent(Int.self, forKey: .ledBorderImageIndex)
         isFireworks = try c.decodeIfPresent(Bool.self, forKey: .isFireworks) ?? false
         isFireworksBloom = try c.decodeIfPresent(Bool.self, forKey: .isFireworksBloom) ?? false
         isFlipClock = try c.decodeIfPresent(Bool.self, forKey: .isFlipClock) ?? false
@@ -117,6 +120,7 @@ struct LEDItem: Codable {
         try c.encodeIfPresent(borderStyle, forKey: .borderStyle)
         try c.encodeIfPresent(lightBoardStyle, forKey: .lightBoardStyle)
         try c.encodeIfPresent(linearBorderStyle, forKey: .linearBorderStyle)
+        try c.encodeIfPresent(ledBorderImageIndex, forKey: .ledBorderImageIndex)
         try c.encode(isFireworks, forKey: .isFireworks)
         try c.encode(isFireworksBloom, forKey: .isFireworksBloom)
         try c.encode(isFlipClock, forKey: .isFlipClock)
@@ -143,10 +147,13 @@ struct LEDItem: Codable {
             if name.hasPrefix("neon_"),
                let numberStr = name.split(separator: "_").last,
                let number = Int(numberStr) {
-                if number <= 3 {
-                    return true  // neon_1, neon_2, neon_3 need VIP
+                // neon_1-3 不需要VIP（免费背景）
+                // neon_4+ 不需要VIP，继续检查其他条件
+                if number == 4 {
+                    // neon_4 特殊处理：在首页配置中使用了边框，需要VIP
+                    // 但如果用户在编辑页选择 neon_4 作为背景，不会自动有边框
+                    // 所以这里不返回true，让边框判断决定
                 }
-                // neon_4+ doesn't need VIP, continue checking other conditions
             }
             if name.hasPrefix("idol_"),
                let numberStr = name.split(separator: "_").last,
@@ -196,6 +203,7 @@ struct LEDItem: Codable {
          borderStyle: Int? = nil, // 跑马灯边框样式
          lightBoardStyle: Int? = nil, // 灯牌边框样式
          linearBorderStyle: Int? = nil, // 线性边框样式
+         ledBorderImageIndex: Int? = nil, // LED边框图片索引
          isFireworks: Bool = false,
          isFireworksBloom: Bool = false,
          isFlipClock: Bool = false,
@@ -223,6 +231,7 @@ struct LEDItem: Codable {
         self.borderStyle = borderStyle
         self.lightBoardStyle = lightBoardStyle
         self.linearBorderStyle = linearBorderStyle
+        self.ledBorderImageIndex = ledBorderImageIndex
         self.isFireworks = isFireworks
         self.isFireworksBloom = isFireworksBloom
         self.isFlipClock = isFlipClock
@@ -308,16 +317,28 @@ struct LEDFontRenderer {
             paragraphStyle.lineSpacing = lineSpacing
         }
 
-        if let (lowerName, upperName) = matrixFontNames(for: fontName),
-           let lowerFont = UIFont(name: lowerName, size: size),
-           let upperFont = UIFont(name: upperName, size: size) {
-            return matrixAttributedText(
-                text,
-                lowerFont: lowerFont,
-                upperFont: upperFont,
-                color: color,
-                paragraphStyle: paragraphStyle
-            )
+        if let (lowerName, upperName) = matrixFontNames(for: fontName) {
+            print("🔤 尝试加载MatrixSans字体: \(fontName) -> lower=\(lowerName), upper=\(upperName)")
+            if let lowerFont = UIFont(name: lowerName, size: size),
+               let upperFont = UIFont(name: upperName, size: size) {
+                print("🔤 ✅ MatrixSans字体加载成功: \(lowerName)")
+                return matrixAttributedText(
+                    text,
+                    lowerFont: lowerFont,
+                    upperFont: upperFont,
+                    color: color,
+                    paragraphStyle: paragraphStyle
+                )
+            } else {
+                print("🔤 ❌ MatrixSans字体加载失败: lower=\(lowerName), fontName=\(fontName)")
+                // 列出可用字体帮助调试
+                let familyNames = UIFont.familyNames
+                for family in familyNames {
+                    if family.contains("Matrix") {
+                        print("🔤 可用的Matrix字体族: \(family) -> \(UIFont.fontNames(forFamilyName: family))")
+                    }
+                }
+            }
         }
 
         let font = UIFont(name: fontName, size: size) ?? .systemFont(ofSize: size, weight: .medium)

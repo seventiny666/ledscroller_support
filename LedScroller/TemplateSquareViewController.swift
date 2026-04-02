@@ -4416,15 +4416,13 @@ class TemplateCategoryCell: UITableViewCell {
             var textColor = "#FFFFFF" // 默认白色
             
             if category == "neon" {
+                // neon_1-3: 无边框（免费）
                 if i == 1 {
-                    // neon_1: 线性边框（VIP）
-                    linearBorderStyle = 0
+                    // neon_1: 无边框（免费）
                 } else if i == 2 {
-                    // neon_2: 线性边框（VIP）
-                    linearBorderStyle = 1
+                    // neon_2: 无边框（免费）
                 } else if i == 3 {
-                    // neon_3: 跑马灯边框（VIP）
-                    borderStyle = 0
+                    // neon_3: 无边框（免费）
                 } else if i == 4 {
                     // neon_4: 跑马灯边框（VIP）
                     borderStyle = 1

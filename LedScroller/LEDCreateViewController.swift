@@ -760,12 +760,11 @@ class LEDCreateViewController: UIViewController {
         
         // 字体选择
         addSectionLabelToView(fontTabView, text: "fontSelection".localized, yOffset: &tabYOffset)
-        
+
         // 创建字体选择按钮（固定一行，不可滑动）
-        // 需求：去掉 Bold，只保留 3 个系统选项 + 2 个新字体 = 5 个。
+        // 需求：去掉 thin，只保留 2 个系统选项 + 6 个VIP字体 = 8 个。
         let fontNames = [
             "pingfang".localized,
-            "thin".localized,
             "medium".localized,
             "dotMatrix".localized,
             "pixel".localized,
@@ -812,7 +811,7 @@ class LEDCreateViewController: UIViewController {
             btn.translatesAutoresizingMaskIntoConstraints = false
 
             // VIP fonts get a top-right badge.
-            if index >= 3 {
+            if index >= 2 {
                 addVIPBadge(to: btn)
             }
 
@@ -820,8 +819,8 @@ class LEDCreateViewController: UIViewController {
                 btn.heightAnchor.constraint(equalToConstant: fontButtonHeight)
             ])
 
-            // 5 per row
-            if index < 5 {
+            // 4 per row
+            if index < 4 {
                 fontStack.addArrangedSubview(btn)
             } else {
                 fontStack2.addArrangedSubview(btn)
@@ -1070,9 +1069,34 @@ class LEDCreateViewController: UIViewController {
         borderTabView = UIView()
         borderTabView.translatesAutoresizingMaskIntoConstraints = false
         // 不在这里添加到父视图，在showTab时添加
-        
+
         var tabYOffset: CGFloat = 20 // 增加顶部间距20px，让内容不要太贴近Tab切换控件
-        
+
+        // LED边框图片（8个图片，2行布局：4-4）
+        addSectionLabelToView(borderTabView, text: "LED边框", yOffset: &tabYOffset)
+
+        // 第1行（图片1-4）
+        let ledBorderRow1 = createLEDBorderImageStack(startIndex: 1, count: 4, tag: 900)
+        borderTabView.addSubview(ledBorderRow1)
+        NSLayoutConstraint.activate([
+            ledBorderRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            ledBorderRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            ledBorderRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
+            ledBorderRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 60
+
+        // 第2行（图片5-8）
+        let ledBorderRow2 = createLEDBorderImageStack(startIndex: 5, count: 4, tag: 904)
+        borderTabView.addSubview(ledBorderRow2)
+        NSLayoutConstraint.activate([
+            ledBorderRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
+            ledBorderRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
+            ledBorderRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
+            ledBorderRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
+        ])
+        tabYOffset += 70
+
         // 跑马灯边框（12个样式，3行4列）
         addSectionLabelToView(borderTabView, text: "marqueeBorder".localized, yOffset: &tabYOffset)
         
@@ -1169,7 +1193,7 @@ class LEDCreateViewController: UIViewController {
             linearRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
     }
-    
+
     // 创建跑马灯边框选择器（一行4个按钮）
     private func createMarqueeBorderStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
         let buttons = (0..<count).map { index -> UIButton in
@@ -1443,6 +1467,60 @@ class LEDCreateViewController: UIViewController {
         return stack
     }
     
+    // 创建LED边框图片选择器
+    private func createLEDBorderImageStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let buttons = (0..<count).map { index -> UIButton in
+            let btn = UIButton(type: .system)
+            let imageIndex = startIndex + index
+            
+            // 尝试加载LED边框图片
+            let imageName = "line_\(imageIndex)"
+            if let image = UIImage(named: imageName) {
+                btn.setBackgroundImage(image, for: .normal)
+                btn.imageView?.contentMode = .scaleAspectFill
+            } else {
+                // 占位符：如果没有图片，显示索引
+                btn.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+                let label = UILabel()
+                label.text = "\(imageIndex)"
+                label.textColor = .white
+                label.font = .boldSystemFont(ofSize: 16)
+                label.textAlignment = .center
+                label.translatesAutoresizingMaskIntoConstraints = false
+                btn.addSubview(label)
+                NSLayoutConstraint.activate([
+                    label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                    label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                ])
+            }
+            
+            btn.layer.cornerRadius = 8
+            btn.layer.borderWidth = 2
+            btn.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+            btn.clipsToBounds = true
+            btn.tag = tag + index
+            btn.addTarget(self, action: #selector(ledBorderImageButtonTapped(_:)), for: .touchUpInside)
+            btn.translatesAutoresizingMaskIntoConstraints = false
+            
+            // LED边框图片免费，不添加VIP标签
+            
+            return btn
+        }
+        
+        let stack = UIStackView(arrangedSubviews: buttons)
+        stack.axis = .horizontal
+        stack.distribution = .fillEqually
+        stack.spacing = 10
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        
+        // 为每个按钮设置16:9比例
+        buttons.forEach { btn in
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+        }
+        
+        return stack
+    }
+    
     @objc private func linearBorderButtonTapped(_ sender: UIButton) {
         let displayIndex = sender.tag - 800
         let styleIndex = linearBorderDisplayOrder[displayIndex].rawValue
@@ -1487,6 +1565,68 @@ class LEDCreateViewController: UIViewController {
             // 清除灯牌边框的选中状态
             for i in 0..<12 {
                 if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+        }
+        
+        // 更新预览
+        updatePreview()
+    }
+    
+    @objc private func ledBorderImageButtonTapped(_ sender: UIButton) {
+        let imageIndex = sender.tag - 900 + 1 // tag从900开始，对应line_1
+        
+        // 检查是否点击了当前已选中的边框
+        let isCurrentlySelected = (currentItem.ledBorderImageIndex == imageIndex)
+        
+        if isCurrentlySelected {
+            // 取消选择
+            currentItem.ledBorderImageIndex = nil
+            
+            // 清除所有LED边框图片按钮的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(900 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+        } else {
+            // 选择新的边框
+            currentItem.ledBorderImageIndex = imageIndex
+            currentItem.borderStyle = nil // 清除跑马灯边框
+            currentItem.lightBoardStyle = nil // 清除灯牌边框
+            currentItem.linearBorderStyle = nil // 清除线性边框
+            
+            // 更新选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(900 + i) as? UIButton {
+                    let index = i + 1
+                    button.layer.borderWidth = (index == imageIndex) ? 3 : 2
+                    button.layer.borderColor = (index == imageIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除跑马灯边框的选中状态
+            for i in 0..<12 {
+                if let button = borderTabView.viewWithTag(600 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除灯牌边框的选中状态
+            for i in 0..<12 {
+                if let button = borderTabView.viewWithTag(700 + i) as? UIButton {
+                    button.layer.borderWidth = 2
+                    button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+            
+            // 清除线性边框的选中状态
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(800 + i) as? UIButton {
                     button.layer.borderWidth = 2
                     button.layer.borderColor = UIColor.white.withAlphaComponent(0.3).cgColor
                 }
@@ -2356,8 +2496,9 @@ class LEDCreateViewController: UIViewController {
     private func shouldShowVIPBadge(category: String, imageIndex: Int) -> Bool {
         switch category {
         case "neon":
-            // 霓虹灯屏幕的前3个需要VIP
-            return imageIndex <= 3
+            // 霓虹灯屏幕：neon_1/2/3 不需要VIP（使用 neon_11/12/13 背景）
+            // neon_4 需要VIP（有边框）
+            return imageIndex == 4 || imageIndex == 9 || imageIndex == 18
         case "idol":
             // 偶像屏幕的后4个需要VIP（5-8）
             return imageIndex >= 5
@@ -2495,32 +2636,37 @@ class LEDCreateViewController: UIViewController {
         case "PingFangSC-Regular":
             fontIndex = 0
         case "PingFangSC-Light":
-            fontIndex = 1
+            // Light font option was removed; map it to Regular.
+            currentItem.fontName = "PingFangSC-Regular"
+            fontIndex = 0
         case "PingFangSC-Semibold":
-            fontIndex = 2
+            fontIndex = 1
         case "PingFangSC-Bold":
             // Bold font option was removed from the picker; map it to Semibold.
             currentItem.fontName = "PingFangSC-Semibold"
-            fontIndex = 2
-        case "STHeitiSC-Medium", "PingFangSC-Medium": // 兼容旧数据
-            fontIndex = 2
-        case "STSongti-SC-Regular": // 兼容旧数据
             fontIndex = 1
+        case "STHeitiSC-Medium", "PingFangSC-Medium": // 兼容旧数据
+            currentItem.fontName = "PingFangSC-Semibold"
+            fontIndex = 1
+        case "STSongti-SC-Regular": // 兼容旧数据
+            currentItem.fontName = "PingFangSC-Regular"
+            fontIndex = 0
         case "STKaitiSC-Regular", "STKaiti": // 兼容旧数据
-            fontIndex = 2
+            currentItem.fontName = "PingFangSC-Semibold"
+            fontIndex = 1
         case let name where name.hasPrefix("MatrixSansPrint"):
-            fontIndex = 3
+            fontIndex = 2 // dotMatrix
         case let name where name.hasPrefix("MatrixSansScreen"):
-            fontIndex = 4
-        case let name where name.hasPrefix("MatrixSansVideo"):
-            fontIndex = 8
-        case let name where name.hasPrefix("MatrixSansSmooth"):
-            fontIndex = 7
+            fontIndex = 3 // pixel
         case let name where name.hasPrefix("MatrixSansRaster"):
-            fontIndex = 6
+            fontIndex = 5 // raster
+        case let name where name.hasPrefix("MatrixSansSmooth"):
+            fontIndex = 6 // smooth
+        case let name where name.hasPrefix("MatrixSansVideo"):
+            fontIndex = 7 // video
         case let name where name.hasPrefix("MatrixSans"):
-            // Mat
-            fontIndex = 5
+            // Mat (MatrixSans-Regular) - must be after other MatrixSans variants
+            fontIndex = 4
         default:
             fontIndex = 0
         }
@@ -2618,6 +2764,17 @@ class LEDCreateViewController: UIViewController {
                     let raw = linearBorderDisplayOrder[i].rawValue
                     button.layer.borderWidth = (raw == linearBorderStyle) ? 3 : 2
                     button.layer.borderColor = (raw == linearBorderStyle) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
+                }
+            }
+        }
+        
+        // 更新LED边框图片按钮选中状态
+        if let ledBorderImageIndex = currentItem.ledBorderImageIndex {
+            for i in 0..<8 {
+                if let button = borderTabView.viewWithTag(900 + i) as? UIButton {
+                    let index = i + 1
+                    button.layer.borderWidth = (index == ledBorderImageIndex) ? 3 : 2
+                    button.layer.borderColor = (index == ledBorderImageIndex) ? UIColor.white.cgColor : UIColor.white.withAlphaComponent(0.3).cgColor
                 }
             }
         }
@@ -2911,20 +3068,18 @@ class LEDCreateViewController: UIViewController {
         case 0:
             currentItem.fontName = "PingFangSC-Regular" // 常规
         case 1:
-            currentItem.fontName = "PingFangSC-Light" // 细体
+            currentItem.fontName = "PingFangSC-Semibold" // 中粗体
         case 2:
-            currentItem.fontName = "PingFangSC-Semibold" // 第三个按钮文案已改为 Bold，但这里仍使用系统 Semibold 字体
-        case 3:
             currentItem.fontName = LEDFontRenderer.dotMatrixFontName // 点阵
-        case 4:
+        case 3:
             currentItem.fontName = LEDFontRenderer.pixelFontName // 像素
-        case 5:
+        case 4:
             currentItem.fontName = LEDFontRenderer.matFontName // Mat
-        case 6:
+        case 5:
             currentItem.fontName = LEDFontRenderer.rasterFontName // Raster
-        case 7:
+        case 6:
             currentItem.fontName = LEDFontRenderer.smoothFontName // Smooth
-        case 8:
+        case 7:
             currentItem.fontName = LEDFontRenderer.videoFontName // Video
         default:
             currentItem.fontName = "PingFangSC-Regular"
@@ -3302,7 +3457,7 @@ class LEDCreateViewController: UIViewController {
     private func updatePreviewBorder() {
         // 移除旧的边框视图
         previewContainer.subviews.forEach { subview in
-            if subview is MarqueeBorderView || subview is LightBoardBorderView || subview is LinearBorderView {
+            if subview is MarqueeBorderView || subview is LightBoardBorderView || subview is LinearBorderView || subview is UIImageView && subview.tag == 9999 {
                 subview.removeFromSuperview()
             }
         }
@@ -3350,6 +3505,26 @@ class LEDCreateViewController: UIViewController {
                 borderView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
                 borderView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor)
             ])
+        }
+        
+        // 添加LED边框图片
+        if let ledBorderImageIndex = currentItem.ledBorderImageIndex {
+            let imageName = "line_\(ledBorderImageIndex)"
+            if let image = UIImage(named: imageName) {
+                let borderImageView = UIImageView(image: image)
+                borderImageView.contentMode = .scaleAspectFit // 保持边框完整显示
+                borderImageView.clipsToBounds = true
+                borderImageView.translatesAutoresizingMaskIntoConstraints = false
+                borderImageView.tag = 9999 // 用于标识LED边框图片视图
+                previewContainer.addSubview(borderImageView)
+                
+                NSLayoutConstraint.activate([
+                    borderImageView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
+                    borderImageView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
+                    borderImageView.trailingAnchor.constraint(equalTo: previewContainer.trailingAnchor),
+                    borderImageView.bottomAnchor.constraint(equalTo: previewContainer.bottomAnchor)
+                ])
+            }
         }
     }
     
