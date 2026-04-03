@@ -43,8 +43,13 @@
 /* VIP Subscription */
 "vipTitle" = "解锁 VIP 会员";
 "vipSubtitle" = "享受全部高级功能和内容";
+"freeVersion" = "免费版";
+"premiumCompare" = "Premium对比";
+"premiumCompare1" = "高级模板";
+"premiumCompare2" = "多种动态边框";
+"premiumCompare3" = "去广告";
 "vipFeature1" = "解锁全部高级模板";
-"vipFeature2" = "专属霓虹灯效果";
+"vipFeature2" = "专属LED字体";
 "vipFeature3" = "偶像应援模板";
 "vipFeature4" = "高级边框样式";
 "vipFeature5" = "优先体验新功能";

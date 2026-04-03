@@ -709,11 +709,11 @@ class VIPScrollView: UIScrollView {
 
 // MARK: - VIP订阅页面
 @objc class VIPSubscriptionViewController: UIViewController {
-    
+
     private let scrollView = VIPScrollView() // 使用自定义ScrollView
     private let contentView = UIView()
     private let purchaseManager = PurchaseManager.shared
-    
+
     // UI组件
     private let headerView = UIView()
     private let titleLabel = UILabel()
@@ -721,9 +721,58 @@ class VIPScrollView: UIScrollView {
     private let featuresView = UIView()
     private let subscriptionOptionsView = UIView()
     private let bottomButtonsView = UIView()
-    
+
     private var subscriptionButtons: [UIButton] = []
     private var selectedSubscriptionIndex = 0 // 默认选择周订阅
+
+    // MARK: - 自适应间距计算
+    /// 根据屏幕高度计算自适应间距
+    private var adaptiveSpacing: CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        // 基准高度: 874pt (iPhone 17 Pro)
+        // 小屏幕: 更紧凑的间距
+        // 大屏幕: 更宽松的间距，但比例控制在合理范围
+        let baseHeight: CGFloat = 874
+        let baseSpacing: CGFloat = 12
+
+        // 使用对数比例，避免大屏幕间距过大
+        let ratio = screenHeight / baseHeight
+        return baseSpacing * ratio
+    }
+
+    /// 区域1顶部偏移（自适应）
+    private var headerTopOffset: CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        // 基准: 40pt，根据屏幕高度微调
+        if screenHeight >= 932 { // iPhone 17 Pro Max
+            return 35
+        } else if screenHeight >= 874 { // iPhone 17 Pro
+            return 40
+        } else { // iPhone 17, 16 Pro 等
+            return 40
+        }
+    }
+
+    /// 区域1→2间距（自适应）
+    private var region1To2Spacing: CGFloat {
+        return adaptiveSpacing
+    }
+
+    /// 区域2→3间距（自适应）
+    private var region2To3Spacing: CGFloat {
+        return adaptiveSpacing * 1.5 // 稍大一点
+    }
+
+    /// 区域3→4间距（自适应）
+    private var region3To4Spacing: CGFloat {
+        let screenHeight = UIScreen.main.bounds.height
+        // 大屏幕时区域3→4间距需要更紧凑，避免底部太空
+        if screenHeight >= 932 { // iPhone 17 Pro Max
+            return adaptiveSpacing * 0.6 // 更紧凑
+        } else {
+            return adaptiveSpacing * 0.8
+        }
+    }
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -1136,7 +1185,7 @@ class VIPScrollView: UIScrollView {
         scrollView.delaysContentTouches = false // 关键：不延迟内容触摸，让按钮立即响应
         scrollView.canCancelContentTouches = true
         view.addSubview(scrollView)
-        
+
         contentView.translatesAutoresizingMaskIntoConstraints = false
         contentView.isUserInteractionEnabled = true // 确保可以传递触摸事件
         scrollView.addSubview(contentView)
@@ -1147,7 +1196,7 @@ class VIPScrollView: UIScrollView {
         }
 
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
+            scrollView.topAnchor.constraint(equalTo: view.topAnchor), // 改为从 view 顶部开始，避免 VIP 图标被截取
             scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
@@ -1215,14 +1264,14 @@ class VIPScrollView: UIScrollView {
     private func setupHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(headerView)
-        
+
         // VIP图标 - 使用PNG图片
         let vipIconView = UIImageView()
         vipIconView.image = UIImage(named: "vip")
         vipIconView.contentMode = .scaleAspectFit
         vipIconView.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(vipIconView)
-        
+
         // 标题
         titleLabel.text = "vipTitle".localized
         titleLabel.textColor = .white
@@ -1230,7 +1279,7 @@ class VIPScrollView: UIScrollView {
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(titleLabel)
-        
+
         // 副标题
         subtitleLabel.text = "vipSubtitle".localized
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
@@ -1238,24 +1287,25 @@ class VIPScrollView: UIScrollView {
         subtitleLabel.textAlignment = .center
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         headerView.addSubview(subtitleLabel)
-        
+
         NSLayoutConstraint.activate([
-            // Pin to contentView top; safeArea here can add extra top padding inside scroll views.
-            headerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0),
+            // Pin to contentView top with additional padding for safe area (自适应)
+            headerView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: headerTopOffset),
             headerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             headerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            headerView.heightAnchor.constraint(equalToConstant: 140),
-            
-            vipIconView.topAnchor.constraint(equalTo: headerView.topAnchor),
+            headerView.heightAnchor.constraint(equalToConstant: 160), // 增加高度以容纳安全区距离
+
+            // VIP 图标距离 headerView 顶部 20pt
+            vipIconView.topAnchor.constraint(equalTo: headerView.topAnchor, constant: 20), // 距离顶部 20pt
             vipIconView.centerXAnchor.constraint(equalTo: headerView.centerXAnchor),
-            vipIconView.widthAnchor.constraint(equalToConstant: 72),
-            vipIconView.heightAnchor.constraint(equalToConstant: 72),
-            
-            titleLabel.topAnchor.constraint(equalTo: vipIconView.bottomAnchor, constant: 10),
+            vipIconView.widthAnchor.constraint(equalToConstant: 56),
+            vipIconView.heightAnchor.constraint(equalToConstant: 56),
+
+            titleLabel.topAnchor.constraint(equalTo: vipIconView.bottomAnchor, constant: 8),
             titleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
             titleLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -20),
-            
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 4),
             subtitleLabel.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 20),
             subtitleLabel.trailingAnchor.constraint(equalTo: headerView.trailingAnchor, constant: -20)
         ])
@@ -1265,6 +1315,17 @@ class VIPScrollView: UIScrollView {
         featuresView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(featuresView)
         
+        let stackView = UIStackView()
+        stackView.axis = .vertical
+        stackView.spacing = 8 // add breathing room
+        stackView.translatesAutoresizingMaskIntoConstraints = false
+        featuresView.addSubview(stackView)
+        
+        // Add Premium comparison table with checkmarks at the TOP
+        let comparisonTable = createComparisonTable()
+        stackView.addArrangedSubview(comparisonTable)
+        
+        // Feature list with checkmarks on each row
         let features = [
             ("🎨", "vipFeature1".localized),
             ("✨", "vipFeature2".localized),
@@ -1274,19 +1335,14 @@ class VIPScrollView: UIScrollView {
             ("💎", "vipFeature6".localized)
         ]
         
-        let stackView = UIStackView()
-        stackView.axis = .vertical
-        stackView.spacing = 8 // add breathing room
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        featuresView.addSubview(stackView)
-        
         for (icon, text) in features {
-            let featureView = createFeatureView(icon: icon, text: text)
+            let featureView = createFeatureViewWithCheckmarks(icon: icon, text: text)
             stackView.addArrangedSubview(featureView)
         }
         
         NSLayoutConstraint.activate([
-                featuresView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: 16),
+            // 区域2（功能描述）到区域1（VIP图片标题）的间距（自适应）
+            featuresView.topAnchor.constraint(equalTo: headerView.bottomAnchor, constant: region1To2Spacing),
             featuresView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             featuresView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
@@ -1297,38 +1353,157 @@ class VIPScrollView: UIScrollView {
         ])
     }
     
-    private func createFeatureView(icon: String, text: String) -> UIView {
+    // Create Premium comparison table (header only)
+    private func createComparisonTable() -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Header row: "Premium对比" | "Free" | "VIP"
+        let headerRow = createComparisonHeaderRow()
+        container.addSubview(headerRow)
+        
+        NSLayoutConstraint.activate([
+            headerRow.topAnchor.constraint(equalTo: container.topAnchor),
+            headerRow.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            headerRow.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            headerRow.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            container.heightAnchor.constraint(equalToConstant: 28)
+        ])
+        
+        return container
+    }
+    
+    // Create header row for comparison table
+    private func createComparisonHeaderRow() -> UIView {
+        let row = UIView()
+        row.translatesAutoresizingMaskIntoConstraints = false
+        
+        // Title "Premium对比" (left)
+        let titleLabel = UILabel()
+        titleLabel.text = "premiumCompare".localized
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 13, weight: .bold)
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        row.addSubview(titleLabel)
+        
+        // Free label (center)
+        let freeLabel = UILabel()
+        freeLabel.text = "freeVersion".localized
+        freeLabel.textColor = UIColor.white.withAlphaComponent(0.5)
+        freeLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        freeLabel.textAlignment = .center
+        freeLabel.translatesAutoresizingMaskIntoConstraints = false
+        row.addSubview(freeLabel)
+        
+        // VIP label (right)
+        let vipLabel = UILabel()
+        vipLabel.text = "VIP"
+        vipLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
+        vipLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        vipLabel.textAlignment = .center
+        vipLabel.translatesAutoresizingMaskIntoConstraints = false
+        row.addSubview(vipLabel)
+        
+        NSLayoutConstraint.activate([
+            titleLabel.leadingAnchor.constraint(equalTo: row.leadingAnchor),
+            titleLabel.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            
+            freeLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -60),
+            freeLabel.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            freeLabel.widthAnchor.constraint(equalToConstant: 40),
+            
+            vipLabel.trailingAnchor.constraint(equalTo: row.trailingAnchor, constant: -12),
+            vipLabel.centerYAnchor.constraint(equalTo: row.centerYAnchor),
+            vipLabel.widthAnchor.constraint(equalToConstant: 40)
+        ])
+        
+        return row
+    }
+    
+    // Create feature view with circular checkmark icons
+    private func createFeatureViewWithCheckmarks(icon: String, text: String) -> UIView {
         let containerView = UIView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
         
+        // Icon label
         let iconLabel = UILabel()
         iconLabel.text = icon
-        iconLabel.font = .systemFont(ofSize: 20)
+        iconLabel.font = .systemFont(ofSize: 16)
         iconLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(iconLabel)
         
+        // Feature text
         let textLabel = UILabel()
         textLabel.text = text
-        textLabel.textColor = .white
-        textLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        textLabel.textColor = UIColor.white.withAlphaComponent(0.9)
+        textLabel.font = .systemFont(ofSize: 14)
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(textLabel)
         
+        // Free icon (circular X)
+        let freeIcon = createCircularCheckIcon(isCheck: false, isVip: false)
+        freeIcon.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(freeIcon)
+        
+        // VIP icon (circular checkmark)
+        let vipIcon = createCircularCheckIcon(isCheck: true, isVip: true)
+        vipIcon.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(vipIcon)
+        
         NSLayoutConstraint.activate([
-            containerView.heightAnchor.constraint(equalToConstant: 24), // 减少高度从30到24
+            containerView.heightAnchor.constraint(equalToConstant: 28),
             
             iconLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
             iconLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            iconLabel.widthAnchor.constraint(equalToConstant: 30),
+            iconLabel.widthAnchor.constraint(equalToConstant: 24),
             
-            textLabel.leadingAnchor.constraint(equalTo: iconLabel.trailingAnchor, constant: 12),
+            textLabel.leadingAnchor.constraint(equalTo: iconLabel.trailingAnchor, constant: 4),
             textLabel.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
-            textLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor)
+            
+            freeIcon.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -56),
+            freeIcon.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            freeIcon.widthAnchor.constraint(equalToConstant: 20),
+            freeIcon.heightAnchor.constraint(equalToConstant: 20),
+            
+            vipIcon.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            vipIcon.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            vipIcon.widthAnchor.constraint(equalToConstant: 20),
+            vipIcon.heightAnchor.constraint(equalToConstant: 20)
         ])
         
         return containerView
     }
     
+    // Create circular checkmark or X icon
+    private func createCircularCheckIcon(isCheck: Bool, isVip: Bool) -> UIView {
+        let container = UIView()
+        container.translatesAutoresizingMaskIntoConstraints = false
+        container.backgroundColor = isCheck 
+            ? (isVip ? UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 0.2) : UIColor(red: 0.0, green: 0.8, blue: 0.4, alpha: 0.2))
+            : UIColor.white.withAlphaComponent(0.1)
+        container.layer.cornerRadius = 10
+        container.layer.masksToBounds = true
+        
+        let iconLabel = UILabel()
+        iconLabel.text = isCheck ? "✓" : "✗"
+        iconLabel.textColor = isCheck 
+            ? (isVip ? UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0) : UIColor(red: 0.0, green: 0.8, blue: 0.4, alpha: 1.0))
+            : UIColor.white.withAlphaComponent(0.3)
+        iconLabel.font = .systemFont(ofSize: 12, weight: .bold)
+        iconLabel.textAlignment = .center
+        iconLabel.translatesAutoresizingMaskIntoConstraints = false
+        container.addSubview(iconLabel)
+        
+        NSLayoutConstraint.activate([
+            iconLabel.topAnchor.constraint(equalTo: container.topAnchor),
+            iconLabel.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            iconLabel.trailingAnchor.constraint(equalTo: container.trailingAnchor),
+            iconLabel.bottomAnchor.constraint(equalTo: container.bottomAnchor)
+        ])
+
+        return container
+    }
+
     private func setupSubscriptionOptions() {
         subscriptionOptionsView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(subscriptionOptionsView)
@@ -1422,24 +1597,71 @@ class VIPScrollView: UIScrollView {
         
         let stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 12
+        stackView.spacing = 10 // 统一间距为10
         stackView.translatesAutoresizingMaskIntoConstraints = false
         optionsContainer.addSubview(stackView)
         
         for (index, (title, price, subtitle, isSelected)) in subscriptionOptions.enumerated() {
-            let optionButton = createSubscriptionOption(
+            let (optionButton, cornerLabel) = createSubscriptionOption(
                 title: title,
                 price: price,
                 subtitle: subtitle,
                 isSelected: isSelected,
                 index: index
             )
-            stackView.addArrangedSubview(optionButton)
+
+            // 设置按钮的内容优先级，防止内容撑大按钮
+            optionButton.setContentHuggingPriority(.required, for: .vertical)
+            optionButton.setContentCompressionResistancePriority(.required, for: .vertical)
+
+            // Create a container for the button + corner label
+            // 重要：所有容器高度必须一致，否则 UIStackView 会根据内容高度调整
+            let buttonContainer = UIView()
+            buttonContainer.translatesAutoresizingMaskIntoConstraints = false
+            buttonContainer.clipsToBounds = false // 允许角标签向上突出显示
+            buttonContainer.addSubview(optionButton)
+
+            // Add corner label to container (on top of button) - 标签向上突出，但不影响容器高度
+            if let cornerLabel = cornerLabel {
+                buttonContainer.addSubview(cornerLabel)
+                let labelWidth: CGFloat = index == 0 ? 86 : 66
+                NSLayoutConstraint.activate([
+                    cornerLabel.topAnchor.constraint(equalTo: optionButton.topAnchor, constant: -9), // 标签从按钮顶部向上突出一半
+                    cornerLabel.trailingAnchor.constraint(equalTo: optionButton.trailingAnchor, constant: -12),
+                    cornerLabel.widthAnchor.constraint(equalToConstant: labelWidth),
+                    cornerLabel.heightAnchor.constraint(equalToConstant: 18)
+                ])
+            }
+
+            // 关键修复：设置容器的 content hugging priority，防止被 UIStackView 拉伸
+            buttonContainer.setContentHuggingPriority(.required, for: .vertical)
+            buttonContainer.setContentCompressionResistancePriority(.required, for: .vertical)
+            
+            // 方法一：固定按钮高度为 64pt（最高优先级）
+            let buttonHeightConstraint = optionButton.heightAnchor.constraint(equalToConstant: 64)
+            buttonHeightConstraint.priority = .required // 1000 - 必须满足
+            
+            // 方法二：固定容器高度为 64pt（最高优先级）
+            let containerHeightConstraint = buttonContainer.heightAnchor.constraint(equalToConstant: 64)
+            containerHeightConstraint.priority = .required // 1000 - 必须满足
+            
+            // 按钮约束：只约束位置和宽度，高度由固定约束控制
+            // 注意：不使用 bottomAnchor 约束，因为它会与 heightAnchor 冲突
+            NSLayoutConstraint.activate([
+                optionButton.topAnchor.constraint(equalTo: buttonContainer.topAnchor),
+                optionButton.leadingAnchor.constraint(equalTo: buttonContainer.leadingAnchor),
+                optionButton.trailingAnchor.constraint(equalTo: buttonContainer.trailingAnchor),
+                buttonHeightConstraint,
+                containerHeightConstraint
+            ])
+
+            stackView.addArrangedSubview(buttonContainer)
             subscriptionButtons.append(optionButton)
         }
         
         NSLayoutConstraint.activate([
-            subscriptionOptionsView.topAnchor.constraint(equalTo: featuresView.bottomAnchor, constant: 20), // 减少间距，从30改为20
+            // 区域3（订阅按钮）到区域2（功能描述）的间距（自适应）
+            subscriptionOptionsView.topAnchor.constraint(equalTo: featuresView.bottomAnchor, constant: region2To3Spacing),
             subscriptionOptionsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             subscriptionOptionsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             
@@ -1457,20 +1679,24 @@ class VIPScrollView: UIScrollView {
     }
     
     
-    private func createSubscriptionOption(title: String, price: String, subtitle: String, isSelected: Bool, index: Int) -> UIButton {
+    private func createSubscriptionOption(title: String, price: String, subtitle: String, isSelected: Bool, index: Int) -> (UIButton, UILabel?) {
         let button = UIButton(type: .custom)
-        button.backgroundColor = isSelected ? UIColor.black.withAlphaComponent(0.7) : UIColor(white: 0.1, alpha: 0.6) // 选中状态改为0.7透明度的黑色
+        button.backgroundColor = isSelected ? UIColor.black.withAlphaComponent(0.7) : UIColor(white: 0.1, alpha: 0.6)
         button.layer.cornerRadius = 12
         button.layer.borderWidth = isSelected ? 2 : 1
-        button.clipsToBounds = false // 改为false，允许标签显示在按钮外部
-        
+        button.clipsToBounds = false // 允许角标签显示在按钮外部
+
+        // 防止按钮内容撑大按钮高度
+        button.setContentHuggingPriority(.required, for: .vertical)
+        button.setContentCompressionResistancePriority(.required, for: .vertical)
+
         // 使用偏粉色的边框颜色（类似start free trial按钮右边的渐变色）
         if isSelected {
-            button.layer.borderColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0).cgColor // 偏粉的橙黄色边框
+            button.layer.borderColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0).cgColor
         } else {
-            button.layer.borderColor = UIColor(white: 0.5, alpha: 0.8).cgColor // 改为灰调边框，从紫色改为灰色
+            button.layer.borderColor = UIColor(white: 0.5, alpha: 0.8).cgColor
         }
-        
+
         button.tag = index
         button.addTarget(self, action: #selector(subscriptionOptionTapped(_:)), for: .touchUpInside)
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -1481,26 +1707,33 @@ class VIPScrollView: UIScrollView {
         titleLabel.textColor = .white
         titleLabel.font = .systemFont(ofSize: 17, weight: .semibold)
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.clipsToBounds = false // 确保文字不被裁剪
+        titleLabel.setContentHuggingPriority(.defaultLow, for: .vertical)
+        titleLabel.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         button.addSubview(titleLabel)
-        
+
         // 价格 - 右对齐，使用渐变主题色
         let priceLabel = UILabel()
         priceLabel.text = price
-        priceLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0) // 橙黄色，匹配渐变主题
+        priceLabel.textColor = UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
         priceLabel.font = .systemFont(ofSize: 19, weight: .bold)
         priceLabel.textAlignment = .right
         priceLabel.translatesAutoresizingMaskIntoConstraints = false
+        priceLabel.setContentHuggingPriority(.defaultLow, for: .vertical)
+        priceLabel.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         button.addSubview(priceLabel)
-        
+
         // 副标题
         let subtitleLabel = UILabel()
         subtitleLabel.text = subtitle
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.7)
         subtitleLabel.font = .systemFont(ofSize: 13)
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.setContentHuggingPriority(.defaultLow, for: .vertical)
+        subtitleLabel.setContentCompressionResistancePriority(.defaultLow, for: .vertical)
         button.addSubview(subtitleLabel)
         
-        // 右上角标签（周订阅和年订阅）- 直接添加到按钮
+        // 右上角标签（周订阅和年订阅）- 创建但不添加到按钮
         var cornerLabel: UILabel?
         if index == 0 { // 周订阅 - 免费试用标签
             cornerLabel = UILabel()
@@ -1511,9 +1744,8 @@ class VIPScrollView: UIScrollView {
             cornerLabel!.textAlignment = .center
             cornerLabel!.layer.cornerRadius = 9 // 圆角调整为高度的一半 (18/2=9)
             cornerLabel!.layer.masksToBounds = true
-            cornerLabel!.layer.zPosition = 100 // 设置非常高的z层级，确保在最上层
+            cornerLabel!.layer.zPosition = 1000 // 设置非常高的z层级，确保在最上层
             cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
-            button.addSubview(cornerLabel!)
         } else if index == 2 { // 年订阅 - 节省76%标签
             cornerLabel = UILabel()
             cornerLabel!.text = "save76Percent".localized
@@ -1523,15 +1755,13 @@ class VIPScrollView: UIScrollView {
             cornerLabel!.textAlignment = .center
             cornerLabel!.layer.cornerRadius = 9 // 圆角调整为高度的一半 (18/2=9)
             cornerLabel!.layer.masksToBounds = true
-            cornerLabel!.layer.zPosition = 100 // 设置非常高的z层级，确保在最上层
+            cornerLabel!.layer.zPosition = 1000 // 设置非常高的z层级，确保在最上层
             cornerLabel!.translatesAutoresizingMaskIntoConstraints = false
-            button.addSubview(cornerLabel!)
         }
         
-        var constraints = [
-            button.heightAnchor.constraint(equalToConstant: 66), // taller for readability + less cramped
-            
-            titleLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 10),
+        let constraints = [
+            // 标题距离按钮顶部 16pt（增加间距避免文字被裁剪）
+            titleLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: 16),
             titleLabel.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
             
             // 价格垂直居中显示
@@ -1539,25 +1769,20 @@ class VIPScrollView: UIScrollView {
             priceLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -16),
             priceLabel.widthAnchor.constraint(greaterThanOrEqualToConstant: 60),
             
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 2),
+            // 副标题距离标题 6pt（下移2pt）
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
             subtitleLabel.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 16),
-            subtitleLabel.trailingAnchor.constraint(equalTo: priceLabel.leadingAnchor, constant: -8)
+            subtitleLabel.trailingAnchor.constraint(lessThanOrEqualTo: priceLabel.leadingAnchor, constant: -8),
+            
+            // 关键：使用 lessThanOrEqualTo 约束，确保内容不会撑大按钮
+            // 总高度 64pt，顶部16pt + 标题约20pt + 间距6pt + 副标题约16pt + 底部6pt
+            titleLabel.bottomAnchor.constraint(lessThanOrEqualTo: button.bottomAnchor, constant: -22),
+            subtitleLabel.bottomAnchor.constraint(lessThanOrEqualTo: button.bottomAnchor, constant: -6)
         ]
-        
-        // 添加右上角标签的约束
-        if let cornerLabel = cornerLabel {
-            let labelWidth: CGFloat = index == 0 ? 80 : 60 // 周订阅标签宽度增大
-            constraints.append(contentsOf: [
-                cornerLabel.topAnchor.constraint(equalTo: button.topAnchor, constant: -6),
-                cornerLabel.trailingAnchor.constraint(equalTo: button.trailingAnchor, constant: -12),
-                cornerLabel.widthAnchor.constraint(equalToConstant: labelWidth),
-                cornerLabel.heightAnchor.constraint(equalToConstant: 18)
-            ])
-        }
         
         NSLayoutConstraint.activate(constraints)
         
-        return button
+        return (button, cornerLabel)
     }
     
     private func setupBottomButtons() {
@@ -1729,26 +1954,27 @@ class VIPScrollView: UIScrollView {
         linksContainer.addSubview(privacyButton)
         
         NSLayoutConstraint.activate([
-            bottomButtonsView.topAnchor.constraint(equalTo: subscriptionOptionsView.bottomAnchor, constant: 12),
+            // 区域4（Start Free Trial）到区域3（订阅按钮）的间距（自适应，大屏幕更紧凑）
+            bottomButtonsView.topAnchor.constraint(equalTo: subscriptionOptionsView.bottomAnchor, constant: region3To4Spacing),
             bottomButtonsView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             bottomButtonsView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            bottomButtonsView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16),
-            bottomButtonsView.heightAnchor.constraint(equalToConstant: 104),
-            
+            bottomButtonsView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -8),
+            bottomButtonsView.heightAnchor.constraint(equalToConstant: 130),
+
             subscribeButton.topAnchor.constraint(equalTo: bottomButtonsView.topAnchor),
             subscribeButton.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
             subscribeButton.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
             subscribeButton.heightAnchor.constraint(equalToConstant: 50),
-            
-            // 免责声明直接放在订阅按钮下面，往下移动4pt
-            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 18),
+
+            // 免责声明直接放在订阅按钮下面
+            disclaimerLabel.topAnchor.constraint(equalTo: subscribeButton.bottomAnchor, constant: 8), // 减少间距从10到8
             disclaimerLabel.leadingAnchor.constraint(equalTo: bottomButtonsView.leadingAnchor, constant: 20),
             disclaimerLabel.trailingAnchor.constraint(equalTo: bottomButtonsView.trailingAnchor, constant: -20),
-            
+
             // 底部链接容器 - 增加高度和点击区域
-            linksContainer.topAnchor.constraint(equalTo: disclaimerLabel.bottomAnchor, constant: 8),
+            linksContainer.topAnchor.constraint(equalTo: disclaimerLabel.bottomAnchor, constant: 4), // 保持间距
             linksContainer.centerXAnchor.constraint(equalTo: bottomButtonsView.centerXAnchor),
-            linksContainer.heightAnchor.constraint(equalToConstant: 40),
+            linksContainer.heightAnchor.constraint(equalToConstant: 44), // 保持高度
             linksContainer.leadingAnchor.constraint(greaterThanOrEqualTo: bottomButtonsView.leadingAnchor, constant: 20),
             linksContainer.trailingAnchor.constraint(lessThanOrEqualTo: bottomButtonsView.trailingAnchor, constant: -20),
             

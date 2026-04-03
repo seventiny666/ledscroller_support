@@ -144,7 +144,7 @@
 "vipTitle" = "解鎖 VIP 會員";
 "vipSubtitle" = "享受全部高級功能和內容";
 "vipFeature1" = "解鎖全部高級模板";
-"vipFeature2" = "專屬霓虹燈效果";
+"vipFeature2" = "專屬LED字體";
 "vipFeature3" = "偶像應援模板";
 "vipFeature4" = "高級邊框樣式";
 "vipFeature5" = "優先體驗新功能";
@@ -200,6 +200,11 @@
 "vipAlertMessage" = "開通訂閱後您可解鎖全部權益\n也可隨時退訂訂閱";
 "becomeVip" = "成為vip";
 "pleaseWait" = "請等待當前操作完成";
+"freeVersion" = "免費版";
+"premiumCompare" = "Premium對比";
+"premiumCompare1" = "高級模板";
+"premiumCompare2" = "特殊邊框";
+"premiumCompare3" = "去廣告";
 
 "feedbackContentTitle" = "您的回饋內容：";
 "feedbackPlaceholder" = "請描述你的問題或建議（例如：出現問題的步驟、截圖等）";

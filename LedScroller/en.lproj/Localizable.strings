@@ -39,8 +39,13 @@
 /* VIP Subscription */
 "vipTitle" = "Unlock VIP Membership";
 "vipSubtitle" = "Enjoy all premium features and content";
+"freeVersion" = "Free";
+"premiumCompare" = "Premium";
+"premiumCompare1" = "Premium Templates";
+"premiumCompare2" = "Dynamic Borders";
+"premiumCompare3" = "Ad-free";
 "vipFeature1" = "Unlock all premium templates";
-"vipFeature2" = "Exclusive neon effects";
+"vipFeature2" = "Exclusive LED fonts";
 "vipFeature3" = "Idol support templates";
 "vipFeature4" = "Advanced border styles";
 "vipFeature5" = "Priority access to new features";

@@ -399,11 +399,7 @@ class SettingsViewController: UIViewController {
         feedbackButton.setTitleColor(.white, for: .normal)
         feedbackButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         if #available(iOS 15.0, *) {
-            if #available(iOS 15.0, *) {
-                feedbackButton.backgroundColor = .systemCyan
-            } else {
-                feedbackButton.backgroundColor = .cyan
-            }
+            feedbackButton.backgroundColor = .systemCyan
         } else {
             feedbackButton.backgroundColor = .cyan
         }

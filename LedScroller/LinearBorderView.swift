@@ -244,7 +244,6 @@ class LinearBorderView: UIView {
         // 根据模式选择不同的参数
         let outerInset: CGFloat
         let innerInset: CGFloat  // 内边框距离
-        let outerCornerRadius: CGFloat  // 外边框的圆角
         let middleCornerRadius: CGFloat // 中间圆点的圆角
         let dotCount: Int  // 圆点数量
         
@@ -252,28 +251,24 @@ class LinearBorderView: UIView {
         case .selection:
             outerInset = 4   // 外边框距离
             innerInset = 10  // 内边框距离
-            outerCornerRadius = 5  // 外边框圆角
             middleCornerRadius = 5
             dotCount = 16  // 圆点数量
             
         case .preview:
             outerInset = 10  // 外边框距离
             innerInset = 32  // 内边框距离再-4px (36-4=32)
-            outerCornerRadius = 12  // 外边框圆角
             middleCornerRadius = 12
             dotCount = 24  // 圆点数量
             
         case .fullscreen:
             outerInset = 24  // 外边框距离
             innerInset = 70  // 内边框距离
-            outerCornerRadius = 34  // 外边框圆角
             middleCornerRadius = 34
             dotCount = 48  // 圆点数量
             
         case .cardCover:
             outerInset = 6   // 外边框距离
             innerInset = 16  // 内边框距离
-            outerCornerRadius = 10  // 外边框圆角 (-2pt)
             middleCornerRadius = 8  // 中间圆点圆角 (-4pt)
             dotCount = 24  // 圆点数量
         }
