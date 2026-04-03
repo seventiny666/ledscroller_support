@@ -5,7 +5,7 @@
 "settings" = "設置";
 
 /* Template Categories */
-"neon" = "霓虹燈屏幕";
+"neon" = "圖片背景";
 "idol" = "偶像屏幕";
 "led" = "LED屏幕";
 "popularAnimation" = "熱門動畫";
@@ -60,7 +60,7 @@
 
 /* About Messages */
 "aboutMessage" = "LedScroller - 讓你的文字發光\n\n一款專業的LED顯示屏模擬應用";
-"versionMessage" = "當前版本：1.0\n\n感謝您的使用！";
+"versionMessage" = "已經是最新版本";
 "feedbackMessage" = "請發送郵件至：\nseventiny007@126.com";
 "rateMessage" = "感謝您的支持！\n請前往App Store為我們評分";
 

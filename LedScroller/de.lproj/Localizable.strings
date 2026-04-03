@@ -5,7 +5,7 @@
 "settings" = "Einstellungen";
 
 /* Template Categories */
-"neon" = "Neon-Bildschirm";
+"neon" = "Bildhintergrund";
 "idol" = "Idol-Bildschirm";
 "led" = "LED-Bildschirm";
 "popularAnimation" = "Beliebte Animation";
@@ -52,7 +52,7 @@
 
 /* About Messages */
 "aboutMessage" = "LedScroller - Lassen Sie Ihren Text leuchten\n\nEine professionelle LED-Display-Simulationsanwendung";
-"versionMessage" = "Aktuelle Version: 1.0\n\nVielen Dank für die Nutzung!";
+"versionMessage" = "Bereits die neueste Version";
 "feedbackMessage" = "Bitte senden Sie eine E-Mail an:\nseventiny007@126.com";
 "rateMessage" = "Vielen Dank für Ihre Unterstützung!\nBitte bewerten Sie uns im App Store";
 

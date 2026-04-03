@@ -145,45 +145,34 @@ extension LEDSquareViewController: UICollectionViewDelegate, UICollectionViewDat
         
         // 检查是否为翻页时钟效果
         if item.isFlipClock {
-            // Set landscape first, then present a tick later to avoid a brief portrait flash.
             AppDelegate.orientationLock = .landscape
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                let clockVC = FlipClockViewController()
-                clockVC.modalPresentationStyle = .fullScreen
-                self?.present(clockVC, animated: true)
-            }
+            let clockVC = FlipClockViewController()
+            clockVC.modalPresentationStyle = .fullScreen
+            present(clockVC, animated: true)
             return
         }
 
         if item.isDigitalClock {
-            // Set landscape first, then present a tick later to avoid a brief portrait flash.
             AppDelegate.orientationLock = .landscape
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                let clockVC = DigitalClockViewController()
-                clockVC.modalPresentationStyle = .fullScreen
-                self?.present(clockVC, animated: true)
-            }
+            let clockVC = DigitalClockViewController()
+            clockVC.modalPresentationStyle = .fullScreen
+            present(clockVC, animated: true)
             return
         }
 
         if item.isStopwatch {
-            // Set landscape first, then present a tick later to avoid a brief portrait flash.
             AppDelegate.orientationLock = .landscape
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                let swVC = StopwatchViewController()
-                swVC.modalPresentationStyle = .fullScreen
-                self?.present(swVC, animated: true)
-            }
+            let swVC = StopwatchViewController()
+            swVC.modalPresentationStyle = .fullScreen
+            present(swVC, animated: true)
             return
         }
 
         if item.isCountdown {
             AppDelegate.orientationLock = .landscape
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-                let cdVC = CountdownViewController()
-                cdVC.modalPresentationStyle = .fullScreen
-                self?.present(cdVC, animated: true)
-            }
+            let cdVC = CountdownViewController()
+            cdVC.modalPresentationStyle = .fullScreen
+            present(cdVC, animated: true)
             return
         }
         

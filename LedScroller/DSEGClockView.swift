@@ -49,6 +49,13 @@ final class DSEGClockView: UIView {
 
         configureCommon(label)
         addSubview(label)
+        
+        // 设置初始字体，避免首次布局时跳动
+        // 在layoutSubviews中会根据实际尺寸重新计算
+        let initialFontSize: CGFloat = 100
+        let initialFont = UIFont(name: "DSEG7Classic-Bold", size: initialFontSize) ?? UIFont.monospacedDigitSystemFont(ofSize: initialFontSize, weight: .bold)
+        label.font = initialFont
+        backgroundLabel.font = initialFont
 
         applyColorsAndGlow()
 
@@ -81,14 +88,22 @@ final class DSEGClockView: UIView {
         }
     }
 
+    // 标记是否已经完成首次布局，避免重复设置字体导致跳动
+    private var hasPerformedInitialLayout = false
+
     override func layoutSubviews() {
         super.layoutSubviews()
 
         DSEGClockView.ensureFontRegistered()
 
-        // PostScript name: DSEG7Classic-Bold
-        let fontSize = max(10, bounds.height * 0.70)
-        let font = UIFont(name: "DSEG7Classic-Bold", size: fontSize) ?? UIFont.monospacedDigitSystemFont(ofSize: fontSize, weight: .bold)
+        // 计算目标字体大小
+        let targetFontSize = max(10, bounds.height * 0.70)
+
+        // 只在字体大小变化时更新（避免不必要的跳动）
+        let currentFontSize = label.font?.pointSize ?? 0
+        guard abs(currentFontSize - targetFontSize) > 1 else { return }
+
+        let font = UIFont(name: "DSEG7Classic-Bold", size: targetFontSize) ?? UIFont.monospacedDigitSystemFont(ofSize: targetFontSize, weight: .bold)
         label.font = font
         backgroundLabel.font = font
 

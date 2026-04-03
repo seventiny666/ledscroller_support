@@ -5,7 +5,7 @@
 "settings" = "Settings";
 
 /* Template Categories */
-"neon" = "Neon Screen";
+"neon" = "Picture Background";
 "idol" = "Idol Screen";
 "led" = "LED Screen";
 "clock" = "Clock Screen";
@@ -133,7 +133,7 @@
 
 /* About Messages */
 "aboutMessage" = "LedScroller - Make Your Text Glow\n\nA professional LED display simulation app";
-"versionMessage" = "Current Version: 1.0.0\n\nThank you for using!";
+"versionMessage" = "Already the latest version";
 "feedbackMessage" = "Please send email to:\nseventiny007@126.com";
 "rateMessage" = "Thank you for your support!\nPlease rate us on the App Store";
 

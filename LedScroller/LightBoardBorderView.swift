@@ -22,6 +22,8 @@ class LightBoardBorderView: UIView {
     private var currentStyle: LightBoardBorderStyle = .style1
     private var dotLayers: [CAShapeLayer] = []
     private let displayMode: DisplayMode
+    var borderWidthAdjustment: CGFloat = 0 // 边框宽度调整值（正数加粗，负数减细）
+    var borderSafeInsetAdjustment: CGFloat = 0 // 安全区距离调整值（正数往外扩，负数往内缩）
     
     enum DisplayMode {
         case selection      // 选择按钮模式
@@ -71,35 +73,41 @@ class LightBoardBorderView: UIView {
         
         // 根据显示模式设置参数
         let dotSize: CGFloat
-        let borderWidth: CGFloat
+        let baseBorderWidth: CGFloat
         let safeInset: CGFloat
         let cornerRadius: CGFloat
         
         switch displayMode {
         case .selection:
             dotSize = 6
-            borderWidth = 10  // 边框宽度
+            baseBorderWidth = 8  // 边框宽度减小2pt (从10改为8)
             safeInset = 12
-            cornerRadius = 8
+            cornerRadius = 4 // 圆角减小4pt (从8改为4)
         case .preview:
             dotSize = 8
-            borderWidth = 12  // 边框宽度
+            baseBorderWidth = 12  // 边框宽度
             safeInset = 12
-            cornerRadius = 16
+            cornerRadius = 12 // 圆角减小4pt (从16改为12)
         case .fullScreen:
             dotSize = 16
-            borderWidth = 20  // 边框宽度
+            baseBorderWidth = 20  // 边框宽度
             safeInset = 20
             cornerRadius = 40
         case .cardCover:
             dotSize = 6 // 圆点直径减小4pt (从10改为6)
-            borderWidth = 12 // 边框宽度减小4pt (从16改为12)
-            safeInset = 12
+            baseBorderWidth = 10 // 边框宽度减小6pt (从16改为10)
+            safeInset = 10 // 距离安全区减小2pt (从12改为10)
             cornerRadius = 8 // 圆角减小4pt (从12改为8)
         }
         
+        // 应用边框宽度调整
+        let borderWidth = max(2, baseBorderWidth + borderWidthAdjustment) // 最小值2pt
+
+        // 应用安全区距离调整（正数往外扩，负数往内缩）
+        let adjustedSafeInset = max(0, safeInset - borderSafeInsetAdjustment) // 最小值0
+
         // 计算边框路径
-        let borderRect = bounds.insetBy(dx: safeInset, dy: safeInset)
+        let borderRect = bounds.insetBy(dx: adjustedSafeInset, dy: adjustedSafeInset)
         
         // 根据样式获取边框颜色和圆点数量
         let (borderColor, dotCount) = getStyleProperties(currentStyle)

@@ -94,17 +94,17 @@ class MarqueeBorderView: UIView {
         case .selection:
             dotSize = 6
             safeInset = 12
-            cornerRadius = 8
+            cornerRadius = 4 // 圆角减小4pt (从8改为4)
         case .preview:
             dotSize = 8
             safeInset = 12
-            cornerRadius = 8
+            cornerRadius = 4 // 圆角减小4pt (从8改为4)
         case .fullScreen:
             dotSize = 16
             safeInset = 20
             cornerRadius = 40
         case .cardCover:
-            dotSize = 8 // cover dots: 2pt smaller diameter; keep fullScreen unchanged
+            dotSize = 6 // cover dots: 4pt smaller diameter (从10改为6)
             safeInset = 6 // closer to edge, still within safe inset
             cornerRadius = 8
         }

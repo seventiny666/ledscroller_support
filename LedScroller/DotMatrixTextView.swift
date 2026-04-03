@@ -5,41 +5,49 @@ import UIKit
 // This is intentionally static: it rasterizes the text once (on layout/content changes)
 // and then draws dots based on sampled pixel intensity. This makes emoji work too,
 // because they get rasterized into the bitmap first.
-final class DotMatrixTextView: UIView {
+public final class DotMatrixTextView: UIView {
 
-    struct Style {
-        var dotDiameter: CGFloat = 5
-        var dotSpacing: CGFloat = 2
-        var threshold: CGFloat = 0.10
-        var levels: Int = 6
-        var insets: UIEdgeInsets = .init(top: 10, left: 12, bottom: 10, right: 12)
+    public struct Style {
+        public var dotDiameter: CGFloat = 5
+        public var dotSpacing: CGFloat = 2
+        public var threshold: CGFloat = 0.10
+        public var levels: Int = 6
+        public var insets: UIEdgeInsets = .init(top: 10, left: 12, bottom: 10, right: 12)
 
-        var step: CGFloat { dotDiameter + dotSpacing }
+        public var step: CGFloat { dotDiameter + dotSpacing }
+        
+        public init(dotDiameter: CGFloat = 5, dotSpacing: CGFloat = 2, threshold: CGFloat = 0.10, levels: Int = 6, insets: UIEdgeInsets = .init(top: 10, left: 12, bottom: 10, right: 12)) {
+            self.dotDiameter = dotDiameter
+            self.dotSpacing = dotSpacing
+            self.threshold = threshold
+            self.levels = levels
+            self.insets = insets
+        }
     }
 
-    var style = Style() { didSet { invalidateCache() } }
+    public var style = Style() { didSet { invalidateCache() } }
 
     // Use a white rasterization color so intensity is stable, then tint the dots with dotColor.
-    var dotColor: UIColor = .white { didSet { setNeedsDisplay() } }
+    public var dotColor: UIColor = .white { didSet { setNeedsDisplay() } }
 
-    var attributedText: NSAttributedString? { didSet { invalidateCache() } }
+    public var attributedText: NSAttributedString? { didSet { invalidateCache() } }
 
     // Cache: points grouped by quantized intensity level (0..levels-1).
     private var levelPoints: [[CGPoint]] = []
     private var cachedBoundsSize: CGSize = .zero
     private var cachedTextHash: Int = 0
 
-    override init(frame: CGRect) {
+    public override init(frame: CGRect) {
         super.init(frame: frame)
         isOpaque = false
         contentMode = .redraw
     }
 
-    required init?(coder: NSCoder) {
+    public required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
 
-    override func layoutSubviews() {
+    public override func layoutSubviews() {
         super.layoutSubviews()
         rebuildIfNeeded()
     }
@@ -114,7 +122,7 @@ final class DotMatrixTextView: UIView {
         _ = radius
     }
 
-    override func draw(_ rect: CGRect) {
+    public override func draw(_ rect: CGRect) {
         super.draw(rect)
         guard !levelPoints.isEmpty else { return }
         guard let ctx = UIGraphicsGetCurrentContext() else { return }

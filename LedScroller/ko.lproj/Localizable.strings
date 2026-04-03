@@ -5,7 +5,7 @@
 "settings" = "설정";
 
 /* Template Categories */
-"neon" = "네온 스크린";
+"neon" = "이미지 배경";
 "idol" = "아이돌 스크린";
 "led" = "LED 스크린";
 "popularAnimation" = "인기 애니메이션";
@@ -107,7 +107,7 @@
 
 /* About Messages */
 "aboutMessage" = "LedScroller - 텍스트를 빛나게 하세요\n\n전문 LED 디스플레이 시뮬레이션 앱";
-"versionMessage" = "현재 버전: 1.0\n\n사용해 주셔서 감사합니다!";
+"versionMessage" = "이미 최신 버전입니다";
 "feedbackMessage" = "이메일을 보내주세요:\nseventiny007@126.com";
 "rateMessage" = "지원해 주셔서 감사합니다!\nApp Store에서 평가해 주세요";
 

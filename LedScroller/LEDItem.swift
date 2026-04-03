@@ -17,6 +17,8 @@ struct LEDItem: Codable {
     var lightBoardStyle: Int? // 灯牌边框样式索引（0-7对应8种样式，nil表示无边框）
     var linearBorderStyle: Int? // 线性边框样式索引（0-7对应8种颜色，nil表示无边框）
     var ledBorderImageIndex: Int? // LED边框图片索引（1-8对应line_1到line_8，nil表示无边框）
+    var borderWidthAdjustment: CGFloat? // 边框宽度调整值（正数加粗，负数减细，nil表示默认）
+    var borderSafeInsetAdjustment: CGFloat? // 安全区距离调整值（正数往外扩，负数往内缩，nil表示默认）
     var isFireworks: Bool // 标识是否为烟花效果
     var isFireworksBloom: Bool // 标识是否为烟花绽放效果（第二种）
     var isFlipClock: Bool // 标识是否为翻页时钟效果
@@ -57,6 +59,8 @@ struct LEDItem: Codable {
         case lightBoardStyle
         case linearBorderStyle
         case ledBorderImageIndex
+        case borderWidthAdjustment
+        case borderSafeInsetAdjustment
         case isFireworks
         case isFireworksBloom
         case isFlipClock
@@ -89,6 +93,8 @@ struct LEDItem: Codable {
         lightBoardStyle = try c.decodeIfPresent(Int.self, forKey: .lightBoardStyle)
         linearBorderStyle = try c.decodeIfPresent(Int.self, forKey: .linearBorderStyle)
         ledBorderImageIndex = try c.decodeIfPresent(Int.self, forKey: .ledBorderImageIndex)
+        borderWidthAdjustment = try c.decodeIfPresent(CGFloat.self, forKey: .borderWidthAdjustment)
+        borderSafeInsetAdjustment = try c.decodeIfPresent(CGFloat.self, forKey: .borderSafeInsetAdjustment)
         isFireworks = try c.decodeIfPresent(Bool.self, forKey: .isFireworks) ?? false
         isFireworksBloom = try c.decodeIfPresent(Bool.self, forKey: .isFireworksBloom) ?? false
         isFlipClock = try c.decodeIfPresent(Bool.self, forKey: .isFlipClock) ?? false
@@ -121,6 +127,8 @@ struct LEDItem: Codable {
         try c.encodeIfPresent(lightBoardStyle, forKey: .lightBoardStyle)
         try c.encodeIfPresent(linearBorderStyle, forKey: .linearBorderStyle)
         try c.encodeIfPresent(ledBorderImageIndex, forKey: .ledBorderImageIndex)
+        try c.encodeIfPresent(borderWidthAdjustment, forKey: .borderWidthAdjustment)
+        try c.encodeIfPresent(borderSafeInsetAdjustment, forKey: .borderSafeInsetAdjustment)
         try c.encode(isFireworks, forKey: .isFireworks)
         try c.encode(isFireworksBloom, forKey: .isFireworksBloom)
         try c.encode(isFlipClock, forKey: .isFlipClock)
@@ -214,6 +222,8 @@ struct LEDItem: Codable {
          lightBoardStyle: Int? = nil, // 灯牌边框样式
          linearBorderStyle: Int? = nil, // 线性边框样式
          ledBorderImageIndex: Int? = nil, // LED边框图片索引
+         borderWidthAdjustment: CGFloat? = nil, // 边框宽度调整值
+         borderSafeInsetAdjustment: CGFloat? = nil, // 安全区距离调整值
          isFireworks: Bool = false,
          isFireworksBloom: Bool = false,
          isFlipClock: Bool = false,
@@ -242,6 +252,8 @@ struct LEDItem: Codable {
         self.lightBoardStyle = lightBoardStyle
         self.linearBorderStyle = linearBorderStyle
         self.ledBorderImageIndex = ledBorderImageIndex
+        self.borderWidthAdjustment = borderWidthAdjustment
+        self.borderSafeInsetAdjustment = borderSafeInsetAdjustment
         self.isFireworks = isFireworks
         self.isFireworksBloom = isFireworksBloom
         self.isFlipClock = isFlipClock

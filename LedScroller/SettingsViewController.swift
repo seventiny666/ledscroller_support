@@ -48,7 +48,7 @@ enum SettingItem {
         switch self {
         case .language: return UIColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)      // 蓝色 - 地球
         case .aboutUs: return UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)       // 浅蓝色 - 信息
-        case .version: return UIColor(red: 0.5, green: 0.5, blue: 0.6, alpha: 1.0)       // 灰紫色 - 版本
+        case .version: return UIColor(red: 0.56, green: 0.93, blue: 0.90, alpha: 1.0)    // 青色 - 版本（更好看的颜色）
         case .restorePurchase: return UIColor(red: 1.0, green: 0.6, blue: 0.4, alpha: 1.0) // 橙色 - 恢复
         case .feedback: return UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1.0)      // 粉色 - 反馈
         case .rate: return UIColor(red: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)          // 金黄色 - 星星
@@ -268,6 +268,12 @@ class SettingsViewController: UIViewController {
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(iconImageView)
         
+        // 为图标添加发光效果
+        iconImageView.layer.shadowColor = item.iconColor.cgColor
+        iconImageView.layer.shadowOffset = CGSize(width: 0, height: 0)
+        iconImageView.layer.shadowOpacity = 0.8
+        iconImageView.layer.shadowRadius = 8
+        
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
 
         // 标题
@@ -278,7 +284,15 @@ class SettingsViewController: UIViewController {
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(titleLabel)
         
-        // 版本号（仅版本项显示）
+        // 箭头（所有按钮都有）
+        let arrowImageView = UIImageView()
+        arrowImageView.image = UIImage(systemName: "chevron.right")
+        arrowImageView.tintColor = .gray
+        arrowImageView.contentMode = .scaleAspectFit
+        arrowImageView.translatesAutoresizingMaskIntoConstraints = false
+        card.addSubview(arrowImageView)
+        
+        // 版本号（仅版本项显示，放在箭头左边）
         if case .version = item {
             let versionLabel = UILabel()
             // 动态获取版本号
@@ -291,23 +305,8 @@ class SettingsViewController: UIViewController {
             card.addSubview(versionLabel)
             
             NSLayoutConstraint.activate([
-                versionLabel.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
+                versionLabel.trailingAnchor.constraint(equalTo: arrowImageView.leadingAnchor, constant: -8),
                 versionLabel.centerYAnchor.constraint(equalTo: card.centerYAnchor)
-            ])
-        } else {
-            // 箭头
-            let arrowImageView = UIImageView()
-            arrowImageView.image = UIImage(systemName: "chevron.right")
-            arrowImageView.tintColor = .gray
-            arrowImageView.contentMode = .scaleAspectFit
-            arrowImageView.translatesAutoresizingMaskIntoConstraints = false
-            card.addSubview(arrowImageView)
-            
-            NSLayoutConstraint.activate([
-                arrowImageView.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
-                arrowImageView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
-                arrowImageView.widthAnchor.constraint(equalToConstant: isPad ? 14 : 12),
-                arrowImageView.heightAnchor.constraint(equalToConstant: isPad ? 22 : 20)
             ])
         }
         
@@ -320,7 +319,12 @@ class SettingsViewController: UIViewController {
             iconImageView.heightAnchor.constraint(equalToConstant: isPad ? 30 : 24),
             
             titleLabel.leadingAnchor.constraint(equalTo: iconImageView.trailingAnchor, constant: 12),
-            titleLabel.centerYAnchor.constraint(equalTo: card.centerYAnchor)
+            titleLabel.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            
+            arrowImageView.trailingAnchor.constraint(equalTo: card.trailingAnchor, constant: -20),
+            arrowImageView.centerYAnchor.constraint(equalTo: card.centerYAnchor),
+            arrowImageView.widthAnchor.constraint(equalToConstant: isPad ? 14 : 12),
+            arrowImageView.heightAnchor.constraint(equalToConstant: isPad ? 22 : 20)
         ])
         
         // 添加点击手势

@@ -43,7 +43,7 @@ class HeartGridViewController: UIViewController {
         view.addSubview(closeButton)
         
         NSLayoutConstraint.activate([
-            // 爱心格子视图填满整个屏幕
+            // 爱心格子视图使用safeArea，确保在安全区域内居中
             heartGridView.topAnchor.constraint(equalTo: view.topAnchor),
             heartGridView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             heartGridView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
@@ -150,9 +150,14 @@ class HeartGridFullScreenView: UIView {
         let startY = (rect.height - totalGridHeight) / 2
         
         // 计算爱心在网格中的真正居中位置
+        // 使用爱心图案的实际边界框来计算，而不是整个网格的大小
+        let boundingBox = getHeartBoundingBox()
+        let heartActualHeight = boundingBox.bottomRow - boundingBox.topRow + 1
+        let heartActualWidth = boundingBox.rightCol - boundingBox.leftCol + 1
+        
         // 使用浮点数计算，然后四舍五入确保居中
-        let exactHeartStartRow = (Double(rows) - Double(heartRows)) / 2.0
-        let exactHeartStartCol = (Double(cols) - Double(heartCols)) / 2.0
+        let exactHeartStartRow = (Double(rows) - Double(heartActualHeight)) / 2.0
+        let exactHeartStartCol = (Double(cols) - Double(heartActualWidth)) / 2.0
         
         let centeredHeartStartRow = Int(exactHeartStartRow.rounded())
         let centeredHeartStartCol = Int(exactHeartStartCol.rounded())
@@ -164,11 +169,13 @@ class HeartGridFullScreenView: UIView {
                 let y = startY + CGFloat(row) * (gridSize + spacing)
                 
                 let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
-                let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
+                // 圆形格子（cornerRadius = 0.5 * gridSize）
+                let path = UIBezierPath(ovalIn: rect)
                 
                 // 判断当前格子是否在爱心图案内
-                let heartRow = row - centeredHeartStartRow
-                let heartCol = col - centeredHeartStartCol
+                // 需要考虑边界框的偏移量
+                let heartRow = row - centeredHeartStartRow + boundingBox.topRow
+                let heartCol = col - centeredHeartStartCol + boundingBox.leftCol
                 
                 var isHeartGrid = false
                 if heartRow >= 0 && heartRow < heartRows && heartCol >= 0 && heartCol < heartCols {
@@ -183,8 +190,7 @@ class HeartGridFullScreenView: UIView {
                     
                     // 静态发光效果
                     let glowRadius = gridSize * 0.3
-                    let glowPath = UIBezierPath(roundedRect: rect.insetBy(dx: -glowRadius, dy: -glowRadius), 
-                                               cornerRadius: gridSize * 0.25 + glowRadius)
+                    let glowPath = UIBezierPath(ovalIn: rect.insetBy(dx: -glowRadius, dy: -glowRadius))
                     UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 0.4).setFill()
                     glowPath.fill()
                 } else {
@@ -197,29 +203,51 @@ class HeartGridFullScreenView: UIView {
         }
     }
     
-    // 返回20x20的爱心图案（更大更详细）
+    // 返回18x20的爱心图案（垂直居中优化 - 减少顶部空白）
     private func getHeartPattern() -> [[Bool]] {
         return [
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, true,  true,  true,  true,  false, false, false, false, true,  true,  true,  true,  false, false, false, false, false],
-            [false, false, true,  true,  true,  true,  true,  true,  false, false, true,  true,  true,  true,  true,  true,  false, false, false, false],
-            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
-            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
-            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
-            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
-            [false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false],
-            [false, false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false, false],
-            [false, false, false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false, false, false],
-            [false, false, false, false, false, true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, true,  true,  true,  true,  true,  true,  false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, true,  true,  true,  true,  false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, true,  true,  false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
-            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, true,  true,  true,  true,  false, false, false, false, true,  true,  true,  true,  false, false, false],
+            [false, false, true,  true,  true,  true,  true,  true,  false, false, true,  true,  true,  true,  true,  true,  false, false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false],
+            [false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false],
+            [false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false],
+            [false, false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false],
+            [false, false, false, false, true,  true,  true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false],
+            [false, false, false, false, false, true,  true,  true,  true,  true,  true,  true,  true,  false, false, false, false, false],
+            [false, false, false, false, false, false, true,  true,  true,  true,  true,  true,  false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, true,  true,  true,  true,  false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, true,  true,  false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false],
+            [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
         ]
+    }
+    
+    // 计算爱心图案的实际边界框（用于更精确的居中）
+    private func getHeartBoundingBox() -> (topRow: Int, bottomRow: Int, leftCol: Int, rightCol: Int) {
+        let pattern = getHeartPattern()
+        var topRow = pattern.count
+        var bottomRow = 0
+        var leftCol = pattern[0].count
+        var rightCol = 0
+        
+        for row in 0..<pattern.count {
+            for col in 0..<pattern[row].count {
+                if pattern[row][col] {
+                    topRow = min(topRow, row)
+                    bottomRow = max(bottomRow, row)
+                    leftCol = min(leftCol, col)
+                    rightCol = max(rightCol, col)
+                }
+            }
+        }
+        
+        return (topRow, bottomRow, leftCol, rightCol)
     }
 }

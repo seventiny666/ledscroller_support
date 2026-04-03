@@ -414,12 +414,12 @@ class LEDCreateViewController: UIViewController {
         ["#FF6347", "#DC143C"], // 红色渐变
         // 第二行：7个渐变
         ["#00CED1", "#4169E1"], // 青蓝渐变
-        ["#32CD32", "#00FA9A"], // 绿色渐变
+        ["#32CD32", "#228B22"], // 绿到深绿渐变
         ["#FF1493", "#FF69B4"], // 粉色渐变
         ["#9370DB", "#8A2BE2"], // 紫色渐变
         ["#FF8C00", "#FF4500"], // 橙色渐变
-        ["#4169E1", "#1E90FF"], // 蓝色渐变
-        ["#BA55D3", "#FF1493"]  // 紫粉渐变
+        ["#4169E1", "#8A2BE2"], // 蓝紫渐变
+        ["#1E90FF", "#9370DB"]  // 蓝紫渐变
     ]
     
     init(editingItem: LEDItem? = nil, isTemplateEdit: Bool = false) {
@@ -929,30 +929,17 @@ class LEDCreateViewController: UIViewController {
             bgColorStack.heightAnchor.constraint(equalToConstant: 36)
         ])
         tabYOffset += 46 // 36 + 10间距
-        
+
         // 第2行：渐变背景色（7个）
         let bgGradientStack1 = createBgGradientStack(gradients: Array(bgGradientColors.prefix(7)), tag: 300)
         bgGradientStack1.translatesAutoresizingMaskIntoConstraints = false
         backgroundTabView.addSubview(bgGradientStack1)
-        
+
         NSLayoutConstraint.activate([
             bgGradientStack1.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
             bgGradientStack1.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
             bgGradientStack1.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
             bgGradientStack1.heightAnchor.constraint(equalToConstant: 36)
-        ])
-        tabYOffset += 46 // 36 + 10间距
-        
-        // 第3行：渐变背景色（7个）
-        let bgGradientStack2 = createBgGradientStack(gradients: Array(bgGradientColors.suffix(7)), tag: 307) // tag从307开始（300+7）
-        bgGradientStack2.translatesAutoresizingMaskIntoConstraints = false
-        backgroundTabView.addSubview(bgGradientStack2)
-        
-        NSLayoutConstraint.activate([
-            bgGradientStack2.topAnchor.constraint(equalTo: backgroundTabView.topAnchor, constant: tabYOffset),
-            bgGradientStack2.leadingAnchor.constraint(equalTo: backgroundTabView.leadingAnchor, constant: 20),
-            bgGradientStack2.trailingAnchor.constraint(equalTo: backgroundTabView.trailingAnchor, constant: -20),
-            bgGradientStack2.heightAnchor.constraint(equalToConstant: 36)
         ])
         tabYOffset += 56 // 36 + 20间距（最后一行后面间距大一些）
         
@@ -1203,6 +1190,10 @@ class LEDCreateViewController: UIViewController {
             linearRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
             linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
         ])
+        tabYOffset += 80 // 行高
+        
+        // 设置最后一行的底部约束，确保内容高度正确
+        linearRow3.bottomAnchor.constraint(lessThanOrEqualTo: borderTabView.bottomAnchor, constant: -60).isActive = true
     }
 
     // 创建跑马灯边框选择器（一行4个按钮）
@@ -2542,9 +2533,8 @@ class LEDCreateViewController: UIViewController {
     private func shouldShowVIPBadge(category: String, imageIndex: Int) -> Bool {
         switch category {
         case "neon":
-            // 霓虹灯屏幕：neon_1/2/3 不需要VIP（使用 neon_11/12/13 背景）
-            // neon_4 需要VIP（有边框）
-            return imageIndex == 4 || imageIndex == 9 || imageIndex == 18
+            // 霓虹灯屏幕：只保留最后4个需要VIP（neon_17, neon_18, neon_19, neon_20）
+            return imageIndex >= 17
         case "idol":
             // 偶像屏幕的后4个需要VIP（5-8）
             return imageIndex >= 5

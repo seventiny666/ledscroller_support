@@ -318,7 +318,7 @@ class FlipDigitView: UIView {
         // 数字后面的浅浅数字（叠一层低透明度的同号，制造纵深感）
         ghostLabel = UILabel()
         ghostLabel.textColor = UIColor.white.withAlphaComponent(0.14)
-        ghostLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .bold)
+        ghostLabel.font = .monospacedDigitSystemFont(ofSize: 100, weight: .bold) // 设置较大初始字体，避免跳动
         ghostLabel.textAlignment = .center
         ghostLabel.adjustsFontSizeToFitWidth = false
         ghostLabel.baselineAdjustment = .alignCenters
@@ -329,7 +329,7 @@ class FlipDigitView: UIView {
         // 数字标签（前景主数字）
         digitLabel = UILabel()
         digitLabel.textColor = .white
-        digitLabel.font = .monospacedDigitSystemFont(ofSize: 10, weight: .bold)
+        digitLabel.font = .monospacedDigitSystemFont(ofSize: 100, weight: .bold) // 设置较大初始字体，避免跳动
         digitLabel.textAlignment = .center
         digitLabel.adjustsFontSizeToFitWidth = false
         digitLabel.baselineAdjustment = .alignCenters
@@ -378,7 +378,13 @@ class FlipDigitView: UIView {
         // Size the digit font from height so it never clips vertically.
         let h = digitView.bounds.height
         // Empirically, ~70% of card height fills well with this font and avoids clipping at top/bottom.
-        let font = UIFont.monospacedDigitSystemFont(ofSize: max(10, h * 0.66), weight: .bold)
+        let targetFontSize = max(10, h * 0.66)
+        
+        // 只在字体大小变化时更新（避免不必要的跳动）
+        let currentFontSize = digitLabel.font?.pointSize ?? 0
+        guard abs(currentFontSize - targetFontSize) > 1 else { return }
+        
+        let font = UIFont.monospacedDigitSystemFont(ofSize: targetFontSize, weight: .bold)
         digitLabel.font = font
         ghostLabel.font = font
 

@@ -67,10 +67,18 @@ class LEDFullScreenViewController: UIViewController {
     
     override func viewDidDisappear(_ animated: Bool) {
         super.viewDidDisappear(animated)
-        
+
         // 在视图完全消失后再恢复竖屏，避免卡顿
         DispatchQueue.main.async {
             AppDelegate.orientationLock = .portrait
+        }
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 更新渐变层的frame
+        if let gradientLayer = useTemplateButton.layer.sublayers?.first as? CAGradientLayer {
+            gradientLayer.frame = useTemplateButton.bounds
         }
     }
     
@@ -408,23 +416,26 @@ class LEDFullScreenViewController: UIViewController {
         useTemplateButton.setTitleColor(.white, for: .normal)
         useTemplateButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
         useTemplateButton.layer.cornerRadius = 22
-        useTemplateButton.layer.masksToBounds = false
+        useTemplateButton.layer.masksToBounds = true // 裁剪渐变层
         useTemplateButton.addTarget(self, action: #selector(useTemplateTapped), for: .touchUpInside)
         useTemplateButton.translatesAutoresizingMaskIntoConstraints = false
 
-        // Pink glow style (solid pink + inner-ish glow)
-        let pink = UIColor(red: 1.0, green: 0.45, blue: 0.75, alpha: 1.0)
-        useTemplateButton.backgroundColor = pink
-        useTemplateButton.layer.shadowColor = pink.cgColor
-        useTemplateButton.layer.shadowOpacity = 0.9
-        useTemplateButton.layer.shadowRadius = 10
-        useTemplateButton.layer.shadowOffset = .zero
+        // 玫红到紫色渐变背景，去掉外发光
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.0, blue: 0.5, alpha: 1.0).cgColor, // 玫红色
+            UIColor(red: 0.6, green: 0.0, blue: 1.0, alpha: 1.0).cgColor  // 紫色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        gradientLayer.cornerRadius = 22
+        useTemplateButton.layer.insertSublayer(gradientLayer, at: 0)
 
         view.addSubview(useTemplateButton)
         view.bringSubviewToFront(useTemplateButton)
 
         NSLayoutConstraint.activate([
-            useTemplateButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            useTemplateButton.centerXAnchor.constraint(equalTo: view.centerXAnchor), // 水平居中
             useTemplateButton.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -16),
             useTemplateButton.heightAnchor.constraint(equalToConstant: 44),
             useTemplateButton.widthAnchor.constraint(greaterThanOrEqualToConstant: 170)

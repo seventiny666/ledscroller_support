@@ -23,6 +23,10 @@ class ILoveUViewController: UIViewController {
         AppDelegate.orientationLock = .portrait
     }
     
+    override var prefersStatusBarHidden: Bool {
+        return true
+    }
+    
     private func setupUI() {
         view.backgroundColor = UIColor.black // 黑色背景突出格子闪烁效果
         
@@ -74,22 +78,36 @@ class ILoveUFullScreenView: UIView {
     private var animationTimer: Timer?
     private var backgroundGridAlphas: [[CGFloat]] = []  // 背景格子的透明度
     
+    // 心跳动画相关
+    private var heartbeatTimer: Timer?
+    private var heartbeatScale: CGFloat = 1.0
+    private var heartbeatPhase: Int = 0 // 0: normal, 1: expand, 2: contract
+
     override init(frame: CGRect) {
         super.init(frame: frame)
         backgroundColor = .clear
         setupAnimation()
+        setupHeartbeatAnimation()
     }
     
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         backgroundColor = .clear
         setupAnimation()
+        setupHeartbeatAnimation()
     }
     
     private func setupAnimation() {
         // 启动动画定时器（降低频率）
         animationTimer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
             self?.updateAnimation()
+        }
+    }
+    
+    private func setupHeartbeatAnimation() {
+        // 心跳动画 - 慢速放大缩小
+        heartbeatTimer = Timer.scheduledTimer(withTimeInterval: 0.25, repeats: true) { [weak self] _ in
+            self?.updateHeartbeat()
         }
     }
     
@@ -108,8 +126,33 @@ class ILoveUFullScreenView: UIView {
         setNeedsDisplay()
     }
     
+    private func updateHeartbeat() {
+        // 心跳节奏：放大 -> 快速缩小 -> 正常 -> 正常（短暂停顿）
+        heartbeatPhase = (heartbeatPhase + 1) % 6
+        
+        switch heartbeatPhase {
+        case 0:
+            heartbeatScale = 1.0
+        case 1:
+            heartbeatScale = 1.15  // 快速放大
+        case 2:
+            heartbeatScale = 0.95  // 快速缩小
+        case 3:
+            heartbeatScale = 1.1   // 第二次放大
+        case 4:
+            heartbeatScale = 0.98  // 第二次缩小
+        case 5:
+            heartbeatScale = 1.0   // 恢复正常
+        default:
+            heartbeatScale = 1.0
+        }
+        
+        setNeedsDisplay()
+    }
+    
     deinit {
         animationTimer?.invalidate()
+        heartbeatTimer?.invalidate()
     }
     
     override func draw(_ rect: CGRect) {
@@ -149,69 +192,114 @@ class ILoveUFullScreenView: UIView {
         let startX = (rect.width - totalGridWidth) / 2
         let startY = (rect.height - totalGridHeight) / 2
         
-        // 计算爱心在网格中的居中位置
-        let exactHeartStartRow = (Double(rows) - Double(heartRows)) / 2.0
-        let exactHeartStartCol = (Double(cols) - Double(heartCols)) / 2.0
+        // 计算爱心在网格中的真正居中位置
+        // 使用爱心图案的实际边界框来计算，而不是整个网格的大小
+        let boundingBox = getHeartBoundingBox()
+        let heartActualHeight = boundingBox.bottomRow - boundingBox.topRow + 1
+        let heartActualWidth = boundingBox.rightCol - boundingBox.leftCol + 1
+        
+        // 使用浮点数计算，然后四舍五入确保居中
+        let exactHeartStartRow = (Double(rows) - Double(heartActualHeight)) / 2.0
+        let exactHeartStartCol = (Double(cols) - Double(heartActualWidth)) / 2.0
         
         let centeredHeartStartRow = Int(exactHeartStartRow.rounded())
         let centeredHeartStartCol = Int(exactHeartStartCol.rounded())
         
-        // 获取字母I和U的图案
-        let letterI = getLetterIPattern()
-        let letterU = getLetterUPattern()
-        
-        // 计算字母I的位置（爱心左边，再增加2格距离）
-        let iStartRow = centeredHeartStartRow + (heartRows - letterI.count) / 2
-        let iStartCol = centeredHeartStartCol - 10 // 从8改为10，再增加2格距离
-        
-        // 计算字母U的位置（爱心右边，调整为5格距离）
-        let uStartRow = centeredHeartStartRow + (heartRows - letterU.count) / 2
-        let uStartCol = centeredHeartStartCol + heartCols + 5 // 从7改为5，调整距离
-        
+        // 计算I和U的图案位置（使用与心相同高度的网格）
+        let iPattern = getIPattern()
+        let uPattern = getUPattern()
+        let iRows = iPattern.count
+        let iCols = iPattern[0].count
+        let uRows = uPattern.count
+        let uCols = uPattern[0].count
+
+        // I和U的高度与心一样高，计算需要的格子数
+        let letterGridHeight = heartActualHeight // 和心一样高的行数
+
+        // 计算I和U在心左右两侧的位置
+        let spacingToHeart = max(iCols, uCols) + 2 // 距离心的格数
+
+        // I的起始列（心左边）- 往右移动3个圆点
+        let iStartCol = centeredHeartStartCol - spacingToHeart - iCols + 3
+        // U的起始列（心右边）- 往左移动4个圆点
+        let uStartCol = centeredHeartStartCol + boundingBox.leftCol + heartActualWidth + spacingToHeart - 4
+
+        // 垂直居中：I/U和心顶部对齐
+        let letterStartRow = centeredHeartStartRow + boundingBox.topRow
+
         // 绘制所有格子
         for row in 0..<rows {
             for col in 0..<cols {
                 let x = startX + CGFloat(col) * (gridSize + spacing)
                 let y = startY + CGFloat(row) * (gridSize + spacing)
-                
+
                 let rect = CGRect(x: x, y: y, width: gridSize, height: gridSize)
-                let path = UIBezierPath(roundedRect: rect, cornerRadius: gridSize * 0.25)
-                
-                var isRedGrid = false
-                
-                // 判断是否在爱心图案内
-                let heartRow = row - centeredHeartStartRow
-                let heartCol = col - centeredHeartStartCol
+                // 圆形格子
+                let path = UIBezierPath(ovalIn: rect)
+
+                // 判断当前格子是否在爱心图案内
+                // 需要考虑边界框的偏移量
+                let heartRow = row - centeredHeartStartRow + boundingBox.topRow
+                let heartCol = col - centeredHeartStartCol + boundingBox.leftCol
+
+                var isHeartGrid = false
                 if heartRow >= 0 && heartRow < heartRows && heartCol >= 0 && heartCol < heartCols {
-                    isRedGrid = heartPattern[heartRow][heartCol]
+                    isHeartGrid = heartPattern[heartRow][heartCol]
                 }
-                
-                // 判断是否在字母I内
-                let iRow = row - iStartRow
-                let iCol = col - iStartCol
-                if iRow >= 0 && iRow < letterI.count && iCol >= 0 && iCol < letterI[0].count {
-                    isRedGrid = isRedGrid || letterI[iRow][iCol]
+
+                // 判断是否是I或U的点
+                var isLetterGrid = false
+                var isIGrid = false
+
+                // 检查I
+                let iLocalRow = row - letterStartRow
+                let iLocalCol = col - iStartCol
+                if iLocalRow >= 0 && iLocalRow < min(iRows, letterGridHeight) && iLocalCol >= 0 && iLocalCol < iCols {
+                    if iPattern[iLocalRow][iLocalCol] {
+                        isLetterGrid = true
+                        isIGrid = true
+                    }
                 }
-                
-                // 判断是否在字母U内
-                let uRow = row - uStartRow
-                let uCol = col - uStartCol
-                if uRow >= 0 && uRow < letterU.count && uCol >= 0 && uCol < letterU[0].count {
-                    isRedGrid = isRedGrid || letterU[uRow][uCol]
+
+                // 检查U
+                let uLocalRow = row - letterStartRow
+                let uLocalCol = col - uStartCol
+                if uLocalRow >= 0 && uLocalRow < min(uRows, letterGridHeight) && uLocalCol >= 0 && uLocalCol < uCols {
+                    if uPattern[uLocalRow][uLocalCol] {
+                        isLetterGrid = true
+                    }
                 }
-                
-                if isRedGrid {
+
+                if isHeartGrid {
+                    // 应用心跳缩放
+                    let centerX = x + gridSize / 2
+                    let centerY = y + gridSize / 2
+                    let scaledX = centerX - (centerX - (startX + totalGridWidth / 2)) * (heartbeatScale - 1)
+                    let scaledY = centerY - (centerY - (startY + totalGridHeight / 2)) * (heartbeatScale - 1)
+                    let scaledRect = CGRect(
+                        x: scaledX - gridSize * heartbeatScale / 2,
+                        y: scaledY - gridSize * heartbeatScale / 2,
+                        width: gridSize * heartbeatScale,
+                        height: gridSize * heartbeatScale
+                    )
+
+                    let scaledPath = UIBezierPath(ovalIn: scaledRect)
+
                     // 点亮的格子：亮红色带静态发光效果
                     let baseColor = UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0)
                     baseColor.setFill()
-                    path.fill()
-                    
+                    scaledPath.fill()
+
                     // 静态发光效果
-                    let glowRadius = gridSize * 0.3
-                    let glowPath = UIBezierPath(roundedRect: rect.insetBy(dx: -glowRadius, dy: -glowRadius), 
-                                               cornerRadius: gridSize * 0.25 + glowRadius)
+                    let glowRadius = gridSize * heartbeatScale * 0.3
+                    let glowPath = UIBezierPath(ovalIn: scaledRect.insetBy(dx: -glowRadius, dy: -glowRadius))
                     UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 0.4).setFill()
                     glowPath.fill()
+                } else if isLetterGrid {
+                    // I和U：红色圆形点（和心一样的颜色）
+                    let circlePath = UIBezierPath(ovalIn: rect)
+                    UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0).setFill()
+                    circlePath.fill()
                 } else {
                     // 未点亮的格子：暗蓝色带随机闪烁效果（提亮颜色）
                     let alpha = backgroundGridAlphas[row][col]
@@ -220,6 +308,40 @@ class ILoveUFullScreenView: UIView {
                 }
             }
         }
+    }
+    
+    // I 字母图案（3列 x 12行）
+    private func getIPattern() -> [[Bool]] {
+        return [
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false],
+            [false, true, false]
+        ]
+    }
+
+    // U 字母图案（7列 x 10行）- 两侧竖线 + 底部5个红点
+    private func getUPattern() -> [[Bool]] {
+        return [
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [true,  false, false, false, false, false, true ],
+            [false, true,  true,  true,  true,  true,  false]
+        ]
     }
     
     // 返回20x20的爱心图案（与HeartGridView相同）
@@ -248,45 +370,25 @@ class ILoveUFullScreenView: UIView {
         ]
     }
     
-    // 字母I的图案
-    private func getLetterIPattern() -> [[Bool]] {
-        return [
-            [true,  true,  true],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [false, true,  false],
-            [true,  true,  true]
-        ]
-    }
-    
-    // 字母U的图案（大写效果）
-    private func getLetterUPattern() -> [[Bool]] {
-        return [
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [true,  false, false, false, true],
-            [false, true,  false, true,  false],
-            [false, true,  true,  true,  false],
-            [false, false, true,  false, false]
-        ]
+    // 计算爱心图案的实际边界框（用于更精确的居中）
+    private func getHeartBoundingBox() -> (topRow: Int, bottomRow: Int, leftCol: Int, rightCol: Int) {
+        let pattern = getHeartPattern()
+        var topRow = pattern.count
+        var bottomRow = 0
+        var leftCol = pattern[0].count
+        var rightCol = 0
+        
+        for row in 0..<pattern.count {
+            for col in 0..<pattern[row].count {
+                if pattern[row][col] {
+                    topRow = min(topRow, row)
+                    bottomRow = max(bottomRow, row)
+                    leftCol = min(leftCol, col)
+                    rightCol = max(rightCol, col)
+                }
+            }
+        }
+        
+        return (topRow, bottomRow, leftCol, rightCol)
     }
 }

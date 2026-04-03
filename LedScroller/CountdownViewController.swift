@@ -135,6 +135,9 @@ final class CountdownViewController: UIViewController {
         timeLabel.textAlignment = .center
         timeLabel.translatesAutoresizingMaskIntoConstraints = false
         leftPanel.addSubview(timeLabel)
+        
+        // 设置初始文本，避免首次布局时跳动
+        timeLabel.text = "00:00"
 
         NSLayoutConstraint.activate([
             timeLabel.centerXAnchor.constraint(equalTo: leftPanel.centerXAnchor),

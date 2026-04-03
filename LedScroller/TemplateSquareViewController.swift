@@ -599,7 +599,7 @@ import StoreKit
         ]
         gradientLayer.startPoint = CGPoint(x: 0, y: 0)
         gradientLayer.endPoint = CGPoint(x: 1, y: 0)
-        gradientLayer.frame = CGRect(x: 0, y: 0, width: 260, height: 50)
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: 200, height: 50) // 宽度从260改为200
         gradientLayer.cornerRadius = 25
         becomeMemberButton.layer.insertSublayer(gradientLayer, at: 0)
         becomeMemberButton.addTarget(self, action: #selector(becomeMemberTapped), for: .touchUpInside)
@@ -608,7 +608,7 @@ import StoreKit
 
         subtitleLabel.text = "subscribeToUnlockAllPremiumContent".localized
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.85)
-        subtitleLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        subtitleLabel.font = .systemFont(ofSize: 15, weight: .regular) // 字体大小从12改为15
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 2
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -622,7 +622,7 @@ import StoreKit
 
             containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 260),
+            containerView.widthAnchor.constraint(equalToConstant: 200), // 宽度从260改为200
 
             becomeMemberButton.topAnchor.constraint(equalTo: containerView.topAnchor),
             becomeMemberButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
@@ -4612,7 +4612,7 @@ class TemplateCategoryCell: UITableViewCell {
             }
 
             // Merge Idol cards into Neon section on iPad home.
-            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 16)) // 移除 Let's Go, Rock On, Stay Cool
+            items.append(contentsOf: Self.createPlaceholderItems(category: "neon", count: 14)) // 移除 Let's Go, Rock On, Stay Cool, Be You, Enjoy, TEXT 15, TEXT 16
             items.append(contentsOf: Self.createPlaceholderItems(category: "idol", count: 4))
             return items
         case .idol:
@@ -4635,11 +4635,11 @@ class TemplateCategoryCell: UITableViewCell {
         switch category {
         case "neon":
             texts = [
-                "Drink Juice", "Dance party!", "Nice Day", "I LOVE U",
+                "Drink Juice", "Dance party!", "1314", "I LOVE U", // Nice Day和1314互换位置
                 "Good Vibes", "Be Happy",
                 "Dream Big", "Shine On", "Feel Good", "Live Free",
-                "Stay Wild", "Keep Going", // 移除 Rock On (neon_13)
-                "Love Life", "Stay True", "Be You" // 移除 Enjoy (neon_20)
+                "Stay Wild", "Happy Time!", // 移除 Rock On (neon_13)
+                "Love Life", "Nice Day" // 1314移到第三位，Nice Day移到最后
             ]
         case "idol":
             texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
@@ -4675,19 +4675,25 @@ class TemplateCategoryCell: UITableViewCell {
             var linearBorderStyle: Int? = nil
             var ledBorderImageIndex: Int? = nil // LED边框图片索引
             var lightBoardStyle: Int? = nil // 灯牌边框样式索引
+            var borderWidthAdjustment: CGFloat? = nil // 边框宽度调整值
+            var borderSafeInsetAdjustment: CGFloat? = nil // 安全区距离调整值
             var fontName = "PingFangSC-Semibold" // 默认粗体字体
             var textColor = "#FFFFFF" // 默认白色
             
             // neon_4 (I LOVE U) 特殊配置：像素字体 + led_2背景 + 线性边框第二行第二个
             var fontSize: CGFloat = 120 // 默认字体大小
             if category == "neon" {
-                // neon_1-3: 无边框（免费）
+                // neon_1-3: 配置各异
                 if i == 1 {
                     // neon_1: 无边框（免费）
                 } else if i == 2 {
                     // neon_2: 无边框（免费）
                 } else if i == 3 {
-                    // neon_3: 无边框（免费）
+                    // neon_3 (1314): 像素字体 + cc4背景 + 线性边框最后一个（VIP）
+                    fontName = LEDFontRenderer.pixelFontName // 像素字体
+                    textColor = "#00FFFF" // 第一行第三个：青色
+                    linearBorderStyle = 11 // 线性边框最后一个 = teal (rawValue=11)
+                    fontSize = 190 // 字体大小190（全屏预览效果）
                 } else if i == 4 {
                     // neon_4 (I LOVE U): 像素字体 + led_2背景 + 线性边框第二行第二个 + 字体140
                     fontName = LEDFontRenderer.pixelFontName // 像素字体
@@ -4704,18 +4710,30 @@ class TemplateCategoryCell: UITableViewCell {
                 } else if i == 8 {
                     // neon_8 (Shine On): LED Border 第二行第二个
                     ledBorderImageIndex = 5 // LED Border 第二行第二个 (索引5)
-                } else if i == 9 {
-                    // neon_9 (Dream Big): 灯牌边框第三行第四个（VIP）+ cc1背景 + dot字体
-                    lightBoardStyle = 11 // 灯牌边框第三行第四个 (style12, 索引11)
+                } else if i == 7 {
+                    // neon_7 (Dream Big): 灯牌边框第二行第一个（VIP）+ neon_16背景 + dot字体
+                    lightBoardStyle = 4 // 灯牌边框第二行第一个 (style5, 索引4)
                     fontName = LEDFontRenderer.dotMatrixFontName // dot字体
+                } else if i == 9 {
+                    // neon_9 (Feel Good): 灯牌边框第一行第一个 + 边框宽度-2pt + 往外扩2pt
+                    lightBoardStyle = 0 // 灯牌边框第一行第一个 (style1, 索引0)
+                    borderWidthAdjustment = -2 // 边框宽度-2pt
+                    borderSafeInsetAdjustment = 2 // 安全区距离-2pt（往外扩2pt，边框整体变大）
                 } else if i == 10 {
                     // neon_10 (Live Free): 线性边框第二行第二个（VIP）
                     linearBorderStyle = 5 // 线性边框第二行第二个 (第一行: 0-3, 第二行: 4-7)
-                } else if i == 18 {
-                    // neon_18 (Be You): 线性边框（VIP） + raster 字体
-                    fontName = LEDFontRenderer.rasterFontName
-                    textColor = "#00FF00"
-                    linearBorderStyle = 1 // green
+                } else if i == 11 {
+                    // neon_11 (Stay Wild): cc1背景 + LED Border第二行第二个（VIP）
+                    ledBorderImageIndex = 5 // LED Border 第二行第二个 (索引5)
+                } else if i == 12 {
+                    // neon_12 (Happy Time!): smooth字体 + 线性边框第一行第三个（VIP）
+                    fontName = LEDFontRenderer.smoothFontName // smooth字体
+                    linearBorderStyle = 1 // 线性边框第一行第三个 = green (rawValue=1)
+                } else if i == 13 {
+                    // neon_13 (Love Life): 跑马灯边框第一行第三个
+                    borderStyle = 2 // 跑马灯边框第一行第三个（索引2）
+                } else if i == 14 {
+                    // neon_14 (Nice Day): 无边框（免费）
                 }
             } else if category == "led" {
                 // LED屏幕模板特殊配置
@@ -4731,7 +4749,7 @@ class TemplateCategoryCell: UITableViewCell {
             // neon_5 (Good Vibes) 使用 cc1 背景（LED Screen 第一行第一个）
             // neon_4 (I LOVE U) 使用 cc4 背景（LED Screen 第一行第四个）
             // neon_6 (Be Happy) 使用 cc8 背景（LED Screen 第二行最后一个）
-            // neon_9 (Dream Big) 使用 cc1 背景（LED Screen 第一行第一个）
+            // neon_7 (Dream Big) 使用 neon_16 背景（Neon Screen 第四行第四个）
             let actualImageName: String?
             if category == "led" && i == 4 {
                 actualImageName = "led_1" // 使用 led_1 替代 led_2（led_2图片本身带有边框效果）
@@ -4741,8 +4759,15 @@ class TemplateCategoryCell: UITableViewCell {
                 actualImageName = "cc1" // Good Vibes 使用 cc1 背景
             } else if category == "neon" && i == 6 {
                 actualImageName = "cc8" // Be Happy 使用 cc8 背景
-            } else if category == "neon" && i == 9 {
-                actualImageName = "cc1" // Dream Big 使用 cc1 背景
+            } else if category == "neon" && i == 7 {
+                actualImageName = "neon_16" // Dream Big 使用 neon_16 背景（Neon Screen 第四行第四个）
+            } else if category == "neon" && i == 11 {
+                actualImageName = "cc1" // Stay Wild 使用 cc1 背景（LED Screen 第一行第一个）
+            } else if category == "neon" && i == 3 {
+                actualImageName = "cc4" // 1314 使用 cc4 背景（LED Screen 第一行第四个）
+            } else if category == "neon" && i == 14 {
+                actualImageName = "neon_14" // Nice Day 使用 neon_14 背景
+            }
             } else {
                 actualImageName = imageName
             }
@@ -4761,7 +4786,9 @@ class TemplateCategoryCell: UITableViewCell {
                 borderStyle: borderStyle,
                 lightBoardStyle: lightBoardStyle,
                 linearBorderStyle: linearBorderStyle,
-                ledBorderImageIndex: ledBorderImageIndex
+                ledBorderImageIndex: ledBorderImageIndex,
+                borderWidthAdjustment: borderWidthAdjustment,
+                borderSafeInsetAdjustment: borderSafeInsetAdjustment
             )
             // 根据实际内容更新 VIP 标识（字体、边框等）
             item.isVIPRequired = item.requiresVIPByContent
@@ -4898,13 +4925,6 @@ class TemplateItemCell: UICollectionViewCell {
         // iPad card covers are much larger; keep the overlay text visually balanced.
         let overlayFontSize: CGFloat = isPad ? 44 : (screenHeight >= 926 ? 22 : 20)
         let titleFontSize: CGFloat = isPad ? 18 : (screenHeight >= 926 ? 15 : 13)
-        let tryButtonFontSize: CGFloat = isPad ? 20 : (screenHeight >= 926 ? 14 : 12) // iPad: -4pt
-        let previewFontSize: CGFloat = isPad ? 15 : (screenHeight >= 926 ? 13 : 11)
-
-        // iPad edit button: 3x height, with explicit spacing above/below.
-        let buttonHeight: CGFloat = isPad ? 50 : 14
-        let buttonTopSpacing: CGFloat = isPad ? 28 : 18
-        let buttonBottomInset: CGFloat = isPad ? 34 : 18
         
         // 封面图片上的文字（霓虹效果）
         overlayTextLabel.textColor = .white
@@ -5323,6 +5343,12 @@ class TemplateItemCell: UICollectionViewCell {
                     let isPad = UIDevice.current.userInterfaceIdiom == .pad
                     let screenHeight = UIScreen.main.bounds.height
 
+                    // 封面字体大小计算：基于容器宽度比例缩放，与预览页面保持一致
+                    // 参照 LEDPreviewViewController 的缩放逻辑
+                    let containerWidth = imageView.bounds.width > 0 ? imageView.bounds.width : (isPad ? 300 : 150)
+                    let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+                    let scaleFactor = containerWidth / landscapeWidth
+
                     // Marry Me 和 Merry Christmas 封面文字应该更小
                     let baseOverlayFontSize: CGFloat
                     let capSize: CGFloat
@@ -5334,7 +5360,7 @@ class TemplateItemCell: UICollectionViewCell {
                         capSize = isPad ? 56 : 28
                     }
 
-                    let overlaySize = min(max(baseOverlayFontSize, item.fontSize * 0.40), capSize)
+                    let overlaySize = min(max(baseOverlayFontSize, item.fontSize * scaleFactor), capSize)
 
                     // Merry Christmas 需要两行显示
                     if item.id == "merry-christmas-default" {
@@ -5395,6 +5421,12 @@ class TemplateItemCell: UICollectionViewCell {
                 let isPad = UIDevice.current.userInterfaceIdiom == .pad
                 let screenHeight = UIScreen.main.bounds.height
 
+                // 封面字体大小计算：基于容器宽度比例缩放，与预览页面保持一致
+                // 参照 LEDPreviewViewController 的缩放逻辑
+                let containerWidth = imageView.bounds.width > 0 ? imageView.bounds.width : (isPad ? 300 : 150)
+                let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+                let scaleFactor = containerWidth / landscapeWidth
+
                 let baseOverlayFontSize: CGFloat
                 let capSize: CGFloat
                 if item.id == "marry-me-default" || item.id == "merry-christmas-default" {
@@ -5405,7 +5437,7 @@ class TemplateItemCell: UICollectionViewCell {
                     capSize = isPad ? 56 : 28
                 }
 
-                let overlaySize = min(max(baseOverlayFontSize, item.fontSize * 0.40), capSize)
+                let overlaySize = min(max(baseOverlayFontSize, item.fontSize * scaleFactor), capSize)
 
                 // Merry Christmas 需要两行显示
                 if item.id == "merry-christmas-default" {
@@ -5469,6 +5501,14 @@ class TemplateItemCell: UICollectionViewCell {
         if let lightBoardStyle = item.lightBoardStyle {
             let borderView = LightBoardBorderView(displayMode: .cardCover)
             borderView.setStyle(LightBoardBorderStyle(rawValue: lightBoardStyle) ?? .style1)
+            // 应用边框宽度调整
+            if let adjustment = item.borderWidthAdjustment {
+                borderView.borderWidthAdjustment = adjustment
+            }
+            // 应用安全区距离调整
+            if let safeInsetAdjustment = item.borderSafeInsetAdjustment {
+                borderView.borderSafeInsetAdjustment = safeInsetAdjustment
+            }
             borderView.translatesAutoresizingMaskIntoConstraints = false
             imageView.addSubview(borderView)
             NSLayoutConstraint.activate([

@@ -4,41 +4,77 @@ import UIKit
 enum LinearBorderStyle: Int, CaseIterable {
     case red = 0, green, blue, yellow, purple, cyan, orange, white
     case pink, gold, coral, teal
-    
+
     var color: UIColor {
         switch self {
-        case .red: return UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0)
-        case .green: return UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0)
-        case .blue: return UIColor(red: 0.0, green: 0.6, blue: 1.0, alpha: 1.0) // 提高亮度和饱和度
+        case .red: return UIColor(red: 1.0, green: 0.1, blue: 0.1, alpha: 1.0) // 提高饱和度
+        case .green: return UIColor(red: 0.0, green: 0.95, blue: 0.2, alpha: 1.0) // 提高饱和度
+        case .blue: return UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0) // 提高饱和度
         case .yellow: return UIColor(red: 1.0, green: 0.95, blue: 0.0, alpha: 1.0) // 提高饱和度
-        case .purple: return UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0)
-        case .cyan: return UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        case .orange: return UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0)
-        case .white: return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        // 新增4个颜色 - 第三行
-        case .pink: return UIColor(red: 1.0, green: 0.08, blue: 0.58, alpha: 1.0) // Deep Pink #FF1493
-        case .gold: return UIColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // Gold #FFD700
-        case .coral: return UIColor(red: 1.0, green: 0.39, blue: 0.28, alpha: 1.0) // Tomato #FF6347
-        case .teal: return UIColor(red: 0.0, green: 0.81, blue: 0.82, alpha: 1.0) // Dark Turquoise #00CED1
+        case .purple: return UIColor(red: 0.9, green: 0.0, blue: 1.0, alpha: 1.0) // 提高饱和度
+        case .cyan: return UIColor(red: 0.0, green: 0.95, blue: 1.0, alpha: 1.0) // 提高饱和度
+        case .orange: return UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0) // 提高饱和度
+        case .white: return UIColor(red: 0.8, green: 0.0, blue: 1.0, alpha: 1.0) // 改为紫色
+        // 最后四个改为渐变色
+        case .pink: return UIColor(red: 1.0, green: 0.2, blue: 0.6, alpha: 1.0) // 粉紫渐变起点
+        case .gold: return UIColor(red: 1.0, green: 0.75, blue: 0.0, alpha: 1.0) // 橙金渐变起点
+        case .coral: return UIColor(red: 1.0, green: 0.3, blue: 0.4, alpha: 1.0) // 红粉渐变起点
+        case .teal: return UIColor(red: 0.0, green: 0.8, blue: 0.8, alpha: 1.0) // 彩色渐变起点
         }
     }
-    
+
     // 获取更亮的颜色版本（用于最内边框）
     var brightColor: UIColor {
         switch self {
-        case .red: return UIColor(red: 1.0, green: 0.3, blue: 0.3, alpha: 1.0)
-        case .green: return UIColor(red: 0.3, green: 1.0, blue: 0.3, alpha: 1.0)
-        case .blue: return UIColor(red: 0.3, green: 0.75, blue: 1.0, alpha: 1.0) // 亮蓝色 - 调整以匹配新的基础蓝色
-        case .yellow: return UIColor(red: 1.0, green: 0.98, blue: 0.5, alpha: 1.0) // 亮黄色 - 调整以匹配新的基础黄色
-        case .purple: return UIColor(red: 1.0, green: 0.4, blue: 1.0, alpha: 1.0)
+        case .red: return UIColor(red: 1.0, green: 0.4, blue: 0.4, alpha: 1.0)
+        case .green: return UIColor(red: 0.3, green: 1.0, blue: 0.4, alpha: 1.0)
+        case .blue: return UIColor(red: 0.4, green: 0.7, blue: 1.0, alpha: 1.0)
+        case .yellow: return UIColor(red: 1.0, green: 1.0, blue: 0.5, alpha: 1.0)
+        case .purple: return UIColor(red: 1.0, green: 0.5, blue: 1.0, alpha: 1.0)
         case .cyan: return UIColor(red: 0.4, green: 1.0, blue: 1.0, alpha: 1.0)
         case .orange: return UIColor(red: 1.0, green: 0.7, blue: 0.3, alpha: 1.0)
-        case .white: return UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-        // 新增4个颜色的亮色版本
-        case .pink: return UIColor(red: 1.0, green: 0.4, blue: 0.7, alpha: 1.0) // 亮粉色
-        case .gold: return UIColor(red: 1.0, green: 0.9, blue: 0.4, alpha: 1.0) // 亮金色
-        case .coral: return UIColor(red: 1.0, green: 0.6, blue: 0.5, alpha: 1.0) // 亮珊瑚色
-        case .teal: return UIColor(red: 0.3, green: 0.9, blue: 0.9, alpha: 1.0) // 亮青绿色
+        case .white: return UIColor(red: 0.9, green: 0.4, blue: 1.0, alpha: 1.0) // 改为紫色
+        // 最后四个的亮色版本
+        case .pink: return UIColor(red: 1.0, green: 0.5, blue: 0.8, alpha: 1.0) // 粉紫渐变终点
+        case .gold: return UIColor(red: 1.0, green: 0.85, blue: 0.3, alpha: 1.0) // 橙金渐变终点
+        case .coral: return UIColor(red: 1.0, green: 0.5, blue: 0.55, alpha: 1.0) // 红粉渐变终点
+        case .teal: return UIColor(red: 0.3, green: 0.9, blue: 0.9, alpha: 1.0) // 彩色渐变终点
+        }
+    }
+
+    // 获取渐变颜色数组（仅用于最后四个）
+    var gradientColors: [UIColor]? {
+        switch self {
+        case .pink:
+            // 粉紫渐变
+            return [
+                UIColor(red: 1.0, green: 0.2, blue: 0.6, alpha: 1.0),  // 粉色
+                UIColor(red: 0.8, green: 0.3, blue: 1.0, alpha: 1.0)   // 紫色
+            ]
+        case .gold:
+            // 橙金渐变
+            return [
+                UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0),  // 橙色
+                UIColor(red: 1.0, green: 0.85, blue: 0.3, alpha: 1.0)  // 金色
+            ]
+        case .coral:
+            // 红粉渐变
+            return [
+                UIColor(red: 1.0, green: 0.2, blue: 0.3, alpha: 1.0),  // 红色
+                UIColor(red: 1.0, green: 0.5, blue: 0.6, alpha: 1.0)   // 粉色
+            ]
+        case .teal:
+            // 彩虹渐变（过渡自然）
+            return [
+                UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0),  // 红
+                UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0),  // 橙
+                UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0),  // 黄
+                UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0),  // 绿
+                UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0),  // 蓝
+                UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0)   // 紫
+            ]
+        default:
+            return nil
         }
     }
 }
@@ -59,6 +95,10 @@ class LinearBorderView: UIView {
     private var innerBorderLayer: CAShapeLayer?
     private var outerGlowLayers: [CAShapeLayer] = []
     private var innerGlowLayers: [CAShapeLayer] = []
+    
+    // 渐变边框支持
+    private var outerGradientLayer: CAGradientLayer?
+    private var innerGradientLayer: CAGradientLayer?
     
     // 圆点相关属性
     private var dotLayers: [CAShapeLayer] = []
@@ -105,6 +145,12 @@ class LinearBorderView: UIView {
         innerGlowLayers.forEach { $0.removeFromSuperlayer() }
         outerGlowLayers.removeAll()
         innerGlowLayers.removeAll()
+        
+        // 清除渐变层
+        outerGradientLayer?.removeFromSuperlayer()
+        innerGradientLayer?.removeFromSuperlayer()
+        outerGradientLayer = nil
+        innerGradientLayer = nil
         
         let bounds = self.bounds
         
@@ -189,48 +235,138 @@ class LinearBorderView: UIView {
         // 外层虚线边框
         let outerRect = bounds.insetBy(dx: outerInset, dy: outerInset)
         let outerPath = UIBezierPath(roundedRect: outerRect, cornerRadius: outerCornerRadius)
-        
-        // 外层边框 - 第一层发光
-        let outerGlow1 = CAShapeLayer()
-        outerGlow1.path = outerPath.cgPath
-        outerGlow1.fillColor = UIColor.clear.cgColor
-        outerGlow1.strokeColor = style.color.cgColor
-        outerGlow1.lineWidth = outerGlow1Width
-        outerGlow1.lineDashPattern = outerDashPattern
-        outerGlow1.opacity = outerGlowOpacity
-        layer.addSublayer(outerGlow1)
-        outerGlowLayers.append(outerGlow1)
-        
-        // 外层边框 - 主边框（使用调整后的颜色）
-        outerBorderLayer = CAShapeLayer()
-        outerBorderLayer!.path = outerPath.cgPath
-        outerBorderLayer!.fillColor = UIColor.clear.cgColor
-        outerBorderLayer!.strokeColor = getAdjustedOuterBorderColor().cgColor  // 使用调整后的颜色
-        outerBorderLayer!.lineWidth = outerLineWidth
-        outerBorderLayer!.lineDashPattern = outerDashPattern
-        layer.addSublayer(outerBorderLayer!)
-        
-        // 最内层实线边框 - 使用亮色
-        let innerRect = bounds.insetBy(dx: innerInset, dy: innerInset)
-        let innerPath = UIBezierPath(roundedRect: innerRect, cornerRadius: innerCornerRadius)
-        
-        // 最内边框 - 第一层发光
-        let innerGlow1 = CAShapeLayer()
-        innerGlow1.path = innerPath.cgPath
-        innerGlow1.fillColor = UIColor.clear.cgColor
-        innerGlow1.strokeColor = style.brightColor.cgColor
-        innerGlow1.lineWidth = innerGlow1Width
-        innerGlow1.opacity = innerGlowOpacity
-        layer.addSublayer(innerGlow1)
-        innerGlowLayers.append(innerGlow1)
-        
-        // 最内边框 - 主边框（使用亮色）
-        innerBorderLayer = CAShapeLayer()
-        innerBorderLayer!.path = innerPath.cgPath
-        innerBorderLayer!.fillColor = UIColor.clear.cgColor
-        innerBorderLayer!.strokeColor = style.brightColor.cgColor
-        innerBorderLayer!.lineWidth = innerLineWidth
-        layer.addSublayer(innerBorderLayer!)
+
+        // 检查是否需要渐变
+        if let gradientColors = style.gradientColors {
+            // 使用渐变边框（最后四个样式）
+            // 外层边框 - 第一层发光
+            let outerGlow1 = CAShapeLayer()
+            outerGlow1.path = outerPath.cgPath
+            outerGlow1.fillColor = UIColor.clear.cgColor
+            outerGlow1.strokeColor = gradientColors[0].cgColor
+            outerGlow1.lineWidth = outerGlow1Width
+            outerGlow1.lineDashPattern = outerDashPattern
+            outerGlow1.opacity = outerGlowOpacity
+            layer.addSublayer(outerGlow1)
+            outerGlowLayers.append(outerGlow1)
+
+            // 外层边框 - 渐变主边框
+            createGradientBorder(
+                path: outerPath,
+                colors: gradientColors,
+                lineWidth: outerLineWidth,
+                dashPattern: outerDashPattern,
+                isOuter: true
+            )
+
+            // 内层边框
+            let innerRect = bounds.insetBy(dx: innerInset, dy: innerInset)
+            let innerPath = UIBezierPath(roundedRect: innerRect, cornerRadius: innerCornerRadius)
+
+            // 最内边框 - 第一层发光
+            let innerGlow1 = CAShapeLayer()
+            innerGlow1.path = innerPath.cgPath
+            innerGlow1.fillColor = UIColor.clear.cgColor
+            innerGlow1.strokeColor = gradientColors.last!.cgColor
+            innerGlow1.lineWidth = innerGlow1Width
+            innerGlow1.opacity = innerGlowOpacity
+            layer.addSublayer(innerGlow1)
+            innerGlowLayers.append(innerGlow1)
+
+            // 最内边框 - 渐变主边框
+            createGradientBorder(
+                path: innerPath,
+                colors: gradientColors,
+                lineWidth: innerLineWidth,
+                dashPattern: nil,
+                isOuter: false
+            )
+        } else {
+            // 使用普通单色边框（前8个样式）
+            // 外层边框 - 第一层发光
+            let outerGlow1 = CAShapeLayer()
+            outerGlow1.path = outerPath.cgPath
+            outerGlow1.fillColor = UIColor.clear.cgColor
+            outerGlow1.strokeColor = style.color.cgColor
+            outerGlow1.lineWidth = outerGlow1Width
+            outerGlow1.lineDashPattern = outerDashPattern
+            outerGlow1.opacity = outerGlowOpacity
+            layer.addSublayer(outerGlow1)
+            outerGlowLayers.append(outerGlow1)
+
+            // 外层边框 - 主边框（使用调整后的颜色）
+            outerBorderLayer = CAShapeLayer()
+            outerBorderLayer!.path = outerPath.cgPath
+            outerBorderLayer!.fillColor = UIColor.clear.cgColor
+            outerBorderLayer!.strokeColor = getAdjustedOuterBorderColor().cgColor
+            outerBorderLayer!.lineWidth = outerLineWidth
+            outerBorderLayer!.lineDashPattern = outerDashPattern
+            layer.addSublayer(outerBorderLayer!)
+
+            // 最内层实线边框 - 使用亮色
+            let innerRect = bounds.insetBy(dx: innerInset, dy: innerInset)
+            let innerPath = UIBezierPath(roundedRect: innerRect, cornerRadius: innerCornerRadius)
+
+            // 最内边框 - 第一层发光
+            let innerGlow1 = CAShapeLayer()
+            innerGlow1.path = innerPath.cgPath
+            innerGlow1.fillColor = UIColor.clear.cgColor
+            innerGlow1.strokeColor = style.brightColor.cgColor
+            innerGlow1.lineWidth = innerGlow1Width
+            innerGlow1.opacity = innerGlowOpacity
+            layer.addSublayer(innerGlow1)
+            innerGlowLayers.append(innerGlow1)
+
+            // 最内边框 - 主边框（使用亮色）
+            innerBorderLayer = CAShapeLayer()
+            innerBorderLayer!.path = innerPath.cgPath
+            innerBorderLayer!.fillColor = UIColor.clear.cgColor
+            innerBorderLayer!.strokeColor = style.brightColor.cgColor
+            innerBorderLayer!.lineWidth = innerLineWidth
+            layer.addSublayer(innerBorderLayer!)
+        }
+    }
+
+    // 创建渐变边框
+    private func createGradientBorder(
+        path: UIBezierPath,
+        colors: [UIColor],
+        lineWidth: CGFloat,
+        dashPattern: [NSNumber]?,
+        isOuter: Bool
+    ) {
+        // 创建形状层作为遮罩
+        let shapeLayer = CAShapeLayer()
+        shapeLayer.path = path.cgPath
+        shapeLayer.fillColor = UIColor.clear.cgColor
+        shapeLayer.strokeColor = UIColor.white.cgColor
+        shapeLayer.lineWidth = lineWidth
+        if let dashPattern = dashPattern {
+            shapeLayer.lineDashPattern = dashPattern
+        }
+
+        // 创建渐变层
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = bounds
+
+        // 设置渐变颜色
+        gradientLayer.colors = colors.map { $0.cgColor }
+
+        // 设置渐变方向（从左上到右下，沿边框环绕）
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 1)
+
+        // 使用形状层作为遮罩
+        gradientLayer.mask = shapeLayer
+
+        layer.addSublayer(gradientLayer)
+
+        // 保存引用
+        if isOuter {
+            outerGradientLayer = gradientLayer
+        } else {
+            innerGradientLayer = gradientLayer
+        }
     }
     
     // 设置中间圆点矩形
