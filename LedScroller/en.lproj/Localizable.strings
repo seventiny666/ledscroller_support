@@ -35,6 +35,7 @@
 "rate" = "Rate App";
 "share" = "Share";
 "restorePurchase" = "Restore Purchase";
+"later" = "Later";
 
 /* VIP Subscription */
 "vipTitle" = "Unlock VIP Membership";

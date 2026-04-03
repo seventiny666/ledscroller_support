@@ -34,7 +34,8 @@ class LEDSquareViewController: UIViewController {
     
     private func setupUI() {
         title = "LED广场"
-        view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 统一为纯黑色
+        // 设置渐变背景
+        setupGradientBackground()
         
         // 确保导航栏样式正确
         navigationController?.navigationBar.prefersLargeTitles = false
@@ -70,7 +71,34 @@ class LEDSquareViewController: UIViewController {
             collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
     }
-    
+
+    private func setupGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        // linear-gradient(180deg, #100A24 0%, #04030B 100%)
+        gradientLayer.colors = [
+            UIColor(red: 0x10/255.0, green: 0x0A/255.0, blue: 0x24/255.0, alpha: 1.0).cgColor, // #100A24
+            UIColor(red: 0x04/255.0, green: 0x03/255.0, blue: 0x0B/255.0, alpha: 1.0).cgColor  // #04030B
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0) // 顶部
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)   // 底部
+        gradientLayer.frame = view.bounds
+        gradientLayer.name = "gradientBackground"
+
+        // 移除旧的渐变层
+        view.layer.sublayers?.removeAll { $0.name == "gradientBackground" }
+
+        // 插入到最底层
+        view.layer.insertSublayer(gradientLayer, at: 0)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 更新渐变层frame
+        if let gradientLayer = view.layer.sublayers?.first(where: { $0.name == "gradientBackground" }) as? CAGradientLayer {
+            gradientLayer.frame = view.bounds
+        }
+    }
+
     private func loadData() {
         ledItems = LEDDataManager.shared.loadItems()
         collectionView.reloadData()

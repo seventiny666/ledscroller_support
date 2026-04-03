@@ -588,9 +588,20 @@ import StoreKit
         becomeMemberButton.setTitle("becomeMember".localized, for: .normal)
         becomeMemberButton.setTitleColor(.white, for: .normal)
         becomeMemberButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
-        // Match the subscription page primary CTA gradient (use the left/orange stop).
-        becomeMemberButton.backgroundColor = UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0)
+        // 使用渐变背景（与设置页面订阅按钮一致）
+        becomeMemberButton.backgroundColor = .clear
         becomeMemberButton.layer.cornerRadius = 25
+        // 添加渐变层
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.6, blue: 0.0, alpha: 1.0).cgColor,  // 橙色
+            UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1.0).cgColor   // 粉色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0)
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: 260, height: 50)
+        gradientLayer.cornerRadius = 25
+        becomeMemberButton.layer.insertSublayer(gradientLayer, at: 0)
         becomeMemberButton.addTarget(self, action: #selector(becomeMemberTapped), for: .touchUpInside)
         becomeMemberButton.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(becomeMemberButton)
@@ -3930,6 +3941,29 @@ class TemplateSquareViewController: UIViewController {
             segmentedControl.layer.cornerRadius = segmentedControl.bounds.height / 2
             segmentedControl.layer.masksToBounds = true
         }
+        // 更新渐变层frame
+        if let gradientLayer = view.layer.sublayers?.first(where: { $0.name == "gradientBackground" }) as? CAGradientLayer {
+            gradientLayer.frame = view.bounds
+        }
+    }
+
+    private func setupGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        // linear-gradient(180deg, #100A24 0%, #04030B 100%)
+        gradientLayer.colors = [
+            UIColor(red: 0x10/255.0, green: 0x0A/255.0, blue: 0x24/255.0, alpha: 1.0).cgColor, // #100A24
+            UIColor(red: 0x04/255.0, green: 0x03/255.0, blue: 0x0B/255.0, alpha: 1.0).cgColor  // #04030B
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0) // 顶部
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)   // 底部
+        gradientLayer.frame = view.bounds
+        gradientLayer.name = "gradientBackground"
+
+        // 移除旧的渐变层
+        view.layer.sublayers?.removeAll { $0.name == "gradientBackground" }
+
+        // 插入到最底层
+        view.layer.insertSublayer(gradientLayer, at: 0)
     }
     
     private func updateCategories() {
@@ -3944,15 +3978,16 @@ class TemplateSquareViewController: UIViewController {
     }
     
     private func setupUI() {
-        view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1) // 纯黑背景
-        
+        // 设置渐变背景
+        setupGradientBackground()
+
         // 隐藏导航栏标题
         title = ""
-        
-        // 设置导航栏样式 - 统一为纯黑色
+
+        // 设置导航栏样式 - 使用顶部渐变色
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 纯黑背景
+        appearance.backgroundColor = UIColor(red: 0.063, green: 0.039, blue: 0.141, alpha: 1.0) // #100A24 顶部渐变色
         appearance.shadowColor = .clear // 移除阴影
         
         navigationController?.navigationBar.standardAppearance = appearance
@@ -4639,6 +4674,7 @@ class TemplateCategoryCell: UITableViewCell {
             var borderStyle: Int? = nil
             var linearBorderStyle: Int? = nil
             var ledBorderImageIndex: Int? = nil // LED边框图片索引
+            var lightBoardStyle: Int? = nil // 灯牌边框样式索引
             var fontName = "PingFangSC-Semibold" // 默认粗体字体
             var textColor = "#FFFFFF" // 默认白色
             
@@ -4669,8 +4705,12 @@ class TemplateCategoryCell: UITableViewCell {
                     // neon_8 (Shine On): LED Border 第二行第二个
                     ledBorderImageIndex = 5 // LED Border 第二行第二个 (索引5)
                 } else if i == 9 {
-                    // neon_9 (Dream Big): 线性边框（VIP）
-                    linearBorderStyle = 0 // red
+                    // neon_9 (Dream Big): 灯牌边框第三行第四个（VIP）+ cc1背景 + dot字体
+                    lightBoardStyle = 11 // 灯牌边框第三行第四个 (style12, 索引11)
+                    fontName = LEDFontRenderer.dotMatrixFontName // dot字体
+                } else if i == 10 {
+                    // neon_10 (Live Free): 线性边框第二行第二个（VIP）
+                    linearBorderStyle = 5 // 线性边框第二行第二个 (第一行: 0-3, 第二行: 4-7)
                 } else if i == 18 {
                     // neon_18 (Be You): 线性边框（VIP） + raster 字体
                     fontName = LEDFontRenderer.rasterFontName
@@ -4689,14 +4729,20 @@ class TemplateCategoryCell: UITableViewCell {
             
             // neon_4 和 led_4 使用 led_1 背景（led_2图片本身带有边框效果，不合适）
             // neon_5 (Good Vibes) 使用 cc1 背景（LED Screen 第一行第一个）
+            // neon_4 (I LOVE U) 使用 cc4 背景（LED Screen 第一行第四个）
             // neon_6 (Be Happy) 使用 cc8 背景（LED Screen 第二行最后一个）
+            // neon_9 (Dream Big) 使用 cc1 背景（LED Screen 第一行第一个）
             let actualImageName: String?
-            if (category == "led" && i == 4) || (category == "neon" && i == 4) {
+            if category == "led" && i == 4 {
                 actualImageName = "led_1" // 使用 led_1 替代 led_2（led_2图片本身带有边框效果）
+            } else if category == "neon" && i == 4 {
+                actualImageName = "cc4" // I LOVE U 使用 cc4 背景（LED Screen 第一行第四个）
             } else if category == "neon" && i == 5 {
                 actualImageName = "cc1" // Good Vibes 使用 cc1 背景
             } else if category == "neon" && i == 6 {
                 actualImageName = "cc8" // Be Happy 使用 cc8 背景
+            } else if category == "neon" && i == 9 {
+                actualImageName = "cc1" // Dream Big 使用 cc1 背景
             } else {
                 actualImageName = imageName
             }
@@ -4713,7 +4759,7 @@ class TemplateCategoryCell: UITableViewCell {
                 speed: speed,
                 fontName: fontName,
                 borderStyle: borderStyle,
-                lightBoardStyle: nil,
+                lightBoardStyle: lightBoardStyle,
                 linearBorderStyle: linearBorderStyle,
                 ledBorderImageIndex: ledBorderImageIndex
             )
@@ -4785,11 +4831,11 @@ extension TemplateCategoryCell: UICollectionViewDelegate, UICollectionViewDataSo
         // Required = top(image) + image(16:9) + spacing + button + bottom.
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
         if isPad && currentTab == .popular {
-            let height = width * (9.0/16.0) + (18 + 28 + 50 + 34)
+            let height = width * (9.0/16.0) + (18 + 28 + 50 + 34) - 10 // 减少10pt
             return CGSize(width: width, height: height)
         }
 
-        let height = width * 0.95 // 保持宽高比
+        let height = width * 0.95 - 10 // 保持宽高比，减少10pt
         return CGSize(width: width, height: height)
     }
     
@@ -4824,7 +4870,7 @@ class TemplateItemCell: UICollectionViewCell {
     
     private func setupUI() {
         // 容器
-        containerView.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.18)
+        containerView.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.12) // 透明度改为0.12
         containerView.layer.cornerRadius = 16
         containerView.clipsToBounds = false // 改为false，避免裁剪底部内容
         containerView.translatesAutoresizingMaskIntoConstraints = false
@@ -4871,44 +4917,28 @@ class TemplateItemCell: UICollectionViewCell {
         imageView.addSubview(overlayTextLabel)
         
         // 标题（动画模版用）
-        titleLabel.textColor = .white
+        titleLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         titleLabel.font = .systemFont(ofSize: titleFontSize, weight: .medium)
         titleLabel.textAlignment = .center
         titleLabel.numberOfLines = 1
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(titleLabel)
-        
-        // 按钮容器
-        buttonStack.axis = .horizontal
-        buttonStack.spacing = 8
-        buttonStack.distribution = .fillEqually
-        buttonStack.translatesAutoresizingMaskIntoConstraints = false
-        containerView.addSubview(buttonStack)
-        
-        // Create/edit template button (opens the editor/creation flow).
+
+        // 编辑文字标签（替换原来的编辑按钮）
         tryButton.setTitle("edit".localized, for: .normal)
         tryButton.setTitleColor(.white, for: .normal)
-        tryButton.titleLabel?.font = .systemFont(ofSize: tryButtonFontSize, weight: .medium)
-        tryButton.backgroundColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 0.3)
-        tryButton.layer.cornerRadius = buttonHeight / 2
-        tryButton.layer.masksToBounds = true
-        tryButton.layer.borderWidth = 1
-        tryButton.layer.borderColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0).cgColor
+        tryButton.titleLabel?.font = .systemFont(ofSize: titleFontSize, weight: .medium)
+        tryButton.backgroundColor = .clear // 透明背景
+        tryButton.layer.cornerRadius = 0
+        tryButton.layer.masksToBounds = false
+        tryButton.layer.borderWidth = 0
         tryButton.addTarget(self, action: #selector(tryButtonTapped), for: .touchUpInside)
-        buttonStack.addArrangedSubview(tryButton)
-        
-        // 预览模版按钮（胶囊形状）
-        previewButton.setTitle("preview".localized, for: .normal)
-        previewButton.setTitleColor(.white, for: .normal)
-        previewButton.titleLabel?.font = .systemFont(ofSize: previewFontSize, weight: .medium)
-        previewButton.backgroundColor = UIColor.systemPink.withAlphaComponent(0.3)
-        previewButton.layer.cornerRadius = buttonHeight / 2
-        previewButton.layer.masksToBounds = true
-        previewButton.layer.borderWidth = 1
-        previewButton.layer.borderColor = UIColor.systemPink.cgColor
-        previewButton.addTarget(self, action: #selector(previewButtonTapped), for: .touchUpInside)
-        buttonStack.addArrangedSubview(previewButton)
-        
+        tryButton.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(tryButton) // 必须添加到视图层级
+
+        // 预览模版按钮 - 隐藏，不再使用
+        previewButton.isHidden = true
+
         // VIP标签（右上角）
         vipBadgeView.translatesAutoresizingMaskIntoConstraints = false
         vipBadgeView.isHidden = true // 默认隐藏
@@ -4919,35 +4949,33 @@ class TemplateItemCell: UICollectionViewCell {
         // iPad cover image needs more padding to match the larger card proportions.
         let imageTopInset: CGFloat = isPad ? 18 : 12
         let imageSideInset: CGFloat = isPad ? 18 : 9
-        
-        let buttonTopConstraint = buttonStack.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: buttonTopSpacing)
 
         NSLayoutConstraint.activate([
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
-            
+
             imageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: imageTopInset),
             imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: imageSideInset),
             imageView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -imageSideInset),
             imageView.heightAnchor.constraint(equalTo: imageView.widthAnchor, multiplier: 9.0/16.0),
-            
+
             overlayTextLabel.centerYAnchor.constraint(equalTo: imageView.centerYAnchor),
             overlayTextLabel.leadingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: 8),
             overlayTextLabel.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: -8),
-            
+
             titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
             titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
-            
-            buttonTopConstraint,
-            buttonStack.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 40),
-            buttonStack.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -40),
-            buttonStack.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -buttonBottomInset),
-            buttonStack.heightAnchor.constraint(equalToConstant: buttonHeight),
-            
+
+            // 编辑文字标签约束（参照 titleLabel 样式）
+            tryButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+            tryButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
+            tryButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
+            tryButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
+
             // VIP标签约束（放在contentView上，保证压过所有封面/边框视图）
             vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: isPad ? 12 : 8),
             vipBadgeView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -12 : -8),
@@ -5334,20 +5362,17 @@ class TemplateItemCell: UICollectionViewCell {
                 }
                 overlayTextLabel.isHidden = false
             }
-            titleLabel.isHidden = true
-            buttonStack.isHidden = false
-            tryButton.isHidden = false
-            previewButton.isHidden = true
-            
-            // 调整按钮高度
-            buttonStack.arrangedSubviews.forEach { $0.removeFromSuperview() }
-            buttonStack.addArrangedSubview(tryButton)
-            
-            // 强制立即布局并更新按钮圆角
-            layoutIfNeeded()
-            if tryButton.bounds.height > 0 {
-                tryButton.layer.cornerRadius = tryButton.bounds.height / 2
+            // Popular tab: 显示封面下方的文字标题，隐藏按钮
+            // 特殊处理：merry-christmas-default 显示单行 "Merry Christmas"
+            if item.id == "merry-christmas-default" {
+                titleLabel.text = "Merry Christmas"
+            } else {
+                titleLabel.text = item.text
             }
+            titleLabel.isHidden = false
+            buttonStack.isHidden = true
+            tryButton.isHidden = true
+            previewButton.isHidden = true
         } else {
             // 动画模版：默认显示标题（卡片下方），隐藏按钮和封面文字
             overlayTextLabel.isHidden = true

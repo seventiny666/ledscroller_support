@@ -78,6 +78,11 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         }
         return true
     }
+
+    // 禁用TabBar切换时的交互动画
+    func tabBarController(_ tabBarController: UITabBarController, interactionControllerFor animationController: UIViewControllerAnimatedTransitioning) -> UIViewControllerInteractiveTransitioning? {
+        return nil
+    }
     
     // 自定义TabBar切换动画 - 返回nil禁用过渡动画
     func tabBarController(_ tabBarController: UITabBarController, animationControllerForTransitionFrom fromVC: UIViewController, to toVC: UIViewController) -> UIViewControllerAnimatedTransitioning? {
@@ -135,6 +140,13 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
         // 禁用iOS 17+的新动画效果和点击高亮
         if #available(iOS 17.0, *) {
             tabBar.layer.allowsGroupOpacity = false
+        }
+
+        // 禁用iOS 17.4+的胶囊高亮效果
+        if #available(iOS 17.4, *) {
+            for item in tabBar.items ?? [] {
+                item.isSpringLoaded = false
+            }
         }
         
         print("🔍 TabBar: setupTabBar completed")

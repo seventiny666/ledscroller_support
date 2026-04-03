@@ -31,7 +31,7 @@ enum SettingItem {
         case .share: return "share".localized
         }
     }
-    
+
     var icon: String {
         switch self {
         case .language: return "globe"
@@ -41,6 +41,18 @@ enum SettingItem {
         case .feedback: return "envelope"
         case .rate: return "star"
         case .share: return "square.and.arrow.up"
+        }
+    }
+
+    var iconColor: UIColor {
+        switch self {
+        case .language: return UIColor(red: 0.4, green: 0.6, blue: 1.0, alpha: 1.0)      // 蓝色 - 地球
+        case .aboutUs: return UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)       // 浅蓝色 - 信息
+        case .version: return UIColor(red: 0.5, green: 0.5, blue: 0.6, alpha: 1.0)       // 灰紫色 - 版本
+        case .restorePurchase: return UIColor(red: 1.0, green: 0.6, blue: 0.4, alpha: 1.0) // 橙色 - 恢复
+        case .feedback: return UIColor(red: 1.0, green: 0.4, blue: 0.6, alpha: 1.0)      // 粉色 - 反馈
+        case .rate: return UIColor(red: 1.0, green: 0.8, blue: 0.2, alpha: 1.0)          // 金黄色 - 星星
+        case .share: return UIColor(red: 0.4, green: 0.9, blue: 0.6, alpha: 1.0)         // 绿色 - 分享
         }
     }
 }
@@ -151,14 +163,15 @@ class SettingsViewController: UIViewController {
     
     private func setupUI() {
         title = "settings".localized
-        view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1)
+        // 设置渐变背景
+        setupGradientBackground()
         
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
 
-        // 设置导航栏样式 - 统一为纯黑色
+        // 设置导航栏样式 - 透明背景让渐变显示
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 纯黑背景
+        appearance.backgroundColor = UIColor(red: 0.063, green: 0.039, blue: 0.141, alpha: 1.0) // #100A24 顶部渐变色
 
         if isPad {
             appearance.titleTextAttributes = [
@@ -200,7 +213,7 @@ class SettingsViewController: UIViewController {
             scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
             
-            stackView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 80), // 增加顶部间距，让内容居中
+            stackView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 60), // 减少20pt，从80改为60
             stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
             stackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
             stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -80), // 增加底部间距
@@ -213,17 +226,44 @@ class SettingsViewController: UIViewController {
             stackView.addArrangedSubview(card)
         }
     }
+
+    private func setupGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        // linear-gradient(180deg, #100A24 0%, #04030B 100%)
+        gradientLayer.colors = [
+            UIColor(red: 0x10/255.0, green: 0x0A/255.0, blue: 0x24/255.0, alpha: 1.0).cgColor, // #100A24
+            UIColor(red: 0x04/255.0, green: 0x03/255.0, blue: 0x0B/255.0, alpha: 1.0).cgColor  // #04030B
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0) // 顶部
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)   // 底部
+        gradientLayer.frame = view.bounds
+        gradientLayer.name = "gradientBackground"
+
+        // 移除旧的渐变层
+        view.layer.sublayers?.removeAll { $0.name == "gradientBackground" }
+
+        // 插入到最底层
+        view.layer.insertSublayer(gradientLayer, at: 0)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 更新渐变层frame
+        if let gradientLayer = view.layer.sublayers?.first(where: { $0.name == "gradientBackground" }) as? CAGradientLayer {
+            gradientLayer.frame = view.bounds
+        }
+    }
     
     private func createSettingCard(for item: SettingItem) -> UIView {
         let card = UIView()
-        card.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1)
+        card.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.12) // 透明度改为0.12
         card.layer.cornerRadius = 16
         card.translatesAutoresizingMaskIntoConstraints = false
-        
-        // 图标
+
+        // 图标 - 使用各自的配色
         let iconImageView = UIImageView()
         iconImageView.image = UIImage(systemName: item.icon)
-        iconImageView.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
+        iconImageView.tintColor = item.iconColor
         iconImageView.contentMode = .scaleAspectFit
         iconImageView.translatesAutoresizingMaskIntoConstraints = false
         card.addSubview(iconImageView)
@@ -241,9 +281,12 @@ class SettingsViewController: UIViewController {
         // 版本号（仅版本项显示）
         if case .version = item {
             let versionLabel = UILabel()
-            versionLabel.text = "1.0.0"
-            versionLabel.textColor = .gray
-            versionLabel.font = .systemFont(ofSize: isPad ? 18 : 14)
+            // 动态获取版本号
+            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2.6"
+            versionLabel.text = appVersion
+            // 彩色渐变文字效果
+            versionLabel.textColor = UIColor(red: 0.56, green: 0.93, blue: 0.90, alpha: 1.0) // #8FFFE6 青色
+            versionLabel.font = .systemFont(ofSize: isPad ? 18 : 14, weight: .medium)
             versionLabel.translatesAutoresizingMaskIntoConstraints = false
             card.addSubview(versionLabel)
             
@@ -395,21 +438,16 @@ class SettingsViewController: UIViewController {
         messageLabel.translatesAutoresizingMaskIntoConstraints = false
 
         let feedbackButton = UIButton(type: .system)
-        feedbackButton.setTitle("rateSheetFeedback".localized, for: .normal)
+        feedbackButton.setTitle("later".localized, for: .normal) // 改为"下次再说"
         feedbackButton.setTitleColor(.white, for: .normal)
         feedbackButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
-        if #available(iOS 15.0, *) {
-            feedbackButton.backgroundColor = .systemCyan
-        } else {
-            feedbackButton.backgroundColor = .cyan
-        }
-        feedbackButton.layer.cornerRadius = 18
+        feedbackButton.backgroundColor = UIColor(white: 0.3, alpha: 1.0) // 灰色背景
+        feedbackButton.layer.cornerRadius = 22 // 胶囊形状
+        feedbackButton.clipsToBounds = true
         feedbackButton.translatesAutoresizingMaskIntoConstraints = false
         feedbackButton.addAction(UIAction { [weak self] _ in
             self?.dismissCustomRateAlert()
-            let vc = FeedbackViewController()
-            vc.hidesBottomBarWhenPushed = true
-            self?.navigationController?.pushViewController(vc, animated: true)
+            // 直接关闭，不跳转
         }, for: .touchUpInside)
 
         let rateButton = UIButton(type: .system)
@@ -417,7 +455,8 @@ class SettingsViewController: UIViewController {
         rateButton.setTitleColor(.white, for: .normal)
         rateButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .semibold)
         rateButton.backgroundColor = .systemPink
-        rateButton.layer.cornerRadius = 18
+        rateButton.layer.cornerRadius = 22 // 胶囊形状
+        rateButton.clipsToBounds = true
         rateButton.translatesAutoresizingMaskIntoConstraints = false
         rateButton.addAction(UIAction { [weak self] _ in
             self?.dismissCustomRateAlert()
@@ -468,8 +507,8 @@ class SettingsViewController: UIViewController {
             buttonStack.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 20),
             buttonStack.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             buttonStack.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
-            buttonStack.heightAnchor.constraint(equalToConstant: 44),
-            buttonStack.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -20),
+            buttonStack.heightAnchor.constraint(equalToConstant: 44), // 胶囊按钮高度
+            buttonStack.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -30), // 底部增加10pt (原-20改为-30)
         ])
     }
 

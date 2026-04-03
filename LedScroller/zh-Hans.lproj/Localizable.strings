@@ -39,6 +39,7 @@
 "rate" = "评分";
 "share" = "分享";
 "restorePurchase" = "恢复购买";
+"later" = "下次再说";
 
 /* VIP Subscription */
 "vipTitle" = "解锁 VIP 会员";

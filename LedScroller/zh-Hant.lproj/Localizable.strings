@@ -39,6 +39,7 @@
 "rate" = "評分";
 "share" = "分享";
 "restorePurchase" = "恢復購買";
+"later" = "下次再說";
 
 /* VIP Status Messages */
 "vipMember" = "VIP會員";

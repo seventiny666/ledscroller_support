@@ -92,10 +92,10 @@ class LightBoardBorderView: UIView {
             safeInset = 20
             cornerRadius = 40
         case .cardCover:
-            dotSize = 10
-            borderWidth = 16  // 边框宽度
+            dotSize = 6 // 圆点直径减小4pt (从10改为6)
+            borderWidth = 12 // 边框宽度减小4pt (从16改为12)
             safeInset = 12
-            cornerRadius = 12
+            cornerRadius = 8 // 圆角减小4pt (从12改为8)
         }
         
         // 计算边框路径
@@ -106,40 +106,40 @@ class LightBoardBorderView: UIView {
         
         // 绘制边框
         if currentStyle == .style12 {
-            // 为style12创建多段彩色边框，增加更多颜色段让渐变更自然
+            // 为style12创建彩虹渐变边框
+            // 使用更多的颜色段和HSL色相环实现更自然的过渡
             let borderPath = UIBezierPath(roundedRect: borderRect, cornerRadius: cornerRadius)
-            
-            // 创建更多颜色段来实现自然渐变
-            let colors = [
-                UIColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 1.0), // 红
-                UIColor(red: 1.0, green: 0.2, blue: 0.0, alpha: 1.0), // 红橙
-                UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0), // 橙
-                UIColor(red: 1.0, green: 0.8, blue: 0.0, alpha: 1.0), // 橙黄
-                UIColor(red: 1.0, green: 1.0, blue: 0.0, alpha: 1.0), // 黄
-                UIColor(red: 0.5, green: 1.0, blue: 0.0, alpha: 1.0), // 黄绿
-                UIColor(red: 0.0, green: 1.0, blue: 0.0, alpha: 1.0), // 绿
-                UIColor(red: 0.0, green: 1.0, blue: 0.5, alpha: 1.0), // 绿青
-                UIColor(red: 0.0, green: 1.0, blue: 1.0, alpha: 1.0), // 青
-                UIColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0), // 青蓝
-                UIColor(red: 0.0, green: 0.0, blue: 1.0, alpha: 1.0), // 蓝
-                UIColor(red: 0.5, green: 0.0, blue: 1.0, alpha: 1.0), // 蓝紫
-                UIColor(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0), // 紫红
-                UIColor(red: 1.0, green: 0.0, blue: 0.5, alpha: 1.0)  // 回到红色
-            ]
-            
-            // 创建多个边框段来模拟彩色效果
-            for (index, color) in colors.enumerated() {
+
+            // 使用HSL色相环创建彩虹色 - 更自然的过渡
+            // 每15度一个颜色点，共24个点，让过渡更平滑
+            let colorCount = 24
+            var rainbowColors: [UIColor] = []
+            for i in 0...colorCount {
+                let hue = CGFloat(i) / CGFloat(colorCount)
+                let color = UIColor(hue: hue, saturation: 1.0, brightness: 1.0, alpha: 1.0)
+                rainbowColors.append(color)
+            }
+
+            // 创建多个边框段，每段使用渐变色
+            let segmentCount = rainbowColors.count - 1
+            for i in 0..<segmentCount {
                 let borderLayer = CAShapeLayer()
                 borderLayer.path = borderPath.cgPath
-                borderLayer.strokeColor = color.cgColor
+                borderLayer.strokeColor = rainbowColors[i].cgColor
                 borderLayer.fillColor = UIColor.clear.cgColor
                 borderLayer.lineWidth = borderWidth
-                
+
                 // 设置每段的stroke范围
-                let segmentLength = 1.0 / CGFloat(colors.count)
-                borderLayer.strokeStart = CGFloat(index) * segmentLength
-                borderLayer.strokeEnd = CGFloat(index + 1) * segmentLength
-                
+                let segmentLength = 1.0 / CGFloat(segmentCount)
+                borderLayer.strokeStart = CGFloat(i) * segmentLength
+                borderLayer.strokeEnd = CGFloat(i + 1) * segmentLength
+
+                // 添加轻微的发光效果
+                borderLayer.shadowColor = rainbowColors[i].cgColor
+                borderLayer.shadowRadius = 2
+                borderLayer.shadowOpacity = 0.5
+                borderLayer.shadowOffset = .zero
+
                 layer.addSublayer(borderLayer)
             }
         } else {

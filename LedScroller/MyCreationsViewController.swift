@@ -36,12 +36,13 @@ class MyCreationsViewController: UIViewController {
 
     private func setupUI() {
         title = "creations".localized // 从"创作"改为"我的创作"
-        view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1) // 纯黑背景
+        // 设置渐变背景
+        setupGradientBackground()
 
-        // 导航栏样式 - 统一为纯黑色
+        // 导航栏样式 - 透明背景让渐变显示
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 纯黑背景
+        appearance.backgroundColor = UIColor(red: 0.063, green: 0.039, blue: 0.141, alpha: 1.0) // #100A24 顶部渐变色
         appearance.titleTextAttributes = [
             .foregroundColor: UIColor.white,
             .font: UIFont.systemFont(ofSize: 18, weight: .semibold)
@@ -80,6 +81,33 @@ class MyCreationsViewController: UIViewController {
             tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
         ])
+    }
+
+    private func setupGradientBackground() {
+        let gradientLayer = CAGradientLayer()
+        // linear-gradient(180deg, #100A24 0%, #04030B 100%)
+        gradientLayer.colors = [
+            UIColor(red: 0x10/255.0, green: 0x0A/255.0, blue: 0x24/255.0, alpha: 1.0).cgColor, // #100A24
+            UIColor(red: 0x04/255.0, green: 0x03/255.0, blue: 0x0B/255.0, alpha: 1.0).cgColor  // #04030B
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0) // 顶部
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)   // 底部
+        gradientLayer.frame = view.bounds
+        gradientLayer.name = "gradientBackground"
+
+        // 移除旧的渐变层
+        view.layer.sublayers?.removeAll { $0.name == "gradientBackground" }
+
+        // 插入到最底层
+        view.layer.insertSublayer(gradientLayer, at: 0)
+    }
+
+    override func viewDidLayoutSubviews() {
+        super.viewDidLayoutSubviews()
+        // 更新渐变层frame
+        if let gradientLayer = view.layer.sublayers?.first(where: { $0.name == "gradientBackground" }) as? CAGradientLayer {
+            gradientLayer.frame = view.bounds
+        }
     }
 
     private func setupEmptyStateView() {
@@ -208,7 +236,7 @@ class MyCreationsViewController: UIViewController {
         toast.backgroundColor = UIColor.black.withAlphaComponent(0.8)
         toast.font = .systemFont(ofSize: 14, weight: .medium)
         toast.textAlignment = .center
-        toast.layer.cornerRadius = 8
+        toast.layer.cornerRadius = 20 // 胶囊形状（高度40的一半）
         toast.clipsToBounds = true
         toast.translatesAutoresizingMaskIntoConstraints = false
 
@@ -217,7 +245,7 @@ class MyCreationsViewController: UIViewController {
         NSLayoutConstraint.activate([
             toast.centerXAnchor.constraint(equalTo: view.centerXAnchor),
             toast.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor, constant: -50),
-            toast.widthAnchor.constraint(greaterThanOrEqualToConstant: 150),
+            toast.widthAnchor.constraint(greaterThanOrEqualToConstant: 200), // 增加最小宽度，确保大于文字内容
             toast.heightAnchor.constraint(equalToConstant: 40)
         ])
 
@@ -281,8 +309,8 @@ extension MyCreationsViewController: UITableViewDelegate, UITableViewDataSource 
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         // 19.5:9 宽高比计算 + 时间标签高度 + 优化后的边距
         let screenWidth = UIScreen.main.bounds.width
-        // backgroundCard左右边距40px,containerView在backgroundCard内左右边距14px
-        let cardWidth = screenWidth - 80 - 28 // 40*2 + 14*2
+        // backgroundCard左右边距36px,containerView在backgroundCard内左右边距14px
+        let cardWidth = screenWidth - 72 - 28 // 36*2 + 14*2
         let cardHeight = cardWidth * 9 / 19.5 // 19.5:9比例
         // backgroundCard顶部边距0 + containerView内上边距14 + 封面到时间间距8 + 时间标签高度20 + 时间到底部间距8 + backgroundCard底部间距20px
         return cardHeight + 0 + 14 + 8 + 20 + 8 + 20 // 减少时间区域上下间距,总共减少20px
@@ -501,7 +529,7 @@ class CreationTableCell: UITableViewCell {
         selectionStyle = .none
 
         // 深色圆角背景卡片(类似设置页面的卡片样式)
-        backgroundCard.backgroundColor = UIColor(red: 0x20/255.0, green: 0x1F/255.0, blue: 0x1F/255.0, alpha: 1) // #201F1F
+        backgroundCard.backgroundColor = UIColor(red: 1.0, green: 1.0, blue: 1.0, alpha: 0.12) // 透明度改为0.12
         backgroundCard.layer.cornerRadius = 16
         backgroundCard.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(backgroundCard)
@@ -566,8 +594,8 @@ class CreationTableCell: UITableViewCell {
         NSLayoutConstraint.activate([
             // backgroundCard: 顶部边距0px,紧贴内容区域
             backgroundCard.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 0), // 设为0px
-            backgroundCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 40),
-            backgroundCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -40),
+            backgroundCard.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 36), // 从40改为36，增加8pt宽度
+            backgroundCard.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -36), // 从-40改为-36，增加8pt宽度
             backgroundCard.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -20), // 卡片间距20px
 
             // containerView: 在backgroundCard内,统一使用14px边距
