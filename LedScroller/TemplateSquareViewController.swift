@@ -4767,7 +4767,6 @@ class TemplateCategoryCell: UITableViewCell {
                 actualImageName = "cc4" // 1314 使用 cc4 背景（LED Screen 第一行第四个）
             } else if category == "neon" && i == 14 {
                 actualImageName = "neon_14" // Nice Day 使用 neon_14 背景
-            }
             } else {
                 actualImageName = imageName
             }
