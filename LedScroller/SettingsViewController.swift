@@ -544,11 +544,7 @@ class SettingsViewController: UIViewController {
                 primaryButtonTitle: PurchaseManager.shared.getVIPButtonText(),
                 primaryAction: {
                     print("🔍 管理订阅按钮被点击")
-                    if #available(iOS 15.0, *) {
-                        StoreKitManager.shared.openManageSubscriptions()
-                    } else {
-                        VIPManager.shared.openManageSubscriptions()
-                    }
+                    StoreKitManager.shared.openManageSubscriptions()
                 }
             )
         } else {

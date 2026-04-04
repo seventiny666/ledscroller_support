@@ -94,10 +94,10 @@ class LightBoardBorderView: UIView {
             safeInset = 20
             cornerRadius = 40
         case .cardCover:
-            dotSize = 6 // 圆点直径减小4pt (从10改为6)
-            baseBorderWidth = 10 // 边框宽度减小6pt (从16改为10)
-            safeInset = 10 // 距离安全区减小2pt (从12改为10)
-            cornerRadius = 8 // 圆角减小4pt (从12改为8)
+            dotSize = 4 // 圆点直径减小2pt (从6改为4)
+            baseBorderWidth = 8 // 边框宽度减小2pt (从10改为8)
+            safeInset = 10 // 距离安全区
+            cornerRadius = 10 // 圆角减小4pt (从14改为10)
         }
         
         // 应用边框宽度调整
@@ -157,6 +157,8 @@ class LightBoardBorderView: UIView {
             borderLayer.strokeColor = borderColor.cgColor
             borderLayer.fillColor = UIColor.clear.cgColor
             borderLayer.lineWidth = borderWidth
+            borderLayer.lineCap = .round
+            borderLayer.lineJoin = .round
             layer.addSublayer(borderLayer)
         }
         

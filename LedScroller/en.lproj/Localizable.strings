@@ -107,6 +107,13 @@
 "freeTrialStarted" = "Free trial started! You can enjoy VIP features for 3 days.";
 "termsMessage" = "Thank you for using our app. For detailed terms of service, please visit our official website.";
 "privacyMessage" = "We value your privacy. For detailed privacy policy, please visit our official website.";
+/* Subscription Success Alert */
+"congratulationsSubscription" = "🎉 Congratulations!";
+"becomeWeeklyMember" = "Weekly Member";
+"becomeMonthlyMember" = "Monthly Member";
+"becomeYearlyMember" = "Yearly Member";
+"becomeVIPMember" = "VIP Member";
+"unlockAllLEDFeatures" = "All LED features unlocked!\nEnjoy the full creative experience.";
 "loadingProducts" = "Loading subscription options, please try again later";
 "subscriptionMember" = "Subscription Member";
 "weeklyMember" = "Weekly Member";

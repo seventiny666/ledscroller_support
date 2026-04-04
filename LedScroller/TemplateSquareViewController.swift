@@ -19,10 +19,10 @@ import StoreKit
         case lifetime
     }
     
-    // 通知名称
-    static let vipStatusDidChangeNotification = Notification.Name("VIPStatusDidChange")
-    static let purchaseDidCompleteNotification = Notification.Name("PurchaseDidComplete")
-    static let purchaseDidFailNotification = Notification.Name("PurchaseDidFail")
+    // 通知名称（与 PurchaseManager 保持一致）
+    static let vipStatusDidChangeNotification = Notification.Name("VIPStatusDidChangeNotification")
+    static let purchaseDidCompleteNotification = Notification.Name("PurchaseDidCompleteNotification")
+    static let purchaseDidFailNotification = Notification.Name("PurchaseDidFailNotification")
     
     var vipStatus: VIPStatus = .free {
         didSet {
@@ -608,9 +608,10 @@ import StoreKit
 
         subtitleLabel.text = "subscribeToUnlockAllPremiumContent".localized
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.85)
-        subtitleLabel.font = .systemFont(ofSize: 19, weight: .regular) // +4pt: 15→19
+        subtitleLabel.font = .systemFont(ofSize: 13, weight: .regular) // 字体缩小以适应宽度
         subtitleLabel.textAlignment = .center
-        subtitleLabel.numberOfLines = 1
+        subtitleLabel.numberOfLines = 2 // 改为2行确保文字完整显示
+        subtitleLabel.lineBreakMode = .byWordWrapping
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(subtitleLabel)
 
@@ -1102,15 +1103,17 @@ class VIPScrollView: UIScrollView {
     @objc private func purchaseDidComplete(_ notification: Notification) {
         print("🔍 收到购买完成通知")
         DispatchQueue.main.async {
-            if let userInfo = notification.userInfo,
+            let userInfo = notification.userInfo
+            if let userInfo = userInfo,
                let restored = userInfo["restored"] as? Bool, restored {
                 print("🔍 恢复购买成功，显示成功提示")
                 // 恢复购买成功，不自动关闭界面
-                self.showSuccessAlert(message: "restoreSuccess".localized, shouldDismiss: false)
+                self.showNeonSuccessAlert(isRestore: true, shouldDismiss: false)
             } else {
                 print("🔍 新购买成功，显示成功提示并关闭界面")
-                // 新购买成功，关闭界面
-                self.showSuccessAlert(message: "purchaseSuccess".localized, shouldDismiss: true)
+                // 从通知中获取产品ID以判断会员类型
+                let productID = userInfo?["productID"] as? String ?? ""
+                self.showNeonSuccessAlert(productID: productID, isRestore: false, shouldDismiss: true)
             }
         }
     }
@@ -1530,71 +1533,35 @@ class VIPScrollView: UIScrollView {
         optionsContainer.translatesAutoresizingMaskIntoConstraints = false
         subscriptionOptionsView.addSubview(optionsContainer)
         
-        // 创建订阅选项 - 使用实际产品价格或回退价格
+        // 创建订阅选项 - 使用 StoreKit 2 实际产品价格或回退价格
         var subscriptionOptions: [(String, String, String, Bool)] = []
-        
-        if #available(iOS 15.0, *) {
-            // StoreKit2 price display (fixed order: weekly/monthly/yearly)
-            let ids = StoreKitManager.ProductIdentifier.allCases
-            for (index, id) in ids.enumerated() {
-                let priceString = StoreKitManager.shared.product(for: id)?.displayPrice
-                    ?? (index == 0 ? "$2.99" : index == 1 ? "$7.99" : "$29.99")
 
-                let title: String
-                let subtitle: String
-                let isSelected = (index == 0)
+        // StoreKit2 price display (fixed order: weekly/monthly/yearly)
+        let ids = StoreKitManager.ProductIdentifier.allCases
+        for (index, id) in ids.enumerated() {
+            let priceString = StoreKitManager.shared.product(for: id)?.displayPrice
+                ?? (index == 0 ? "$2.99" : index == 1 ? "$7.99" : "$29.99")
 
-                switch index {
-                case 0:
-                    title = "weeklySubscription".localized
-                    subtitle = "freeTrial".localized
-                case 1:
-                    title = "monthlySubscription".localized
-                    subtitle = "mostPopular".localized
-                case 2:
-                    title = "🔥 " + "yearlySubscription".localized
-                    subtitle = "save76Percent".localized
-                default:
-                    title = id.displayName
-                    subtitle = ""
-                }
+            let title: String
+            let subtitle: String
+            let isSelected = (index == 0)
 
-                subscriptionOptions.append((title, priceString, subtitle, isSelected))
+            switch index {
+            case 0:
+                title = "weeklySubscription".localized
+                subtitle = "freeTrial".localized
+            case 1:
+                title = "monthlySubscription".localized
+                subtitle = "mostPopular".localized
+            case 2:
+                title = "🔥 " + "yearlySubscription".localized
+                subtitle = "save76Percent".localized
+            default:
+                title = id.displayName
+                subtitle = ""
             }
-        } else {
-            // StoreKit1 price display (assumes VIPManager.products ordering matches UI)
-            if VIPManager.shared.products.count >= 3 {
-                let formatter = NumberFormatter()
-                formatter.numberStyle = .currency
 
-                for (index, product) in VIPManager.shared.products.enumerated() {
-                    if index >= 3 { break }
-
-                    formatter.locale = product.priceLocale
-                    let priceString = formatter.string(from: product.price) ?? "$0.00"
-
-                    let title: String
-                    let subtitle: String
-                    let isSelected = (index == 0)
-
-                    switch index {
-                    case 0:
-                        title = "weeklySubscription".localized
-                        subtitle = "freeTrial".localized
-                    case 1:
-                        title = "monthlySubscription".localized
-                        subtitle = "mostPopular".localized
-                    case 2:
-                        title = "🔥 " + "yearlySubscription".localized
-                        subtitle = "save76Percent".localized
-                    default:
-                        title = product.localizedTitle
-                        subtitle = ""
-                    }
-
-                    subscriptionOptions.append((title, priceString, subtitle, isSelected))
-                }
-            }
+            subscriptionOptions.append((title, priceString, subtitle, isSelected))
         }
 
         if subscriptionOptions.isEmpty {
@@ -1862,12 +1829,8 @@ class VIPScrollView: UIScrollView {
         restoreLinkButton.titleLabel?.font = .systemFont(ofSize: 12)
         restoreLinkButton.backgroundColor = .clear
         
-        // 增大点击区域 - 兼容不同iOS版本
-        if #available(iOS 15.0, *) {
-            // iOS 15+ 使用其他方式增大点击区域
-            restoreLinkButton.configuration = nil // 确保不使用UIButtonConfiguration
-        }
-        restoreLinkButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        // 增大点击区域
+        restoreLinkButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
         
         // 设置target - 使用最直接的方式
         restoreLinkButton.addTarget(self, action: #selector(restoreTapped), for: .touchUpInside)
@@ -1906,12 +1869,8 @@ class VIPScrollView: UIScrollView {
         termsButton.titleLabel?.font = .systemFont(ofSize: 12)
         termsButton.backgroundColor = .clear
         
-        // 增大点击区域 - 兼容不同iOS版本
-        if #available(iOS 15.0, *) {
-            // iOS 15+ 使用其他方式增大点击区域
-            termsButton.configuration = nil // 确保不使用UIButtonConfiguration
-        }
-        termsButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        // 增大点击区域
+        termsButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
         
         // 设置target - 使用最直接的方式
         termsButton.addTarget(self, action: #selector(termsTapped), for: .touchUpInside)
@@ -1947,12 +1906,8 @@ class VIPScrollView: UIScrollView {
         privacyButton.titleLabel?.font = .systemFont(ofSize: 12)
         privacyButton.backgroundColor = .clear
         
-        // 增大点击区域 - 兼容不同iOS版本
-        if #available(iOS 15.0, *) {
-            // iOS 15+ 使用其他方式增大点击区域
-            privacyButton.configuration = nil // 确保不使用UIButtonConfiguration
-        }
-        privacyButton.contentEdgeInsets = UIEdgeInsets(top: 12, left: 12, bottom: 12, right: 12)
+        // 增大点击区域
+        privacyButton.configuration?.contentInsets = NSDirectionalEdgeInsets(top: 12, leading: 12, bottom: 12, trailing: 12)
         
         // 设置target - 使用最直接的方式
         privacyButton.addTarget(self, action: #selector(privacyTapped), for: .touchUpInside)
@@ -2189,22 +2144,26 @@ class VIPScrollView: UIScrollView {
             return
         }
 
-        // iOS 14: keep legacy local free-trial behavior for weekly option.
+        // 免费试用由 App Store Connect 配置的 StoreKit 2 订阅优惠自动处理
         if selectedSubscriptionIndex == 0 && !PurchaseManager.shared.isVIP() {
-            print("🔍 开始免费试用 (legacy)")
-            PurchaseManager.shared.startFreeTrialIfAvailable()
-            showSuccessAlert(message: "freeTrialStarted".localized, shouldDismiss: true)
-            return
+            // 直接走 StoreKit 2 购买流程，系统会自动应用免费试用
         }
 
-        guard selectedSubscriptionIndex < VIPManager.shared.products.count else {
+        guard selectedSubscriptionIndex < StoreKitManager.shared.products.count else {
             print("⚠️ 产品列表未加载完成")
             showAlert(title: "tip".localized, message: "loadingProducts".localized)
             return
         }
-        let product = VIPManager.shared.products[selectedSubscriptionIndex]
-        print("🔍 开始购买产品: \(product.productIdentifier)")
-        VIPManager.shared.purchase(product: product)
+        let product = StoreKitManager.shared.products[selectedSubscriptionIndex]
+        print("🔍 开始购买产品: \(product.id)")
+        Task {
+            do {
+                _ = try await StoreKitManager.shared.purchase(product)
+                NotificationCenter.default.post(name: PurchaseManager.purchaseDidCompleteNotification, object: self, userInfo: ["productID": product.id])
+            } catch {
+                NotificationCenter.default.post(name: PurchaseManager.purchaseDidFailNotification, object: self, userInfo: ["error": error.localizedDescription])
+            }
+        }
     }
     
     @objc private func restoreTapped() {
@@ -2487,36 +2446,196 @@ class VIPScrollView: UIScrollView {
         present(alert, animated: true)
     }
     
-    private func showSuccessAlert(message: String, shouldDismiss: Bool = true) {
-        // 确保在主线程执行，并检查当前是否已有模态视图
+    // MARK: - 霓虹风格订阅成功弹窗
+
+    /// 显示霓虹风格的订阅成功弹窗
+    private func showNeonSuccessAlert(productID: String = "", isRestore: Bool, shouldDismiss: Bool) {
+        // 确保在主线程执行
         DispatchQueue.main.async {
-            // 如果当前已经有模态视图在显示，先关闭它（关闭alert，不是整个view controller）
+            // 如果当前已经有模态视图在显示，先关闭它
             if let presentedAlert = self.presentedViewController {
                 presentedAlert.dismiss(animated: false) {
-                    self.presentSuccessAlertSafely(message: message, shouldDismiss: shouldDismiss)
+                    self.presentNeonSuccessAlert(productID: productID, isRestore: isRestore, shouldDismiss: shouldDismiss)
                 }
             } else {
-                self.presentSuccessAlertSafely(message: message, shouldDismiss: shouldDismiss)
+                self.presentNeonSuccessAlert(productID: productID, isRestore: isRestore, shouldDismiss: shouldDismiss)
             }
         }
     }
-    
-    private func presentSuccessAlertSafely(message: String, shouldDismiss: Bool) {
-        let alert = UIAlertController(title: "success".localized, message: message, preferredStyle: .alert)
-        alert.addAction(UIAlertAction(title: "confirm".localized, style: .default) { _ in
-            if shouldDismiss {
-                // Subscription is presented modally in a UINavigationController.
-                // Always dismiss instead of pop, otherwise OK won't return.
-                if self.presentingViewController != nil {
-                    self.dismiss(animated: true)
-                } else if let nav = self.navigationController {
-                    nav.popViewController(animated: true)
-                } else {
-                    self.dismiss(animated: true)
+
+    private func presentNeonSuccessAlert(productID: String, isRestore: Bool, shouldDismiss: Bool) {
+        let overlayView = UIView()
+        overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.6)
+        overlayView.alpha = 0
+        view.addSubview(overlayView)
+
+        // 卡片容器
+        let cardView = UIView()
+        cardView.backgroundColor = UIColor(red: 0.08, green: 0.08, blue: 0.12, alpha: 1.0) // 深色背景
+        cardView.layer.cornerRadius = 20
+        cardView.layer.borderWidth = 1.5
+        cardView.layer.borderColor = UIColor(red: 0.3, green: 0.8, blue: 1.0, alpha: 0.6).cgColor // 霓虹蓝边框
+        cardView.layer.shadowColor = UIColor(red: 0.2, green: 0.6, blue: 1.0, alpha: 0.5).cgColor
+        cardView.layer.shadowOffset = CGSize(width: 0, height: 0)
+        cardView.layer.shadowOpacity = 1.0
+        cardView.layer.shadowRadius = 15
+        cardView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+        cardView.alpha = 0
+        overlayView.addSubview(cardView)
+
+        // 🎉 图标
+        let iconLabel = UILabel()
+        iconLabel.text = "🎉"
+        iconLabel.font = .systemFont(ofSize: 44)
+        iconLabel.textAlignment = .center
+        cardView.addSubview(iconLabel)
+
+        // 标题
+        let titleLabel = UILabel()
+        titleLabel.text = isRestore ? "restoreSuccess".localized : "congratulationsSubscription"
+        titleLabel.textColor = .white
+        titleLabel.font = .systemFont(ofSize: 22, weight: .bold)
+        titleLabel.textAlignment = .center
+        cardView.addSubview(titleLabel)
+
+        // 会员类型文字
+        let memberTypeLabel = UILabel()
+        var memberText = ""
+        if !isRestore {
+            if productID.contains("weekly") || productID.contains("week") {
+                memberText = "becomeWeeklyMember".localized
+            } else if productID.contains("monthly") || productID.contains("month") {
+                memberText = "becomeMonthlyMember".localized
+            } else if productID.contains("yearly") || productID.contains("year") {
+                memberText = "becomeYearlyMember".localized
+            } else {
+                memberText = "becomeVIPMember".localized
+            }
+        } else {
+            memberText = "vipUnlockedAllFeatures".localized
+        }
+        memberTypeLabel.text = memberText
+        memberTypeLabel.textColor = UIColor(red: 0.4, green: 0.9, blue: 1.0, alpha: 1.0) // 霓虹青色
+        memberTypeLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        memberTypeLabel.textAlignment = .center
+        cardView.addSubview(memberTypeLabel)
+
+        // 副标题（解锁提示）
+        let subtitleLabel = UILabel()
+        subtitleLabel.text = "unlockAllLEDFeatures".localized
+        subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.7)
+        subtitleLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        subtitleLabel.textAlignment = .center
+        subtitleLabel.numberOfLines = 0
+        cardView.addSubview(subtitleLabel)
+
+        // 确认按钮
+        let confirmButton = UIButton(type: .custom)
+        confirmButton.setTitle("confirm".localized, for: .normal)
+        confirmButton.setTitleColor(.white, for: .normal)
+        confirmButton.titleLabel?.font = .systemFont(ofSize: 17, weight: .semibold)
+        confirmButton.backgroundColor = .clear
+        confirmButton.layer.cornerRadius = 25
+
+        // 渐变背景（与VIP弹窗一致：橙→粉）
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.colors = [
+            UIColor(red: 1.0, green: 0.5, blue: 0.0, alpha: 1.0).cgColor,   // 橙色
+            UIColor(red: 1.0, green: 0.35, blue: 0.55, alpha: 1.0).cgColor   // 粉色
+        ]
+        gradientLayer.startPoint = CGPoint(x: 0, y: 0.5)
+        gradientLayer.endPoint = CGPoint(x: 1, y: 0.5)
+        gradientLayer.cornerRadius = 25
+        confirmButton.layer.insertSublayer(gradientLayer, at: 0)
+        cardView.addSubview(confirmButton)
+
+        // 布局
+        overlayView.translatesAutoresizingMaskIntoConstraints = false
+        cardView.translatesAutoresizingMaskIntoConstraints = false
+        iconLabel.translatesAutoresizingMaskIntoConstraints = false
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        memberTypeLabel.translatesAutoresizingMaskIntoConstraints = false
+        subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
+        confirmButton.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            overlayView.topAnchor.constraint(equalTo: view.topAnchor),
+            overlayView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            overlayView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            overlayView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+
+            cardView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
+            cardView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
+            cardView.widthAnchor.constraint(lessThanOrEqualToConstant: 300),
+
+            iconLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 28),
+            iconLabel.centerXAnchor.constraint(equalTo: cardView.centerXAnchor),
+
+            titleLabel.topAnchor.constraint(equalTo: iconLabel.bottomAnchor, constant: 12),
+            titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            titleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+
+            memberTypeLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
+            memberTypeLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            memberTypeLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+
+            subtitleLabel.topAnchor.constraint(equalTo: memberTypeLabel.bottomAnchor, constant: 6),
+            subtitleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 24),
+            subtitleLabel.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -24),
+
+            confirmButton.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 24),
+            confirmButton.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 32),
+            confirmButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -32),
+            confirmButton.heightAnchor.constraint(equalToConstant: 50),
+            confirmButton.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -28)
+        ])
+
+        // 更新渐变frame
+        self.view.layoutIfNeeded() // 触发布局后更新gradient frame
+        gradientLayer.frame = confirmButton.bounds
+
+        // 弹出动画
+        UIView.animate(withDuration: 0.3) {
+            overlayView.alpha = 1
+            UIView.animate(withDuration: 0.35, delay: 0.05, usingSpringWithDamping: 0.75, initialSpringVelocity: 0.5) {
+                cardView.transform = .identity
+                cardView.alpha = 1
+            }
+        }
+
+        // 按钮点击事件
+        confirmButton.addAction(UIAction { _ in
+            UIView.animate(withDuration: 0.25) {
+                cardView.transform = CGAffineTransform(scaleX: 0.8, y: 0.8)
+                cardView.alpha = 0
+                overlayView.alpha = 0
+            } completion: { _ in
+                overlayView.removeFromSuperview()
+                if shouldDismiss {
+                    if self.presentingViewController != nil {
+                        self.dismiss(animated: true)
+                    } else if let nav = self.navigationController {
+                        nav.popViewController(animated: true)
+                    } else {
+                        self.dismiss(animated: true)
+                    }
                 }
             }
-        })
-        present(alert, animated: true)
+        }, for: .touchUpInside)
+
+        // 点击背景也可关闭
+        let tapGesture = UITapGestureRecognizer(target: confirmButton, action: #selector(UIButton.sendActions))
+        overlayView.addGestureRecognizer(tapGesture)
+    }
+
+    private func showSuccessAlert(message: String, shouldDismiss: Bool = true) {
+        // 保持兼容性，内部调用霓虹弹窗
+        showNeonSuccessAlert(productID: "", isRestore: message == "restoreSuccess".localized, shouldDismiss: shouldDismiss)
+    }
+
+    private func presentSuccessAlertSafely(message: String, shouldDismiss: Bool) {
+        // 已被 showNeonSuccessAlert 替代，保留以防其他地方调用
+        showNeonSuccessAlert(productID: "", isRestore: message == "restoreSuccess".localized, shouldDismiss: shouldDismiss)
     }
 }
 
@@ -4734,10 +4853,10 @@ class TemplateCategoryCell: UITableViewCell {
                 } else if i == 13 {
                     // neon_13 (Love Life): 跑马灯边框第一行第三个
                     borderStyle = 2 // 跑马灯边框第一行第三个（索引2）
-                } else if i == 14 {
-                    // neon_14 (COME HERE! / 原Niece Day): LED屏幕第二行最后一个背景 + LED边框第二行第二个 + 闪烁极快
-                    ledBorderImageIndex = 5 // LED边框第二行第二个 (索引5)
-                }
+            } else if i == 14 {
+                // neon_14 (COME HERE! / 原Niece Day): LED屏幕第二行最后一个背景 + LED边框第二行最后一个（该行第4个）+ 闪烁极快
+                ledBorderImageIndex = 7 // LED边框第二行最后一个 = line_8 (索引7)
+            }
             } else if category == "led" {
                 // LED屏幕模板特殊配置
                 if i == 4 {
@@ -5361,7 +5480,7 @@ class TemplateItemCell: UICollectionViewCell {
                     // 封面字体大小计算：基于容器宽度比例缩放，与预览页面保持一致
                     // 参照 LEDPreviewViewController 的缩放逻辑
                     let containerWidth = imageView.bounds.width > 0 ? imageView.bounds.width : (isPad ? 300 : 150)
-                    let landscapeWidth: CGFloat = 1100 // 全屏横屏基准宽度（从852增大，缩小封面文字）
+                    let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度（与LEDPreviewViewController保持一致）
                     let scaleFactor = containerWidth / landscapeWidth
 
                     // Marry Me 和 Merry Christmas 封面文字应该更小
@@ -5439,7 +5558,7 @@ class TemplateItemCell: UICollectionViewCell {
                 // 封面字体大小计算：基于容器宽度比例缩放，与预览页面保持一致
                 // 参照 LEDPreviewViewController 的缩放逻辑
                 let containerWidth = imageView.bounds.width > 0 ? imageView.bounds.width : (isPad ? 300 : 150)
-                let landscapeWidth: CGFloat = 1100 // 全屏横屏基准宽度（从852增大，缩小封面文字）
+                let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度（与LEDPreviewViewController保持一致）
                 let scaleFactor = containerWidth / landscapeWidth
 
                 let baseOverlayFontSize: CGFloat

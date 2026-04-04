@@ -1,130 +1,99 @@
 import Foundation
 import StoreKit
 
-// Unified purchase facade.
-// - iOS 15+: prefers StoreKit 2 for correct subscription entitlement handling.
-// - iOS 14: falls back to legacy StoreKit 1 (VIPManager).
-//
-// This keeps call sites simple (isVIP/restore/purchase) while avoiding
-// re-implementing receipt validation without a server.
+// MARK: - 统一购买管理器 (StoreKit 2)
+// iOS 15.0+ 部署目标，使用 StoreKit 2 处理订阅
 @MainActor
 final class PurchaseManager {
     static let shared = PurchaseManager()
     private init() {}
 
-    // MARK: - Notifications (bridge legacy + StoreKit2 to existing UI)
+    // MARK: - Notifications
 
-    // Existing screens already observe these VIPManager notifications.
-    // Keep them as the UI-facing contract.
-    static let vipStatusDidChangeNotification = VIPManager.vipStatusDidChangeNotification
-    static let purchaseDidCompleteNotification = VIPManager.purchaseDidCompleteNotification
-    static let purchaseDidFailNotification = VIPManager.purchaseDidFailNotification
+    /// VIP 状态变更通知（供 UI 层观察）
+    static let vipStatusDidChangeNotification = Notification.Name("VIPStatusDidChangeNotification")
+
+    /// 购买完成通知
+    static let purchaseDidCompleteNotification = Notification.Name("PurchaseDidCompleteNotification")
+
+    /// 购买失败通知
+    static let purchaseDidFailNotification = Notification.Name("PurchaseDidFailNotification")
 
     // MARK: - Status
 
     func isVIP() -> Bool {
-        if #available(iOS 15.0, *) {
-            return StoreKitManager.shared.isVIP()
-        }
-        return VIPManager.shared.isVIP()
+        return StoreKitManager.shared.isVIP()
     }
 
     func getVIPStatusText() -> String {
-        if #available(iOS 15.0, *) {
-            return StoreKitManager.shared.getStatusText()
-        }
-        return VIPManager.shared.getVIPStatusText()
+        return StoreKitManager.shared.getStatusText()
     }
 
     func getVIPButtonText() -> String {
-        // StoreKit2 does not maintain the legacy button wording; reuse the same UX.
         return isVIP() ? "vipButtonManage".localized : "vipButtonFree".localized
     }
 
     func isLoading() -> Bool {
-        if #available(iOS 15.0, *) {
-            return StoreKitManager.shared.isPurchasing
-        }
-        return VIPManager.shared.isLoading
+        return StoreKitManager.shared.isPurchasing
     }
 
     // Used by Settings.
     func getSubscriptionTypeText() -> String {
-        if #available(iOS 15.0, *) {
-            if let productId = StoreKitManager.shared.getCurrentProductID() {
-                switch productId {
-                case StoreKitManager.ProductIdentifier.weekly.rawValue:
-                    return "weeklyMember".localized
-                case StoreKitManager.ProductIdentifier.monthly.rawValue:
-                    return "monthlyMember".localized
-                case StoreKitManager.ProductIdentifier.yearly.rawValue:
-                    return "yearlyMember".localized
-                default:
-                    return ""
-                }
+        if let productId = StoreKitManager.shared.getCurrentProductID() {
+            switch productId {
+            case StoreKitManager.ProductIdentifier.weekly.rawValue:
+                return "weeklyMember".localized
+            case StoreKitManager.ProductIdentifier.monthly.rawValue:
+                return "monthlyMember".localized
+            case StoreKitManager.ProductIdentifier.yearly.rawValue:
+                return "yearlyMember".localized
+            default:
+                return ""
             }
-            return ""
         }
-        return VIPManager.shared.getSubscriptionTypeText()
-    }
-
-    // MARK: - Legacy Helpers
-
-    func forceResetPurchaseState() {
-        // Legacy only; StoreKit2 has no equivalent.
-        if #available(iOS 15.0, *) {
-            return
-        }
-        VIPManager.shared.forceResetPurchaseState()
-    }
-
-    func checkAndResetIfStuck() {
-        if #available(iOS 15.0, *) {
-            return
-        }
-        VIPManager.shared.checkAndResetIfStuck()
-    }
-
-    func startFreeTrialIfAvailable() {
-        // StoreKit2: free trial should be configured in App Store Connect and handled by system.
-        if #available(iOS 15.0, *) {
-            return
-        }
-        VIPManager.shared.startFreeTrial()
+        return ""
     }
 
     // MARK: - Actions
 
-    func restorePurchases() {
-        if #available(iOS 15.0, *) {
-            Task { @MainActor in
-                do {
-                    try await StoreKitManager.shared.restorePurchases()
-                    NotificationCenter.default.post(
-                        name: PurchaseManager.purchaseDidCompleteNotification,
-                        object: self,
-                        userInfo: ["restored": true]
-                    )
-                    NotificationCenter.default.post(
-                        name: PurchaseManager.vipStatusDidChangeNotification,
-                        object: self
-                    )
-                } catch {
-                    NotificationCenter.default.post(
-                        name: PurchaseManager.purchaseDidFailNotification,
-                        object: self,
-                        userInfo: ["error": error.localizedDescription]
-                    )
-                }
-            }
-            return
-        }
+    /// 强制重置购买状态（用于调试或防卡死）
+    func forceResetPurchaseState() {
+        // StoreKit 2 使用 Task 管理，不需要手动重置
+        StoreKitManager.shared.resetLoadingState()
+    }
 
-        VIPManager.shared.restorePurchases()
+    /// 检查并重置可能的卡死状态
+    func checkAndResetIfStuck() {
+        if isLoading() {
+            print("🔍 检测到可能的卡死状态，强制重置")
+            forceResetPurchaseState()
+        }
+    }
+
+    func restorePurchases() {
+        Task { @MainActor in
+            do {
+                try await StoreKitManager.shared.restorePurchases()
+                NotificationCenter.default.post(
+                    name: PurchaseManager.purchaseDidCompleteNotification,
+                    object: self,
+                    userInfo: ["restored": true]
+                )
+                NotificationCenter.default.post(
+                    name: PurchaseManager.vipStatusDidChangeNotification,
+                    object: self
+                )
+            } catch {
+                NotificationCenter.default.post(
+                    name: PurchaseManager.purchaseDidFailNotification,
+                    object: self,
+                    userInfo: ["error": error.localizedDescription]
+                )
+            }
+        }
     }
 
     // StoreKit2 purchase (index matches StoreKitManager.products ordering).
-    @available(iOS 15.0, *)
     func purchaseProduct(at index: Int) {
         Task { @MainActor in
             let identifiers = StoreKitManager.ProductIdentifier.allCases

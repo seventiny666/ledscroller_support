@@ -122,10 +122,14 @@ final class StopwatchViewController: UIViewController {
             b.tintColor = .white
             b.semanticContentAttribute = .forceLeftToRight
 
-            // Icon on the left, text on the right; keep the button short.
-            b.imageEdgeInsets = UIEdgeInsets(top: 0, left: -6, bottom: 0, right: 6)
-            b.titleEdgeInsets = UIEdgeInsets(top: 0, left: 6, bottom: 0, right: -6)
-            b.contentEdgeInsets = UIEdgeInsets(top: 8, left: 12, bottom: 8, right: 12)
+            // Icon on the left, text on the right; keep the button short. (iOS 15+ Configuration API)
+            var config = UIButton.Configuration.plain()
+            config.imagePadding = 6
+            config.imagePlacement = .leading
+            config.contentInsets = NSDirectionalEdgeInsets(top: 8, leading: 12, bottom: 8, trailing: 12)
+            b.configuration = config
+            // 重新设置图片和标题（Configuration 会覆盖之前设置的）
+            b.setImage(UIImage(systemName: symbolName), for: .normal)
 
             b.backgroundColor = UIColor.white.withAlphaComponent(0.15)
             b.layer.cornerRadius = 14

@@ -81,6 +81,13 @@
 "freeTrialStarted" = "無料トライアルが開始されました！3日間VIP機能をお楽しみいただけます。";
 "termsMessage" = "アプリをご利用いただきありがとうございます。詳細な利用規約については、公式ウェブサイトをご覧ください。";
 "privacyMessage" = "お客様のプライバシーを大切にしています。詳細なプライバシーポリシーについては、公式ウェブサイトをご覧ください。";
+/* サブスクリプション成功 */
+"congratulationsSubscription" = "🎉 おめでとうございます！";
+"becomeWeeklyMember" = "週間メンバーになりました";
+"becomeMonthlyMember" = "月間メンバーになりました";
+"becomeYearlyMember" = "年間メンバーになりました";
+"becomeVIPMember" = "VIPメンバーになりました";
+"unlockAllLEDFeatures" = "LEDの全機能を解除しました！\nクリエイティブ体験をお楽しみください ✨";
 "loadingProducts" = "サブスクリプションオプションを読み込み中です。後でもう一度お試しください";
 "subscriptionMember" = "サブスクリプション会員";
 "weeklyMember" = "週間会員";

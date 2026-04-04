@@ -106,6 +106,13 @@
 "freeTrialStarted" = "免费试用已开始！您可以享受3天的VIP功能。";
 "termsMessage" = "感谢您使用我们的应用。详细的服务条款请访问我们的官方网站。";
 "privacyMessage" = "我们重视您的隐私。详细的隐私政策请访问我们的官方网站。";
+/* 订阅成功弹窗 */
+"congratulationsSubscription" = "🎉 恭喜您订阅成功！";
+"becomeWeeklyMember" = "已成为周度会员";
+"becomeMonthlyMember" = "已成为月度会员";
+"becomeYearlyMember" = "已成为年度会员";
+"becomeVIPMember" = "已成为 VIP 会员";
+"unlockAllLEDFeatures" = "已解锁 LED 全部功能！\n尽情享受创作乐趣吧 ✨";
 "termsContent" = "服务条款\n\n1. 接受条款\n当你下载、安装或使用 LedScroller，即表示你同意遵守本服务条款。\n\n2. 许可与限制\n我们授予你在个人设备上使用本应用的有限、非独占、不可转让许可。你不得复制、修改、反向工程或将本应用用于任何违法用途。\n\n3. VIP 订阅\n- 订阅由 Apple App Store 处理。\n- 确认购买后将向你的 Apple ID 账户收费。\n- 订阅将自动续订，除非在当前周期结束前至少 24 小时取消。\n- 你可在 iOS 设置 -> Apple ID -> 订阅 中管理或取消订阅，或访问：\nhttps://apps.apple.com/account/subscriptions\n\n4. 免责声明\n本应用按“现状”提供，不提供任何明示或暗示的保证。\n\n5. 责任限制\n在法律允许的最大范围内，我们不对因使用或无法使用本应用而产生的间接或后果性损失承担责任。\n\n6. 适用法律\n本条款受中华人民共和国法律管辖。\n\n7. 联系我们\n邮箱：seventiny007@126.com";
 "privacyContent" = "隐私政策\n\nLedScroller 是一款离线、注重隐私的应用。我们不收集个人信息，不进行用户行为跟踪，也不运营任何后端服务器。\n\n1. 我们收集的信息\n我们不收集任何个人信息，包括但不限于：\n- 不收集个人身份信息\n- 不收集使用统计/分析数据\n- 不收集广告标识符\n- 不收集位置信息\n- 不收集通讯录等联系人信息\n\n2. 本地数据存储\n你的创作内容与设置仅存储在你的设备本地（例如 iOS UserDefaults）。卸载应用后，本地数据会被删除。\n\n3. 网络与第三方服务\n由于我们不提供任何服务器端服务，LedScroller 不会连接到我们的服务器。\n应用内购买/订阅由 Apple 通过 StoreKit 处理，用于 App 分发与订阅管理。\n\n4. 儿童隐私\n我们不会主动收集 13 岁以下儿童的个人信息。\n\n5. 联系我们\n邮箱：seventiny007@126.com";
 "loadingProducts" = "正在加载订阅选项，请稍后再试";

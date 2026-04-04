@@ -182,6 +182,13 @@
 "vipStatusSubscribed" = "VIP會員（剩餘%d天）";
 "termsMessage" = "感謝您使用我們的應用。詳細的服務條款請訪問我們的官方網站。";
 "privacyMessage" = "我們重視您的隱私。詳細的隱私政策請訪問我們的官方網站。";
+/* 訂閱成功彈窗 */
+"congratulationsSubscription" = "🎉 恭喜您訂閱成功！";
+"becomeWeeklyMember" = "已成為週度會員";
+"becomeMonthlyMember" = "已成為月度會員";
+"becomeYearlyMember" = "已成為年度會員";
+"becomeVIPMember" = "已成為 VIP 會員";
+"unlockAllLEDFeatures" = "已解鎖 LED 全部功能！\n盡情享受創作樂趣吧 ✨";
 "termsContent" = "服務條款\n\n1. 接受條款\n當你下載、安裝或使用 LedScroller，即表示你同意遵守本服務條款。\n\n2. 授權與限制\n我們授予你在個人裝置上使用本應用的有限、非獨占、不可轉讓授權。你不得複製、修改、反向工程或將本應用用於任何違法用途。\n\n3. VIP 訂閱\n- 訂閱由 Apple App Store 處理。\n- 確認購買後將向你的 Apple ID 帳戶收費。\n- 訂閱將自動續訂，除非在目前週期結束前至少 24 小時取消。\n- 你可在 iOS 設定 -> Apple ID -> 訂閱 中管理或取消訂閱，或造訪：\nhttps://apps.apple.com/account/subscriptions\n\n4. 免責聲明\n本應用按「現狀」提供，不提供任何明示或暗示的保證。\n\n5. 責任限制\n在法律允許的最大範圍內，我們不對因使用或無法使用本應用而產生的間接或後果性損失承擔責任。\n\n6. 適用法律\n本條款受中華人民共和國法律管轄。\n\n7. 聯絡我們\nEmail：seventiny007@126.com";
 "privacyContent" = "隱私政策\n\nLedScroller 是一款離線、注重隱私的應用。我們不收集個人資訊，不進行使用者行為追蹤，也不營運任何後端伺服器。\n\n1. 我們收集的資訊\n我們不收集任何個人資訊，包括但不限於：\n- 不收集個人身份資訊\n- 不收集使用統計/分析資料\n- 不收集廣告識別碼\n- 不收集位置資訊\n- 不收集通訊錄等聯絡人資訊\n\n2. 本機資料儲存\n你的創作內容與設定僅儲存在你的裝置本機（例如 iOS UserDefaults）。卸載應用後，本機資料會被刪除。\n\n3. 網路與第三方服務\n由於我們不提供任何伺服器端服務，LedScroller 不會連線到我們的伺服器。\n應用內購買/訂閱由 Apple 透過 StoreKit 處理，用於 App 發佈與訂閱管理。\n\n4. 兒童隱私\n我們不會主動收集 13 歲以下兒童的個人資訊。\n\n5. 聯絡我們\nEmail：seventiny007@126.com";
 "loadingProducts" = "正在加載訂閱選項，請稍後再試";
