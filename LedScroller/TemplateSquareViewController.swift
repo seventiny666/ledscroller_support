@@ -4162,7 +4162,8 @@ extension TemplateSquareViewController: UITableViewDelegate, UITableViewDataSour
         let screenWidth = UIScreen.main.bounds.width
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let interItemSpacing: CGFloat = isPad ? 24 : 16
-        let cardWidth = (screenWidth - 20 * 2 - interItemSpacing) / 2
+        let sideInset: CGFloat = isPad ? 50 : 20   // Pad端左右各50pt，iPhone各20pt
+        let cardWidth = (screenWidth - sideInset * 2 - interItemSpacing) / 2
 
         let cardHeight: CGFloat
         if isPad && currentTab == .popular {
@@ -4482,7 +4483,7 @@ class TemplateCategoryCell: UITableViewCell {
         let verticalSpacing: CGFloat = isPad ? 14 : 8      // 上下行间距（减小，因为cell本身较高）
         layout.minimumInteritemSpacing = horizontalSpacing
         layout.minimumLineSpacing = verticalSpacing
-        layout.sectionInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        layout.sectionInset = UIEdgeInsets(top: 0, left: isPad ? 50 : 20, bottom: 0, right: isPad ? 50 : 20)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.backgroundColor = .clear
@@ -4903,7 +4904,8 @@ class TemplateItemCell: UICollectionViewCell {
         containerView.translatesAutoresizingMaskIntoConstraints = false
         contentView.addSubview(containerView)
         
-        // 图片（16:9比例）
+        // 图片（16:9比例，与首页卡片一致）
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 12
@@ -4920,7 +4922,6 @@ class TemplateItemCell: UICollectionViewCell {
         overlayTextLabel.textColor = .white
         // 根据屏幕尺寸动态调整字体大小
         let screenHeight = UIScreen.main.bounds.height
-        let isPad = UIDevice.current.userInterfaceIdiom == .pad
 
         // iPad card covers are much larger; keep the overlay text visually balanced.
         let overlayFontSize: CGFloat = isPad ? 44 : (screenHeight >= 926 ? 22 : 20)

@@ -500,8 +500,9 @@ class LEDCreateViewController: UIViewController {
         navigationItem.rightBarButtonItem?.tintColor = UIColor(red: 0x8E/255.0, green: 0xFF/255.0, blue: 0xE6/255.0, alpha: 1.0)
         
         // 预览容器
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         previewContainer.backgroundColor = UIColor(hex: currentItem.backgroundColor)
-        previewContainer.layer.cornerRadius = 15
+        previewContainer.layer.cornerRadius = isPad ? 24 : 15   // Pad端圆角增大
         previewContainer.layer.borderWidth = 3.0 // 加粗边框
         previewContainer.layer.borderColor = UIColor.white.withAlphaComponent(0.5).cgColor
         previewContainer.clipsToBounds = true
@@ -535,12 +536,17 @@ class LEDCreateViewController: UIViewController {
             fontSize: previewLabel.font.pointSize
         )
         
+        // Pad端预览区使用iPad横屏实际比例（约1:0.7，接近11寸iPad横屏1194x834的比例）
+        // iPhone保持19.5:9全面屏比例
+        let previewAspectRatio: CGFloat = isPad ? 0.7 : 9.0/19.5
+        let screenWidth = UIScreen.main.bounds.width
+        
         NSLayoutConstraint.activate([
-            previewContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 6), // 从10改为6，往上移动4px
-            previewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
-            previewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
-            // 19.5:9 比例，基于宽度计算高度（适配现代手机全屏比例）
-            previewContainer.heightAnchor.constraint(equalTo: previewContainer.widthAnchor, multiplier: 9.0/19.5),
+            previewContainer.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: isPad ? 8 : 6),
+            isPad ? previewContainer.centerXAnchor.constraint(equalTo: view.centerXAnchor) : previewContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60),
+            isPad ? previewContainer.widthAnchor.constraint(equalToConstant: screenWidth - 240) : previewContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -60),
+            // 根据设备类型使用不同的宽高比
+            previewContainer.heightAnchor.constraint(equalTo: previewContainer.widthAnchor, multiplier: previewAspectRatio),
             
             previewBackgroundImageView.topAnchor.constraint(equalTo: previewContainer.topAnchor),
             previewBackgroundImageView.leadingAnchor.constraint(equalTo: previewContainer.leadingAnchor),
@@ -640,8 +646,8 @@ class LEDCreateViewController: UIViewController {
         // 设置固定容器的约束
         NSLayoutConstraint.activate([
             fixedContainer.topAnchor.constraint(equalTo: previewContainer.bottomAnchor, constant: 2), // 从10改为2，往上移动8px
-            fixedContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            fixedContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+            isPad ? fixedContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 10) : fixedContainer.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+            isPad ? fixedContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -10) : fixedContainer.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             fixedContainer.heightAnchor.constraint(equalToConstant: yOffset)
         ])
         
@@ -943,10 +949,11 @@ class LEDCreateViewController: UIViewController {
         ])
         tabYOffset += 56 // 36 + 20间距（最后一行后面间距大一些）
         
-        // 计算按钮尺寸：每行4个按钮，16:9比例
+        // 计算按钮尺寸：每行4个按钮，Pad端使用3:4比例（匹配iPad横屏实际比例），iPhone用16:9
         let screenWidth = UIScreen.main.bounds.width
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let buttonWidth = (screenWidth - 40 - 30) / 4 // 左右边距20 + 3个间距10
-        let buttonHeight = buttonWidth * 9.0 / 16.0
+        let buttonHeight = buttonWidth * (isPad ? 3.0 / 4.0 : 9.0 / 16.0)
         
         // LED横幅（8个，2行，每行4个）
         addSectionLabelToView(backgroundTabView, text: "led".localized, yOffset: &tabYOffset)
@@ -1055,149 +1062,86 @@ class LEDCreateViewController: UIViewController {
     private func setupBorderTab(yOffset: CGFloat) {
         borderTabView = UIView()
         borderTabView.translatesAutoresizingMaskIntoConstraints = false
-        // 不在这里添加到父视图，在showTab时添加
 
-        var tabYOffset: CGFloat = 20 // 增加顶部间距20px，让内容不要太贴近Tab切换控件
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        
+        // 使用垂直StackView自动管理所有内容区域的布局（解决iPad上内容堆叠问题）
+        let mainStack = UIStackView()
+        mainStack.axis = .vertical
+        mainStack.spacing = isPad ? 12 : 8 // iPad更大间距
+        mainStack.translatesAutoresizingMaskIntoConstraints = false
+        borderTabView.addSubview(mainStack)
+        
+        NSLayoutConstraint.activate([
+            mainStack.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: isPad ? 24 : 20),
+            mainStack.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: isPad ? 28 : 20),
+            mainStack.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: isPad ? -28 : -20),
+            mainStack.bottomAnchor.constraint(lessThanOrEqualTo: borderTabView.bottomAnchor, constant: isPad ? -40 : -30)
+        ])
 
-        // LED边框图片（8个图片，2行布局：4-4）
-        addSectionLabelToView(borderTabView, text: "ledBorder".localized, yOffset: &tabYOffset)
-
-        // 第1行（图片1-4）
+        // === LED边框图片（8个图片，2行布局：4-4）===
+        let ledLabel = createSectionLabel("ledBorder".localized)
+        mainStack.addArrangedSubview(ledLabel)
+        
         let ledBorderRow1 = createLEDBorderImageStack(startIndex: 1, count: 4, tag: 900)
-        borderTabView.addSubview(ledBorderRow1)
-        NSLayoutConstraint.activate([
-            ledBorderRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            ledBorderRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            ledBorderRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            ledBorderRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
-
-        // 第2行（图片5-8）
+        mainStack.addArrangedSubview(ledBorderRow1)
+        
         let ledBorderRow2 = createLEDBorderImageStack(startIndex: 5, count: 4, tag: 904)
-        borderTabView.addSubview(ledBorderRow2)
-        NSLayoutConstraint.activate([
-            ledBorderRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            ledBorderRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            ledBorderRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            ledBorderRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 70
+        mainStack.addArrangedSubview(ledBorderRow2)
 
-        // 跑马灯边框（12个样式，3行4列）
-        addSectionLabelToView(borderTabView, text: "marqueeBorder".localized, yOffset: &tabYOffset)
+        // === 跑马灯边框（12个样式，3行4列）===
+        let marqueeLabel = createSectionLabel("marqueeBorder".localized)
+        mainStack.addArrangedSubview(marqueeLabel)
         
-        // 第1行（样式0-3）
         let marqueeRow1 = createMarqueeBorderStack(startIndex: 0, count: 4, tag: 600)
-        borderTabView.addSubview(marqueeRow1)
-        NSLayoutConstraint.activate([
-            marqueeRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            marqueeRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            marqueeRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            marqueeRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
+        mainStack.addArrangedSubview(marqueeRow1)
         
-        // 第2行（样式4-7）
         let marqueeRow2 = createMarqueeBorderStack(startIndex: 4, count: 4, tag: 604)
-        borderTabView.addSubview(marqueeRow2)
-        NSLayoutConstraint.activate([
-            marqueeRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            marqueeRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            marqueeRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            marqueeRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
+        mainStack.addArrangedSubview(marqueeRow2)
         
-        // 第3行（样式8-11）
         let marqueeRow3 = createMarqueeBorderStack(startIndex: 8, count: 4, tag: 608)
-        borderTabView.addSubview(marqueeRow3)
-        NSLayoutConstraint.activate([
-            marqueeRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            marqueeRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            marqueeRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            marqueeRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 70
+        mainStack.addArrangedSubview(marqueeRow3)
+
+        // === 灯牌边框（12个样式，3行4列）===
+        let lightBoardLabel = createSectionLabel("lightBoardBorder".localized)
+        mainStack.addArrangedSubview(lightBoardLabel)
         
-        // 灯牌边框（12个样式，3行4列）
-        addSectionLabelToView(borderTabView, text: "lightBoardBorder".localized, yOffset: &tabYOffset)
-        
-        // 第1行（样式0-3）
         let lightBoardRow1 = createLightBoardBorderStack(startIndex: 0, count: 4, tag: 700)
-        borderTabView.addSubview(lightBoardRow1)
-        NSLayoutConstraint.activate([
-            lightBoardRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            lightBoardRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            lightBoardRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            lightBoardRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
+        mainStack.addArrangedSubview(lightBoardRow1)
         
-        // 第2行（样式4-7）
         let lightBoardRow2 = createLightBoardBorderStack(startIndex: 4, count: 4, tag: 704)
-        borderTabView.addSubview(lightBoardRow2)
-        NSLayoutConstraint.activate([
-            lightBoardRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            lightBoardRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            lightBoardRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            lightBoardRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
+        mainStack.addArrangedSubview(lightBoardRow2)
         
-        // 第3行（样式8-11）
         let lightBoardRow3 = createLightBoardBorderStack(startIndex: 8, count: 4, tag: 708)
-        borderTabView.addSubview(lightBoardRow3)
-        NSLayoutConstraint.activate([
-            lightBoardRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            lightBoardRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            lightBoardRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            lightBoardRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 70
+        mainStack.addArrangedSubview(lightBoardRow3)
+
+        // === 线性边框（12个颜色，3行布局：4-4-4）===
+        let linearLabel = createSectionLabel("linearBorder".localized)
+        mainStack.addArrangedSubview(linearLabel)
         
-        // 线性边框（12个颜色，3行布局：4-4-4）
-        addSectionLabelToView(borderTabView, text: "linearBorder".localized, yOffset: &tabYOffset)
-        
-        // 第1行（颜色0-3：红、绿、蓝、黄）
         let linearRow1 = createLinearBorderStack(startIndex: 0, count: 4, tag: 800)
-        borderTabView.addSubview(linearRow1)
-        NSLayoutConstraint.activate([
-            linearRow1.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            linearRow1.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            linearRow1.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            linearRow1.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
+        mainStack.addArrangedSubview(linearRow1)
         
-        // 第2行（颜色4-7：紫、青、橙、白）
         let linearRow2 = createLinearBorderStack(startIndex: 4, count: 4, tag: 804)
-        borderTabView.addSubview(linearRow2)
-        NSLayoutConstraint.activate([
-            linearRow2.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            linearRow2.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            linearRow2.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            linearRow2.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 60
+        mainStack.addArrangedSubview(linearRow2)
         
-        // 第3行（颜色8-11：粉、金、珊瑚、青绿）
         let linearRow3 = createLinearBorderStack(startIndex: 8, count: 4, tag: 808)
-        borderTabView.addSubview(linearRow3)
-        NSLayoutConstraint.activate([
-            linearRow3.topAnchor.constraint(equalTo: borderTabView.topAnchor, constant: tabYOffset),
-            linearRow3.leadingAnchor.constraint(equalTo: borderTabView.leadingAnchor, constant: 20),
-            linearRow3.trailingAnchor.constraint(equalTo: borderTabView.trailingAnchor, constant: -20),
-            linearRow3.heightAnchor.constraint(greaterThanOrEqualToConstant: 50)
-        ])
-        tabYOffset += 80 // 行高
-        
-        // 设置最后一行的底部约束，确保内容高度正确
-        linearRow3.bottomAnchor.constraint(lessThanOrEqualTo: borderTabView.bottomAnchor, constant: -60).isActive = true
+        mainStack.addArrangedSubview(linearRow3)
+    }
+    
+    /// 创建分区块标题标签
+    private func createSectionLabel(_ text: String) -> UILabel {
+        let label = UILabel()
+        label.text = text
+        label.textColor = UIColor(red: 0.6, green: 0.8, blue: 1.0, alpha: 1.0)
+        label.font = .boldSystemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
     }
 
     // 创建跑马灯边框选择器（一行4个按钮）
     private func createMarqueeBorderStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let buttons = (0..<count).map { index -> UIButton in
             let btn = UIButton(type: .system)
             let styleIndex = startIndex + index
@@ -1244,12 +1188,13 @@ class LEDCreateViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .fillEqually
-        stack.spacing = 10
+        stack.spacing = isPad ? 14 : 10
         stack.translatesAutoresizingMaskIntoConstraints = false
         
-        // 为每个按钮设置16:9比例
+        // 为每个按钮设置比例（Pad端3:4匹配iPad横屏，iPhone 16:9）
+        let btnRatio: CGFloat = isPad ? 3.0 / 4.0 : 9.0 / 16.0
         buttons.forEach { btn in
-            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: btnRatio).isActive = true
         }
         
         return stack
@@ -1257,6 +1202,7 @@ class LEDCreateViewController: UIViewController {
     
     // 创建灯牌边框选择器（一行4个按钮）
     private func createLightBoardBorderStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let buttons = (0..<count).map { index -> UIButton in
             let btn = UIButton(type: .system)
             let styleIndex = startIndex + index
@@ -1300,12 +1246,13 @@ class LEDCreateViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .fillEqually
-        stack.spacing = 10
+        stack.spacing = isPad ? 14 : 10
         stack.translatesAutoresizingMaskIntoConstraints = false
         
-        // 为每个按钮设置16:9比例
+        // 为每个按钮设置比例（Pad端3:4匹配iPad横屏，iPhone 16:9）
+        let btnRatio: CGFloat = isPad ? 3.0 / 4.0 : 9.0 / 16.0
         buttons.forEach { btn in
-            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: btnRatio).isActive = true
         }
         
         return stack
@@ -1435,6 +1382,7 @@ class LEDCreateViewController: UIViewController {
     
     // 创建线性边框选择器
     private func createLinearBorderStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let buttons = (0..<count).map { index -> UIButton in
             let btn = UIButton(type: .system)
             let displayIndex = startIndex + index
@@ -1478,12 +1426,13 @@ class LEDCreateViewController: UIViewController {
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .fillEqually
-        stack.spacing = 10
+        stack.spacing = isPad ? 14 : 10
         stack.translatesAutoresizingMaskIntoConstraints = false
         
-        // 为每个按钮设置16:9比例
+        // 为每个按钮设置比例（Pad端3:4匹配iPad横屏，iPhone 16:9）
+        let btnRatio: CGFloat = isPad ? 3.0 / 4.0 : 9.0 / 16.0
         buttons.forEach { btn in
-            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: btnRatio).isActive = true
         }
         
         return stack
@@ -1491,29 +1440,42 @@ class LEDCreateViewController: UIViewController {
     
     // 创建LED边框图片选择器
     private func createLEDBorderImageStack(startIndex: Int, count: Int, tag: Int) -> UIStackView {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         let buttons = (0..<count).map { index -> UIButton in
             let btn = UIButton(type: .system)
             let imageIndex = startIndex + index
             
-            // 尝试加载LED边框图片
-            let imageName = "line_\(imageIndex)"
+            // 尝试加载LED边框图片（iPad优先加载_pad版本）
+            let imageName: String
+            if isPad {
+                imageName = "line_\(imageIndex)_pad"
+            } else {
+                imageName = "line_\(imageIndex)"
+            }
             if let image = UIImage(named: imageName) {
                 btn.setBackgroundImage(image, for: .normal)
                 btn.imageView?.contentMode = .scaleAspectFill
             } else {
-                // 占位符：如果没有图片，显示索引
-                btn.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
-                let label = UILabel()
-                label.text = "\(imageIndex)"
-                label.textColor = .white
-                label.font = .boldSystemFont(ofSize: 16)
-                label.textAlignment = .center
-                label.translatesAutoresizingMaskIntoConstraints = false
-                btn.addSubview(label)
-                NSLayoutConstraint.activate([
-                    label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
-                    label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
-                ])
+                // 回退到非pad版本（兼容性）
+                let fallbackName = "line_\(imageIndex)"
+                if let fallbackImage = UIImage(named: fallbackName) {
+                    btn.setBackgroundImage(fallbackImage, for: .normal)
+                    btn.imageView?.contentMode = .scaleAspectFill
+                } else {
+                    // 占位符
+                    btn.backgroundColor = UIColor(red: 0.1, green: 0.1, blue: 0.1, alpha: 1.0)
+                    let label = UILabel()
+                    label.text = "\(imageIndex)"
+                    label.textColor = .white
+                    label.font = .boldSystemFont(ofSize: 16)
+                    label.textAlignment = .center
+                    label.translatesAutoresizingMaskIntoConstraints = false
+                    btn.addSubview(label)
+                    NSLayoutConstraint.activate([
+                        label.centerXAnchor.constraint(equalTo: btn.centerXAnchor),
+                        label.centerYAnchor.constraint(equalTo: btn.centerYAnchor)
+                    ])
+                }
             }
             
             btn.layer.cornerRadius = 8
@@ -1524,20 +1486,19 @@ class LEDCreateViewController: UIViewController {
             btn.addTarget(self, action: #selector(ledBorderImageButtonTapped(_:)), for: .touchUpInside)
             btn.translatesAutoresizingMaskIntoConstraints = false
             
-            // LED边框图片免费，不添加VIP标签
-            
             return btn
         }
         
         let stack = UIStackView(arrangedSubviews: buttons)
         stack.axis = .horizontal
         stack.distribution = .fillEqually
-        stack.spacing = 10
+        stack.spacing = isPad ? 14 : 10 // iPad增大间距
         stack.translatesAutoresizingMaskIntoConstraints = false
         
-        // 为每个按钮设置16:9比例
+        // 为每个按钮设置比例（Pad端3:4匹配iPad横屏，iPhone 16:9）
+        let btnRatio: CGFloat = isPad ? 3.0 / 4.0 : 9.0 / 16.0
         buttons.forEach { btn in
-            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: btnRatio).isActive = true
         }
         
         return stack
@@ -2387,9 +2348,11 @@ class LEDCreateViewController: UIViewController {
         stack.spacing = 10
         stack.translatesAutoresizingMaskIntoConstraints = false
         
-        // 为每个按钮设置16:9比例
+        // 为每个按钮设置比例（Pad端3:4匹配iPad横屏，iPhone 16:9）
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let btnRatio: CGFloat = isPad ? 3.0 / 4.0 : 9.0 / 16.0
         buttons.forEach { btn in
-            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: 9.0/16.0).isActive = true
+            btn.heightAnchor.constraint(equalTo: btn.widthAnchor, multiplier: btnRatio).isActive = true
         }
         
         return stack
@@ -3403,15 +3366,25 @@ class LEDCreateViewController: UIViewController {
             previewLabel.minimumScaleFactor = 0.3 // 最小缩放到30%
         }
         
-        // 计算预览字体大小：按“预览容器高度 / 横屏全屏可用高度”的比例缩放。
+        // 计算预览字体大小：按"预览容器高度 / 横屏全屏可用高度"的比例缩放。
         // 这样创建页预览的视觉比例更接近横屏全屏预览。
+        // iPad端使用实际横屏高度（宽屏模式），iPhone使用竖屏短边
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         view.layoutIfNeeded()
         previewContainer.layoutIfNeeded()
 
         let previewHeight = max(previewContainer.bounds.height * 0.9, 1) // label is capped at 90% height
         let screenBounds = UIScreen.main.bounds
         let landscapeHeight = min(screenBounds.width, screenBounds.height)
-        let fullScreenEffectiveHeight = max(landscapeHeight - 40, 1) // rough safe-area/controls allowance
+        // iPad横屏有效高度更大，减去安全区域和关闭按钮区域
+        let fullScreenEffectiveHeight: CGFloat
+        if isPad {
+            // iPad横屏：使用实际的横屏高度（约768pt for 11寸），扣除安全区+按钮
+            fullScreenEffectiveHeight = max(landscapeHeight - 60, 1)
+        } else {
+            // iPhone横屏：保持原有计算
+            fullScreenEffectiveHeight = max(landscapeHeight - 40, 1)
+        }
 
         let scaleFactor = min(max(previewHeight / fullScreenEffectiveHeight, 0.25), 0.85)
         let previewFontSize = currentItem.fontSize * scaleFactor
@@ -3595,12 +3568,27 @@ class LEDCreateViewController: UIViewController {
             ])
         }
         
-        // 添加LED边框图片
+        // 添加LED边框图片 - Pad端加载_pad版本，不拉伸
         if let ledBorderImageIndex = currentItem.ledBorderImageIndex {
-            let imageName = "line_\(ledBorderImageIndex)"
-            if let image = UIImage(named: imageName) {
+            let isPad = UIDevice.current.userInterfaceIdiom == .pad
+            let imageName: String
+            if isPad {
+                imageName = "line_\(ledBorderImageIndex)_pad"
+            } else {
+                imageName = "line_\(ledBorderImageIndex)"
+            }
+            
+            // 加载图片（含回退机制）
+            var loadedImage = UIImage(named: imageName)
+            if loadedImage == nil && isPad {
+                let fallbackName = "line_\(ledBorderImageIndex)"
+                loadedImage = UIImage(named: fallbackName)
+            }
+            
+            if let image = loadedImage {
                 let borderImageView = UIImageView(image: image)
-                borderImageView.contentMode = .scaleToFill // 拉伸填满整个预览区域，不裁剪
+                // Pad端不拉伸，保持比例居中；iPhone用scaleToFill
+                borderImageView.contentMode = isPad ? .scaleAspectFit : .scaleToFill
                 borderImageView.clipsToBounds = true
                 borderImageView.translatesAutoresizingMaskIntoConstraints = false
                 borderImageView.tag = 9999 // 用于标识LED边框图片视图

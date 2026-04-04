@@ -286,7 +286,7 @@ class SettingsViewController: UIViewController {
         if case .version = item {
             let versionLabel = UILabel()
             // 动态获取版本号
-            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2.7"
+            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2.8"
             versionLabel.text = appVersion
             // 彩色渐变文字效果
             versionLabel.textColor = UIColor(red: 0.56, green: 0.93, blue: 0.90, alpha: 1.0) // #8FFFE6 青色

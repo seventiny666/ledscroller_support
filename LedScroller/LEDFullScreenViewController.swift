@@ -120,7 +120,9 @@ class LEDFullScreenViewController: UIViewController {
             if let image = UIImage(named: imageName) {
                 // 显示背景图片
                 backgroundImageView.image = image
-                backgroundImageView.contentMode = .scaleToFill // 拉伸填满整个屏幕，不裁剪
+                // Pad端使用scaleAspectFill保持比例填充（避免拉伸变形），iPhone用scaleToFill
+                let isPad = UIDevice.current.userInterfaceIdiom == .pad
+                backgroundImageView.contentMode = isPad ? .scaleAspectFill : .scaleToFill
                 backgroundImageView.clipsToBounds = true
                 backgroundImageView.translatesAutoresizingMaskIntoConstraints = false
                 view.addSubview(backgroundImageView)
@@ -160,7 +162,9 @@ class LEDFullScreenViewController: UIViewController {
         
         // LED边框图片视图
         let ledBorderImageView = UIImageView()
-        ledBorderImageView.contentMode = .scaleToFill // 拉伸填满整个屏幕，不裁剪
+        // Pad端不拉伸，保持原始比例居中显示；iPhone端使用scaleToFill
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        ledBorderImageView.contentMode = isPad ? .scaleAspectFit : .scaleToFill
         ledBorderImageView.clipsToBounds = true
         ledBorderImageView.translatesAutoresizingMaskIntoConstraints = false
         ledBorderImageView.isHidden = true // 默认隐藏
@@ -192,9 +196,22 @@ class LEDFullScreenViewController: UIViewController {
             ledBorderImageView.isHidden = true
         } else if let ledBorderImageIndex = ledItem.ledBorderImageIndex,
                   ledBorderImageIndex >= 1 && ledBorderImageIndex <= 8 {
-            // LED边框图片
-            let imageName = "line_\(ledBorderImageIndex)"
-            if let image = UIImage(named: imageName) {
+            // LED边框图片 - iPad优先加载_pad版本
+            let isPad = UIDevice.current.userInterfaceIdiom == .pad
+            let imageName: String
+            if isPad {
+                imageName = "line_\(ledBorderImageIndex)_pad"
+            } else {
+                imageName = "line_\(ledBorderImageIndex)"
+            }
+            // 加载图片（含pad回退机制）
+            var loadedImage = UIImage(named: imageName)
+            if loadedImage == nil && isPad {
+                // 回退到非pad版本
+                let fallbackName = "line_\(ledBorderImageIndex)"
+                loadedImage = UIImage(named: fallbackName)
+            }
+            if let image = loadedImage {
                 ledBorderImageView.image = image
                 ledBorderImageView.isHidden = false
                 borderView.isHidden = true
@@ -234,9 +251,14 @@ class LEDFullScreenViewController: UIViewController {
         let wrapEnabled = ledItem.isTextWrapEnabled
         textLabel.numberOfLines = wrapEnabled ? 0 : 1
         textLabel.lineBreakMode = wrapEnabled ? .byWordWrapping : .byClipping
-        // Do NOT auto-scale text; font size strictly follows the slider.
-        textLabel.adjustsFontSizeToFitWidth = false
-        textLabel.minimumScaleFactor = 1.0
+        // 换行关闭时启用字体自适应缩放，确保文字完整显示（与创建页预览行为一致）
+        if wrapEnabled {
+            textLabel.adjustsFontSizeToFitWidth = false
+            textLabel.minimumScaleFactor = 1.0
+        } else {
+            textLabel.adjustsFontSizeToFitWidth = true
+            textLabel.minimumScaleFactor = 0.3 // 最小缩到30%
+        }
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
 
