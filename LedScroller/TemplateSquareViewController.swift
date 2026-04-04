@@ -610,7 +610,7 @@ import StoreKit
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.85)
         subtitleLabel.font = .systemFont(ofSize: 19, weight: .regular) // +4pt: 15→19
         subtitleLabel.textAlignment = .center
-        subtitleLabel.numberOfLines = 2
+        subtitleLabel.numberOfLines = 1
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(subtitleLabel)
 
@@ -4641,7 +4641,7 @@ class TemplateCategoryCell: UITableViewCell {
                 "Good Vibes", "Be Happy",
                 "Dream Big", "Shine On", "Feel Good", "Live Free",
                 "Stay Wild", "Happy Time!", // 移除 Rock On (neon_13)
-                "Love Life", "Nice Day" // 1314移到第三位，Nice Day移到最后
+                "Love Life", "COME HERE!" // 原Nice Day改为COME HERE! (Niece Day)
             ]
         case "idol":
             texts = ["Drink Juice", "Dance party!", "Nice Day", "party hard"]
@@ -4710,8 +4710,8 @@ class TemplateCategoryCell: UITableViewCell {
                     borderStyle = 0 // 跑马灯边框第一个
                     fontName = LEDFontRenderer.videoFontName // video字体
                 } else if i == 8 {
-                    // neon_8 (Shine On): LED Border 第二行第二个
-                    ledBorderImageIndex = 5 // LED Border 第二行第二个 (索引5)
+                    // neon_8 (Shine On): LED Border 第二行最后一个
+                    ledBorderImageIndex = 7 // LED Border 第二行最后一个 = line_8 (索引7)
                 } else if i == 7 {
                     // neon_7 (Dream Big): 灯牌边框第二行第一个（VIP）+ neon_16背景 + dot字体
                     lightBoardStyle = 4 // 灯牌边框第二行第一个 (style5, 索引4)
@@ -4735,7 +4735,8 @@ class TemplateCategoryCell: UITableViewCell {
                     // neon_13 (Love Life): 跑马灯边框第一行第三个
                     borderStyle = 2 // 跑马灯边框第一行第三个（索引2）
                 } else if i == 14 {
-                    // neon_14 (Nice Day): 无边框（免费）
+                    // neon_14 (COME HERE! / 原Niece Day): LED屏幕第二行最后一个背景 + LED边框第二行第二个 + 闪烁极快
+                    ledBorderImageIndex = 5 // LED边框第二行第二个 (索引5)
                 }
             } else if category == "led" {
                 // LED屏幕模板特殊配置
@@ -4768,7 +4769,7 @@ class TemplateCategoryCell: UITableViewCell {
             } else if category == "neon" && i == 3 {
                 actualImageName = "cc4" // 1314 使用 cc4 背景（LED Screen 第一行第四个）
             } else if category == "neon" && i == 14 {
-                actualImageName = "neon_14" // Nice Day 使用 neon_14 背景
+                actualImageName = "cc8" // COME HERE! 使用 cc8 背景（LED Screen 第二行最后一个）
             } else {
                 actualImageName = imageName
             }
@@ -4793,6 +4794,12 @@ class TemplateCategoryCell: UITableViewCell {
             )
             // 根据实际内容更新 VIP 标识（字体、边框等）
             item.isVIPRequired = item.requiresVIPByContent
+            
+            // neon_14 (COME HERE!): 闪烁极快
+            if category == "neon" && i == 14 {
+                item.speed = 0.15 // 极快闪烁
+            }
+            
             items.append(item)
         }
         return items
