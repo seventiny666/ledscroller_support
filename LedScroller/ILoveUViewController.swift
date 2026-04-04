@@ -13,8 +13,12 @@ class ILoveUViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 强制横屏
+        // 强制横屏（iPad端额外强制旋转）
         AppDelegate.orientationLock = .landscape
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+            UIViewController.attemptRotationToDeviceOrientation()
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -249,7 +253,6 @@ class ILoveUFullScreenView: UIView {
 
                 // 判断是否是I或U的点
                 var isLetterGrid = false
-                var isIGrid = false
 
                 // 检查I
                 let iLocalRow = row - letterStartRow
@@ -257,7 +260,6 @@ class ILoveUFullScreenView: UIView {
                 if iLocalRow >= 0 && iLocalRow < min(iRows, letterGridHeight) && iLocalCol >= 0 && iLocalCol < iCols {
                     if iPattern[iLocalRow][iLocalCol] {
                         isLetterGrid = true
-                        isIGrid = true
                     }
                 }
 

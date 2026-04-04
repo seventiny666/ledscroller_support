@@ -51,6 +51,14 @@ class LEDFullScreenViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        
+        // iPad端进入时强制横屏
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            AppDelegate.orientationLock = .landscape
+            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+            UIViewController.attemptRotationToDeviceOrientation()
+        }
+        
         startAnimation()
     }
     
@@ -86,12 +94,21 @@ class LEDFullScreenViewController: UIViewController {
         return true
     }
     
+    override var shouldAutorotate: Bool { true }
+
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        // iPad和iPhone都强制横屏
         return .landscape
     }
     
     override var preferredInterfaceOrientationForPresentation: UIInterfaceOrientation {
+        // 强制横屏（向右）
         return .landscapeRight
+    }
+    
+    /// iPad端字体放大系数（降低到1.3，与创建LED预览区更一致）
+    private var iPadFontScaleFactor: CGFloat {
+        UIDevice.current.userInterfaceIdiom == .pad ? 1.3 : 1.0
     }
     
     private func setupUI() {
@@ -223,8 +240,9 @@ class LEDFullScreenViewController: UIViewController {
         textLabel.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(textLabel)
 
-        // 直接使用fontSize值，这就是全屏横屏时的实际大小
-        let adjustedFontSize = ledItem.fontSize
+        // 直接使用fontSize值，iPad端放大1.5倍
+        let baseFontSize = ledItem.fontSize
+        let adjustedFontSize = baseFontSize * iPadFontScaleFactor
         textLabel.attributedText = LEDFontRenderer.attributedText(
             ledItem.text,
             fontName: ledItem.fontName,

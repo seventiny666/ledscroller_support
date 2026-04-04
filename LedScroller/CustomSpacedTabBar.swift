@@ -3,7 +3,7 @@ import UIKit
 // 自定义 TabBar，支持精确控制标签位置
 class CustomSpacedTabBar: UITabBar {
 
-    private let baseEdgeInset: CGFloat = 20 // 首页和设置距离屏幕边缘的距离
+    private let baseEdgeInset: CGFloat = 36 // 首页和设置距离屏幕边缘的距离（从20增大到36，拉大间距）
 
     private func firstSubview<T: UIView>(ofType type: T.Type, in view: UIView) -> T? {
         for sub in view.subviews {
@@ -34,7 +34,7 @@ class CustomSpacedTabBar: UITabBar {
         let isPad = traitCollection.userInterfaceIdiom == .pad
         let tabScale: CGFloat = isPad ? 1.2 : 1.0
         let edgeInset = baseEdgeInset * tabScale
-        let itemWidth: CGFloat = 80 * tabScale // 每个标签的宽度
+        let itemWidth: CGFloat = 68 * tabScale // 每个标签的宽度（从80减小到68，让间距更大）
         
         // 布局方案：
         // 首页：距离左边缘 20px

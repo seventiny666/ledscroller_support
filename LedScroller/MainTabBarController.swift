@@ -142,10 +142,23 @@ class MainTabBarController: UITabBarController, UITabBarControllerDelegate {
             tabBar.layer.allowsGroupOpacity = false
         }
 
-        // 禁用iOS 17.4+的胶囊高亮效果
+        // 禁用iOS 17+的选中状态胶囊/圆角背景效果
         if #available(iOS 17.4, *) {
             for item in tabBar.items ?? [] {
                 item.isSpringLoaded = false
+            }
+        }
+        
+        // 遍历子视图，隐藏胶囊形状的选中指示器（安全方式，不依赖KVO key）
+        DispatchQueue.main.async { [weak self] in
+            guard let self = self else { return }
+            for subview in self.tabBar.subviews {
+                let description = String(describing: type(of: subview))
+                // iOS 17+ 的选中背景通常是 _UIBarIndicatorView 或类似私有类
+                if description.contains("Indicator") || description.contains("indicator") {
+                    subview.isHidden = true
+                    subview.alpha = 0
+                }
             }
         }
         

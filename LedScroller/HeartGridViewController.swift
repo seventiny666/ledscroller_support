@@ -13,8 +13,12 @@ class HeartGridViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        // 强制横屏
+        // 强制横屏（iPad端额外强制旋转）
         AppDelegate.orientationLock = .landscape
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+            UIViewController.attemptRotationToDeviceOrientation()
+        }
     }
     
     override func viewWillDisappear(_ animated: Bool) {

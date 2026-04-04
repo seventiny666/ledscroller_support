@@ -587,7 +587,7 @@ import StoreKit
 
         becomeMemberButton.setTitle("becomeMember".localized, for: .normal)
         becomeMemberButton.setTitleColor(.white, for: .normal)
-        becomeMemberButton.titleLabel?.font = .systemFont(ofSize: 16, weight: .bold)
+        becomeMemberButton.titleLabel?.font = .systemFont(ofSize: 20, weight: .bold) // +4pt: 16→20
         // 使用渐变背景（与设置页面订阅按钮一致）
         becomeMemberButton.backgroundColor = .clear
         becomeMemberButton.layer.cornerRadius = 25
@@ -608,7 +608,7 @@ import StoreKit
 
         subtitleLabel.text = "subscribeToUnlockAllPremiumContent".localized
         subtitleLabel.textColor = UIColor.white.withAlphaComponent(0.85)
-        subtitleLabel.font = .systemFont(ofSize: 15, weight: .regular) // 字体大小从12改为15
+        subtitleLabel.font = .systemFont(ofSize: 19, weight: .regular) // +4pt: 15→19
         subtitleLabel.textAlignment = .center
         subtitleLabel.numberOfLines = 2
         subtitleLabel.translatesAutoresizingMaskIntoConstraints = false
@@ -4478,9 +4478,10 @@ class TemplateCategoryCell: UITableViewCell {
         layout.scrollDirection = .vertical
 
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let spacing: CGFloat = isPad ? 24 : 16
-        layout.minimumInteritemSpacing = spacing
-        layout.minimumLineSpacing = spacing
+        let horizontalSpacing: CGFloat = isPad ? 24 : 16 // 左右列间距
+        let verticalSpacing: CGFloat = isPad ? 14 : 8      // 上下行间距（减小，因为cell本身较高）
+        layout.minimumInteritemSpacing = horizontalSpacing
+        layout.minimumLineSpacing = verticalSpacing
         layout.sectionInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
         
         collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
@@ -4973,7 +4974,7 @@ class TemplateItemCell: UICollectionViewCell {
             containerView.topAnchor.constraint(equalTo: contentView.topAnchor),
             containerView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             containerView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
-            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor),
+            containerView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8), // 底部-8pt
 
             imageView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: imageTopInset),
             imageView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: imageSideInset),
@@ -4984,16 +4985,16 @@ class TemplateItemCell: UICollectionViewCell {
             overlayTextLabel.leadingAnchor.constraint(equalTo: imageView.leadingAnchor, constant: 8),
             overlayTextLabel.trailingAnchor.constraint(equalTo: imageView.trailingAnchor, constant: -8),
 
-            titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+            titleLabel.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 6), // 间距优化 8→6
             titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
-            titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
+            titleLabel.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -10), // 底部-10pt（原-12）
 
-            // 编辑文字标签约束（参照 titleLabel 样式）
-            tryButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 8),
+            // 编辑文字标签约束
+            tryButton.topAnchor.constraint(equalTo: imageView.bottomAnchor, constant: 6), // 间距优化 8→6
             tryButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 12),
             tryButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -12),
-            tryButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -12),
+            tryButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -10), // 底部-10pt（原-12）
 
             // VIP标签约束（放在contentView上，保证压过所有封面/边框视图）
             vipBadgeView.topAnchor.constraint(equalTo: containerView.topAnchor, constant: isPad ? 12 : 8),
@@ -5032,6 +5033,13 @@ class TemplateItemCell: UICollectionViewCell {
     
     func configure(with item: LEDItem, tab: TemplateTab) {
         currentItem = item
+        
+        // 【关键修复】重置所有标签和按钮的隐藏状态，避免cell复用时显示"编辑"等残留文字
+        tryButton.isHidden = true
+        titleLabel.isHidden = true
+        overlayTextLabel.isHidden = false
+        buttonStack.isHidden = true
+        previewButton.isHidden = true
         
         // 移除之前可能添加的所有自定义视图 / 边框视图
         imageView.subviews.forEach { subview in
@@ -5345,7 +5353,7 @@ class TemplateItemCell: UICollectionViewCell {
                     // 封面字体大小计算：基于容器宽度比例缩放，与预览页面保持一致
                     // 参照 LEDPreviewViewController 的缩放逻辑
                     let containerWidth = imageView.bounds.width > 0 ? imageView.bounds.width : (isPad ? 300 : 150)
-                    let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+                    let landscapeWidth: CGFloat = 1100 // 全屏横屏基准宽度（从852增大，缩小封面文字）
                     let scaleFactor = containerWidth / landscapeWidth
 
                     // Marry Me 和 Merry Christmas 封面文字应该更小
@@ -5423,7 +5431,7 @@ class TemplateItemCell: UICollectionViewCell {
                 // 封面字体大小计算：基于容器宽度比例缩放，与预览页面保持一致
                 // 参照 LEDPreviewViewController 的缩放逻辑
                 let containerWidth = imageView.bounds.width > 0 ? imageView.bounds.width : (isPad ? 300 : 150)
-                let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+                let landscapeWidth: CGFloat = 1100 // 全屏横屏基准宽度（从852增大，缩小封面文字）
                 let scaleFactor = containerWidth / landscapeWidth
 
                 let baseOverlayFontSize: CGFloat

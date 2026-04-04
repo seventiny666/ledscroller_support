@@ -13,25 +13,27 @@ class FireworksBloomViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        // iPad端强制横屏旋转
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            AppDelegate.orientationLock = .landscape
+            UIDevice.current.setValue(UIInterfaceOrientation.landscapeRight.rawValue, forKey: "orientation")
+            UIViewController.attemptRotationToDeviceOrientation()
+        }
         startAutoPlay()
     }
-    
-    override func viewWillDisappear(_ animated: Bool) {
-        super.viewWillDisappear(animated)
-        stopAutoPlay()
-        // 清理所有烟花效果
-        emitterLayers.forEach { $0.removeFromSuperlayer() }
-        emitterLayers.removeAll()
-    }
-    
+
     override var prefersStatusBarHidden: Bool {
         return true
     }
-    
+
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        // iPad端强制横屏
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return .landscape
+        }
         return .portrait
     }
-    
+
     private func setupUI() {
         view.backgroundColor = UIColor(red: 0.0, green: 0.0, blue: 0.0, alpha: 1.0) // 统一为纯黑色
         

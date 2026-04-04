@@ -195,29 +195,19 @@ class SettingsViewController: UIViewController {
         }
         navigationController?.navigationBar.prefersLargeTitles = true
         
-        // 创建滚动视图
-        scrollView = UIScrollView()
-        scrollView.translatesAutoresizingMaskIntoConstraints = false
-        view.addSubview(scrollView)
-        
-        // 创建垂直堆栈视图
+        // 直接使用 stackView 放置设置卡片，不使用 scrollView（避免滚动导致标题消失）
+        // 设置页面只有7个按钮，一屏可以完全展示
         stackView = UIStackView()
         stackView.axis = .vertical
-        stackView.spacing = 12
+        stackView.spacing = isPad ? 22 : 12
         stackView.translatesAutoresizingMaskIntoConstraints = false
-        scrollView.addSubview(stackView)
+        view.addSubview(stackView)
         
         NSLayoutConstraint.activate([
-            scrollView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
-            scrollView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
-            scrollView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
-            scrollView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
-            
-            stackView.topAnchor.constraint(equalTo: scrollView.topAnchor, constant: 60), // 减少20pt，从80改为60
-            stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 16),
-            stackView.trailingAnchor.constraint(equalTo: scrollView.trailingAnchor, constant: -16),
-            stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor, constant: -80), // 增加底部间距
-            stackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor, constant: -32)
+            stackView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: isPad ? 25 : 10),
+            stackView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
+            stackView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
+            stackView.bottomAnchor.constraint(lessThanOrEqualTo: view.safeAreaLayoutGuide.bottomAnchor, constant: isPad ? -35 : -20)
         ])
         
         // 添加设置卡片
@@ -296,7 +286,7 @@ class SettingsViewController: UIViewController {
         if case .version = item {
             let versionLabel = UILabel()
             // 动态获取版本号
-            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2.6"
+            let appVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "1.2.7"
             versionLabel.text = appVersion
             // 彩色渐变文字效果
             versionLabel.textColor = UIColor(red: 0.56, green: 0.93, blue: 0.90, alpha: 1.0) // #8FFFE6 青色
@@ -483,7 +473,7 @@ class SettingsViewController: UIViewController {
         overlayView.tag = 9998
 
         let isPad = UIDevice.current.userInterfaceIdiom == .pad
-        let alertWidth: CGFloat = isPad ? 420 : 360
+        let alertWidth: CGFloat = isPad ? 460 : 360 // iPad: 460, iPhone: 原始360
 
         NSLayoutConstraint.activate([
             overlayView.topAnchor.constraint(equalTo: view.topAnchor),
@@ -495,24 +485,24 @@ class SettingsViewController: UIViewController {
             alertView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
             alertView.widthAnchor.constraint(equalToConstant: alertWidth),
 
-            closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 12),
-            closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -12),
+            closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: isPad ? 16 : 12),
+            closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: isPad ? -16 : -12),
             closeButton.widthAnchor.constraint(equalToConstant: 24),
             closeButton.heightAnchor.constraint(equalToConstant: 24),
 
-            titleLabel.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 22),
+            titleLabel.topAnchor.constraint(equalTo: alertView.topAnchor, constant: isPad ? 28 : 22),
             titleLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             titleLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
 
-            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 12),
+            messageLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: isPad ? 18 : 12),
             messageLabel.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             messageLabel.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
 
-            buttonStack.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: 20),
+            buttonStack.topAnchor.constraint(equalTo: messageLabel.bottomAnchor, constant: isPad ? 28 : 20),
             buttonStack.leadingAnchor.constraint(equalTo: alertView.leadingAnchor, constant: 20),
             buttonStack.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -20),
-            buttonStack.heightAnchor.constraint(equalToConstant: 44), // 胶囊按钮高度
-            buttonStack.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: -30), // 底部增加10pt (原-20改为-30)
+            buttonStack.heightAnchor.constraint(equalToConstant: 44),
+            buttonStack.bottomAnchor.constraint(equalTo: alertView.bottomAnchor, constant: isPad ? -40 : -30)
         ])
     }
 
@@ -670,6 +660,7 @@ class SettingsViewController: UIViewController {
         secondaryButtonTitle: String? = nil,
         secondaryAction: (() -> Void)? = nil
     ) {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         // 创建自定义弹窗视图
         let overlayView = UIView()
         overlayView.backgroundColor = UIColor.black.withAlphaComponent(0.5)
@@ -696,12 +687,12 @@ class SettingsViewController: UIViewController {
         titleLabel.textAlignment = .center
         titleLabel.translatesAutoresizingMaskIntoConstraints = false
         
-        // 消息
+        // 消息（二级标题，最多2行）
         let messageLabel = UILabel()
         messageLabel.textColor = UIColor.white.withAlphaComponent(0.8)
         messageLabel.font = .systemFont(ofSize: 16)
         messageLabel.textAlignment = .center
-        messageLabel.numberOfLines = 0
+        messageLabel.numberOfLines = 2 // 二级标题最多2行显示
         
         // 设置1.5倍行间距
         let paragraphStyle = NSMutableParagraphStyle()
@@ -761,8 +752,7 @@ class SettingsViewController: UIViewController {
             
             alertView.centerXAnchor.constraint(equalTo: overlayView.centerXAnchor),
             alertView.centerYAnchor.constraint(equalTo: overlayView.centerYAnchor),
-            alertView.widthAnchor.constraint(equalToConstant: 320), // 宽度再增加4pt (316->320)
-            
+            alertView.widthAnchor.constraint(equalToConstant: isPad ? 360 : 320), // iPad: 360, iPhone: 原始320
             closeButton.topAnchor.constraint(equalTo: alertView.topAnchor, constant: 16), // 往下移动4pt，从12改为16
             closeButton.trailingAnchor.constraint(equalTo: alertView.trailingAnchor, constant: -16), // 往左移动4pt，从-12改为-16
             closeButton.widthAnchor.constraint(equalToConstant: 24),
@@ -1035,6 +1025,7 @@ class LanguageSelectorView: UIView {
     }
     
     private func setupUI() {
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
         // 半透明背景
         backgroundColor = UIColor.black.withAlphaComponent(0.5)
         
@@ -1083,18 +1074,18 @@ class LanguageSelectorView: UIView {
         NSLayoutConstraint.activate([
             containerView.centerXAnchor.constraint(equalTo: centerXAnchor),
             containerView.centerYAnchor.constraint(equalTo: centerYAnchor),
-            containerView.widthAnchor.constraint(equalToConstant: 314),
-            containerView.heightAnchor.constraint(lessThanOrEqualToConstant: 620),
+            containerView.widthAnchor.constraint(equalToConstant: isPad ? 394 : 314), // iPad: 394, iPhone: 原始314
+            containerView.heightAnchor.constraint(lessThanOrEqualToConstant: isPad ? 680 : 620), // iPad: 680, iPhone: 原始620
             
-            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: 24),
-            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
+            titleLabel.topAnchor.constraint(equalTo: containerView.topAnchor, constant: isPad ? 28 : 24),
+            titleLabel.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: isPad ? 24 : 20),
+            titleLabel.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -24 : -20),
             
-            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
-            scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            scrollView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: -16),
-            scrollView.heightAnchor.constraint(lessThanOrEqualToConstant: 440),
+            scrollView.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: isPad ? 20 : 16),
+            scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: isPad ? 24 : 20),
+            scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -24 : -20),
+            scrollView.bottomAnchor.constraint(equalTo: cancelButton.topAnchor, constant: isPad ? -20 : -16),
+            scrollView.heightAnchor.constraint(lessThanOrEqualToConstant: isPad ? 500 : 440), // iPad: 500, iPhone: 原始440
             
             stackView.topAnchor.constraint(equalTo: scrollView.topAnchor),
             stackView.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor),
@@ -1102,9 +1093,9 @@ class LanguageSelectorView: UIView {
             stackView.bottomAnchor.constraint(equalTo: scrollView.bottomAnchor),
             stackView.widthAnchor.constraint(equalTo: scrollView.widthAnchor),
             
-            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: 20),
-            cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: -20),
-            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: -34),
+            cancelButton.leadingAnchor.constraint(equalTo: containerView.leadingAnchor, constant: isPad ? 24 : 20),
+            cancelButton.trailingAnchor.constraint(equalTo: containerView.trailingAnchor, constant: isPad ? -24 : -20),
+            cancelButton.bottomAnchor.constraint(equalTo: containerView.bottomAnchor, constant: isPad ? -40 : -34), // iPad: -40, iPhone: 原始-34
             cancelButton.heightAnchor.constraint(equalToConstant: 50)
         ])
         

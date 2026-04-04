@@ -742,10 +742,9 @@ class CreationTableCell: UITableViewCell {
         ledTextLabel.text = item.text
 
         // 统一字体大小计算:基于全屏横屏尺寸等比缩放
-        // 全屏横屏基准:852px宽度(iPhone 14 Pro横屏)
-        // fontSize值对应全屏横屏时的实际pt大小
+        // 全屏横屏基准宽度增大到1400（从1100再调大），进一步缩小封面文字
         let containerWidth = previewView.bounds.width > 0 ? previewView.bounds.width : 285
-        let landscapeWidth: CGFloat = 852 // 全屏横屏基准宽度
+        let landscapeWidth: CGFloat = 1400 // 进一步增大基准宽度，封面文字更小更完整
 
         // 按容器宽度比例缩放字体
         let scaleFactor = containerWidth / landscapeWidth

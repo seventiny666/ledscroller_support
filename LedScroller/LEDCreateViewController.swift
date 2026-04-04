@@ -1919,13 +1919,17 @@ class LEDCreateViewController: UIViewController {
         currentTab.backgroundColor = .clear // 确保不阻挡内容
         tabContentView.addSubview(currentTab)
         
-        // 创建并激活新的约束 - 关键修复：使用bottom约束而不是height约束
+        // 创建并激活新的约束 - 使用bottom约束让内容自然撑开高度
+        // iPad端需要更大的最小高度以避免边框内容被挤压
+        let isPad = UIDevice.current.userInterfaceIdiom == .pad
+        let minHeight: CGFloat = isPad ? 1200 : 800
+        
         currentTabConstraints = [
             currentTab.topAnchor.constraint(equalTo: tabContentView.topAnchor),
             currentTab.leadingAnchor.constraint(equalTo: tabContentView.leadingAnchor),
             currentTab.trailingAnchor.constraint(equalTo: tabContentView.trailingAnchor),
             currentTab.bottomAnchor.constraint(equalTo: tabContentView.bottomAnchor), // 使用bottom约束
-            currentTab.heightAnchor.constraint(greaterThanOrEqualToConstant: 800) // 增加最小高度到800
+            currentTab.heightAnchor.constraint(greaterThanOrEqualToConstant: minHeight) // iPad增大最小高度
         ]
         NSLayoutConstraint.activate(currentTabConstraints)
         

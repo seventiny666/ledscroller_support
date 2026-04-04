@@ -27,6 +27,10 @@ class LoveRainViewController: UIViewController {
     }
     
     override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+        // iPad端强制横屏
+        if UIDevice.current.userInterfaceIdiom == .pad {
+            return .landscape
+        }
         return .landscape
     }
     
